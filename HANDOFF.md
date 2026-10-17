@@ -41,13 +41,15 @@ Milestone 1 (Pads) passed Luke's phone test. Milestone 2 (Kits and presets) is b
 ## M3 (Sequencer and looping): in progress on `feat/m3-sequencer`
 
 ### Decisions from Luke (2026-10-17)
-- **Loops are patterns.** Loop slots 1–4 on the pad screen are Patterns A–D in the SEQ tab. One plays at a time; tapping another slot while playing switches at the next bar line.
-- **Grid rows:** 8 rows (the design's KICK, SNR, CLAP, CHH, OHH, TOM, PERC, FX) plus a ROWS 1–8 / 9–16 switch, so every pad in the bank can be edited.
-- **Clock:** Tone.js Transport on `engine.ctx`. **Undo:** every change, about 50 levels per pattern. **Saving:** the song autosaves to IndexedDB.
+- **Loops are patterns.** Loop slots 1–4 on the pad screen are the same loops as in the SEQ tab (called LOOP 1–4 everywhere). One plays at a time; tapping another slot while playing switches at the next bar line.
+- **Grid rows:** 8 rows (the design's KICK, SNR, CLAP, CHH, OHH, TOM, PERC, FX), and a PADS button pages through the other pads and banks.
+- **Clock:** Tone.js Transport on `engine.ctx`. **Undo:** every change, one shared stack of 50 steps across all loops. **Saving:** the song autosaves to IndexedDB (step 6).
+- **Record key:** Shift+R, because plain R is a pad key.
 - **Extras in M3:** Note Repeat, and pad banks B–D filled from Sonic Pi CC0 samples.
 - **Claude's choices:** quantise is applied when a hit is recorded (OFF keeps the raw timing). Swing is applied at playback to the off-beat 16ths. Events are `{ tick, pad 0–63, vel }` at 96 ticks per beat. REC on a full slot replaces it; DUB adds to it. Count-in is one bar.
 
-### Steps (Luke checks in after each)
+### Steps (Luke checks in after each; one commit per step)
+Commits: step 1 dbcad22, step 2 4adf35c, step 3 0f005a8, step 4 588ef6e, step 5 5562f80.
 1. **Transport, tempo and metronome: done (2026-10-17)**
    - Play/Stop (Space), metronome on/off (M, accent on beat 1)
    - BPM −/+ (hold to repeat, 40–240), tap tempo (tap the BPM number or press T)
