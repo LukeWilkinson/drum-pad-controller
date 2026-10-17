@@ -4,9 +4,10 @@ Read SPEC.md (milestones) and DESIGN.md (tokens, layouts) first. The design canv
 
 ## Stack
 - Vite + TypeScript (vanilla, no framework) PWA via `vite-plugin-pwa`.
-- Audio: raw Web Audio in `src/audio/engine.ts`. It uses `latencyHint: 'interactive'`, a fresh BufferSource per hit and `start(0)`. Tone.js arrives in M3 for the transport; it must share `engine.ctx` (`Tone.setContext`), and Tone's lookAhead must stay off for live pad hits.
+- Audio: raw Web Audio in `src/audio/engine.ts`. It uses `latencyHint: 'interactive'`, a fresh BufferSource per hit and `start(0)` for live hits (`engine.play`). Sequenced hits and clicks are scheduled with `engine.playAt(pad, vel, when)` / `engine.click(when, accent)`; `engine.cancelScheduled()` drops future ones on stop.
+- Clock: Tone.js 15 Transport in `src/audio/clock.ts`, running on `engine.ctx` via `setContext(new Context({ context: engine.ctx, lookAhead: 0.1 }))`. Only scheduled playback goes through Tone; live pad hits never do. `clock.ts` is the only code that changes `playing`, `bpm` and `click` in the store.
 - HTTPS dev server via `@vitejs/plugin-basic-ssl` so phones on the LAN get a secure context. Setting `HTTP=1` turns it off; the browser pane needs that because it rejects the self-signed certificate. Use the `dev-http` config in `.claude/launch.json`.
-- Node lives at `C:\Program Files\nodejs`. `~/.bashrc` puts it on PATH for every Bash shell (added 2026-10-17), so there's no need to prefix `export PATH=...`.
+- Node lives at `C:\Program Files\nodejs`. `~/.bashrc` is meant to put it on PATH, but on 2026-10-17 a Bash shell still had no `npm`, so prefix `export PATH="/c/Program Files/nodejs:$PATH" &&` when it is missing.
 
 ## Layout of the code
 - `src/audio/kit.ts`: kit types (PadDef, PadParams, ActiveKit) and helpers (screen order: index 0 = top-left = pad 13).
@@ -15,6 +16,7 @@ Read SPEC.md (milestones) and DESIGN.md (tokens, layouts) first. The design canv
 - `src/state.ts`: tiny store (`state`, `update`, `subscribe`). `src/kitControl.ts`: the only code that changes the active kit (select, edit, swap, save, delete); it also saves prefs. `src/store/db.ts`: IndexedDB wrapper.
 - `src/pads/input.ts`: Pointer Events per pad (multi-touch map) and the keyboard. Audio plays before visuals.
 - `src/ui/kits.ts`: Kits panel. `src/ui/views.ts`: PADS/KITS switching. `src/ui/dialog.ts`: shared modal. `src/ui/format.ts`: pad-setting readouts.
+- `src/ui/transport.ts`: Play/Stop, metronome, BPM −/+ (hold to repeat), tap tempo, the LCD bar counter (rAF while playing) and the Space / M / T shortcuts.
 - `src/ui/screen.ts`: builds the whole DOM once. `src/ui/pads.ts` handles the pad visuals (class + `--v` CSS var only).
 - `src/styles/app.css`: one DOM, three layouts by media query (portrait default; landscape `max-height: 540px`; tablet `min-width: 1024px and min-height: 600px`).
 - Placeholder controls carry `data-todo="M2"` etc. To find what's left: `grep -r data-todo src`.
@@ -32,4 +34,6 @@ Read SPEC.md (milestones) and DESIGN.md (tokens, layouts) first. The design canv
   - **Phone test passed (2026-10-17):** Luke reported the M2 HANDOFF.md checklist all good on the real phone.
   - Dev builds expose `window.__drum` (engine, state, KITS, every `kitControl` function) for console checks.
   - If the browser pane serves stale code after an edit, restart the `dev-http` server (Vite's watcher missed an edit once on Windows).
-- **Next:** M3 Sequencer and looping. Ask Luke about plan mode first; read `Seq.dc.html` from the canvas.
+- **M3 Sequencer and looping: in progress** on branch `feat/m3-sequencer`. The approved plan is in HANDOFF.md (6 steps, check in with Luke after each).
+  - **Step 1, transport, tempo and metronome: done (2026-10-17).** Checked by script in the browser pane: click gaps of 0.5 s at 120 BPM and 0.4 s at 150 BPM, accent on beat 1, tap tempo, clamp to 40–240, metronome off, stop cancels future voices, scheduled hat choke. Layout checked at all 3 sizes. Not committed yet.
+- **Next:** M3 step 2 (patterns, recording, overdub, undo, quantise, loop slots).

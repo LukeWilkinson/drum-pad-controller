@@ -5,7 +5,8 @@ const ICON = {
   chevron: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
   undo: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>',
   metro: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 21h8L14 4h-4z"/><path d="M12 16l6-9"/></svg>',
-  play: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor"/></svg>',
+  play: '<svg class="i-play" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor"/></svg>',
+  stop: '<svg class="i-stop" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1" fill="currentColor"/></svg>',
   pads: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1"/><rect x="13" y="4" width="7" height="7" rx="1"/><rect x="4" y="13" width="7" height="7" rx="1"/><rect x="13" y="13" width="7" height="7" rx="1"/></svg>',
   kits: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>',
   seq: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h3M10 6h3M16 6h4M4 12h6M13 12h3M4 18h2M9 18h11"/></svg>',
@@ -60,6 +61,13 @@ export interface ScreenRefs {
   lastInline: HTMLElement;
   fullLevel: HTMLButtonElement;
   rec: HTMLButtonElement;
+  play: HTMLButtonElement;
+  metro: HTMLButtonElement;
+  bpmDown: HTMLButtonElement;
+  bpmUp: HTMLButtonElement;
+  bpmTap: HTMLButtonElement;
+  bpmNum: HTMLElement;
+  lcdBar: HTMLElement;
   selName: HTMLElement;
   master: HTMLInputElement;
 }
@@ -72,13 +80,13 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
         <div class="lcd-top">
           <button class="kit-btn" aria-label="Choose kit"><span class="kit-name">LOADING…</span>${ICON.chevron}</button>
           <div class="bpm">
-            <button aria-label="Tempo down" data-todo="M3">−</button>
-            <span class="bpm-val">120.0 <span class="bpm-unit">BPM</span></span>
-            <button aria-label="Tempo up" data-todo="M3">+</button>
+            <button class="bpm-down" aria-label="Tempo down">−</button>
+            <button class="bpm-tap" aria-label="Tempo 120 BPM. Tap repeatedly to set the tempo"><span class="bpm-num">120.0</span> <span class="bpm-unit">BPM</span></button>
+            <button class="bpm-up" aria-label="Tempo up">+</button>
           </div>
         </div>
         <div class="lcd-status">
-          <span>BAR 01.1</span><span>Q 1/16</span><span>SWING 50%</span>
+          <span class="lcd-bar">BAR 01.1</span><span>Q 1/16</span><span>SWING 50%</span>
           <span class="rec-state">READY</span><span class="last-inline"></span>
         </div>
         <div class="lcd-last" aria-live="polite"></div>
@@ -86,9 +94,9 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
 
       <div class="transport">
         <button class="key" aria-label="Undo" data-todo="M3">${ICON.undo}</button>
-        <button class="key metro" aria-label="Metronome" data-todo="M3">${ICON.metro}</button>
+        <button class="key metro" aria-label="Metronome" aria-pressed="true">${ICON.metro}</button>
         <button class="rec" aria-label="Record" aria-pressed="false"><span></span></button>
-        <button class="key play" aria-label="Play" data-todo="M3">${ICON.play}</button>
+        <button class="key play" aria-label="Play" aria-pressed="false">${ICON.play}${ICON.stop}</button>
         <button class="key dub" aria-label="Overdub" data-todo="M3">DUB</button>
       </div>
 
@@ -146,6 +154,13 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
     lastInline: q('.last-inline'),
     fullLevel: q('.full-level'),
     rec: q('.rec'),
+    play: q('.key.play'),
+    metro: q('.key.metro'),
+    bpmDown: q('.bpm-down'),
+    bpmUp: q('.bpm-up'),
+    bpmTap: q('.bpm-tap'),
+    bpmNum: q('.bpm-num'),
+    lcdBar: q('.lcd-bar'),
     selName: q('.sel-name'),
     master: q('.master input'),
   };

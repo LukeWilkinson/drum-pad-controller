@@ -78,7 +78,10 @@ svg { display: block; }
 }
 .bpm { display: flex; align-items: center; flex: none; }
 .bpm button { width: 30px; height: 44px; background: none; color: var(--lcd-dim); font-size: 18px; }
-.bpm-val { font-size: 20px; font-weight: 600; min-width: 48px; text-align: center; }
+.bpm .bpm-tap {
+  width: auto; min-width: 48px; height: 44px; padding: 0 2px; background: none; box-shadow: none;
+  color: var(--lcd-text); font-family: var(--font-mono); font-size: 20px; font-weight: 600; white-space: nowrap;
+}
 .bpm-unit { display: none; font-size: 12px; color: var(--lcd-dim); }
 .lcd-status { display: flex; justify-content: space-between; gap: 6px; font-size: 11px; color: var(--lcd-dim); white-space: nowrap; }
 .lcd-status .last-inline { display: none; color: var(--lcd-text); overflow: hidden; text-overflow: ellipsis; }
@@ -93,7 +96,11 @@ svg { display: block; }
   color: var(--text); display: grid; place-items: center;
 }
 .key.metro { color: var(--amber); }
+.key.metro[aria-pressed="false"] { color: var(--text-muted); }
 .key.play { color: var(--play); }
+.key.play[aria-pressed="true"] { background: var(--play); color: var(--body); }
+.key.play .i-stop, .key.play[aria-pressed="true"] .i-play { display: none; }
+.key.play[aria-pressed="true"] .i-stop { display: block; }
 .key.dub { font-size: 13px; font-weight: 700; letter-spacing: .06em; }
 .rec {
   --size: 68px;
@@ -232,7 +239,7 @@ svg { display: block; }
 
   .lcd { padding: 2px 10px 6px; gap: 2px; }
   .kit-btn { font-size: 14px; }
-  .bpm-val { font-size: 18px; min-width: 0; }
+  .bpm .bpm-tap { font-size: 18px; min-width: 0; }
   .lcd-status .rec-state { display: none; }
   .lcd-status .last-inline { display: inline; }
   .lcd-last { display: none; }
@@ -278,7 +285,7 @@ svg { display: block; }
   .lcd-top { flex-direction: column; align-items: stretch; gap: 6px; }
   .bpm { justify-content: space-between; }
   .bpm button { width: 44px; height: 44px; border-radius: 6px; background: #3A2A12; color: var(--lcd-text); font-size: 20px; }
-  .bpm-val { font-size: 34px; }
+  .bpm .bpm-tap { font-size: 34px; }
   .bpm-unit { display: inline; }
   .lcd-last { padding-top: 6px; }
 

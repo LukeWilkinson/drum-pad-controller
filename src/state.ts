@@ -16,6 +16,11 @@ export interface AppState {
   view: View;
   /** Saved kits, newest first. */
   userKits: UserKit[];
+  /** Transport (changed only by src/audio/clock.ts). */
+  playing: boolean;
+  bpm: number;
+  /** Metronome on/off. It only sounds while the transport plays. */
+  click: boolean;
 }
 
 export type Change = keyof AppState | 'params' | 'pads';
@@ -27,6 +32,9 @@ export const state: AppState = {
   selectedPad: 12, // Kick
   view: 'pads',
   userKits: [],
+  playing: false,
+  bpm: 120,
+  click: true,
 };
 
 const listeners = new Set<Listener>();

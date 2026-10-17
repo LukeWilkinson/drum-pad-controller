@@ -3,6 +3,7 @@ import './styles/app.css';
 import './styles/kits.css';
 import { registerSW } from 'virtual:pwa-register';
 import { AudioEngine } from './audio/engine';
+import * as clock from './audio/clock';
 import { padNumber } from './audio/kit';
 import { KITS, factoryKit } from './audio/kits';
 import * as kitControl from './kitControl';
@@ -13,6 +14,7 @@ import { applyKit, buildPads, showHit, showRelease } from './ui/pads';
 import { buildKitsPanel } from './ui/kits';
 import { buildScreen } from './ui/screen';
 import { initRail } from './ui/rail';
+import { initTransport } from './ui/transport';
 import { initViews } from './ui/views';
 
 const HINT = 'HIT A PAD — PRESS HIGHER TO HIT HARDER';
@@ -20,6 +22,8 @@ const HINT = 'HIT A PAD — PRESS HIGHER TO HIT HARDER';
 const ui = buildScreen(document.getElementById('app')!);
 const padEls = buildPads(ui.padwell);
 const engine = new AudioEngine();
+clock.initClock(engine);
+initTransport(ui);
 applyKit(padEls, KITS[0].pads); // colours straight away; replaced if a different kit is restored
 buildKitsPanel(ui.app, engine);
 initViews(ui);
@@ -109,4 +113,4 @@ bootKits(engine, (done, total) => setLast(`LOADING KIT ${done}/${total}`, `LOADI
 registerSW({ immediate: true });
 
 // Dev-only handle for checking the engine and store from the browser console.
-if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, state, KITS, factoryKit, ...kitControl } });
+if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, state, KITS, factoryKit, ...kitControl } });
