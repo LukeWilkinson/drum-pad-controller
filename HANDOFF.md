@@ -1,7 +1,7 @@
 # Handoff
 
 ## Where things stand (2026-10-17)
-Milestone 1 (Pads) and Milestone 2 (Kits and presets) passed Luke's phone test (2026-10-17). Milestone 3 (Sequencer and looping) is built and committed on `feat/m3-sequencer` and is waiting for Luke's phone test (checklist below).
+Milestone 1 (Pads) and Milestone 2 (Kits and presets) passed Luke's phone test (2026-10-17). Milestone 3 (Sequencer and looping) is built and committed on `feat/m3-sequencer` and passed Luke's phone test (2026-10-17).
 
 ### M1 (Pads)
 - 4×4 grid in all three layouts, multi-touch, position velocity, keyboard and Full Level.
@@ -38,7 +38,7 @@ Milestone 1 (Pads) and Milestone 2 (Kits and presets) passed Luke's phone test (
 - Styled but not working yet (`data-todo`; `grep -r data-todo src` lists them): KEYS/MIX/SETUP tabs, and the FX send knobs (M6).
 - The desktop artboard extras (step strip, shortcut legend) are not built.
 
-## M3 (Sequencer and looping): built on `feat/m3-sequencer`, waiting for the phone test
+## M3 (Sequencer and looping): built on `feat/m3-sequencer`, phone test passed (2026-10-17)
 
 ### Decisions from Luke (2026-10-17)
 - **Loops are patterns.** Loop slots 1–4 on the pad screen are the same loops as in the SEQ tab (called LOOP 1–4 everywhere). One plays at a time; tapping another slot while playing switches at the next bar line.
@@ -86,7 +86,7 @@ Commits: step 1 dbcad22, step 2 4adf35c, step 3 0f005a8, step 4 588ef6e, step 5 
    - Undo history is not saved: after a reload there is nothing to undo.
    - Checked by script: a full round trip (loop 4, 8 bars, OFF, swing 55, 143.2 BPM on the Tone transport and the LCD, click off, NOTE RPT on), the save on hide, and a damaged save (bad bars, pad 99, junk events, bad BPM / quantise / loop index).
 
-## Luke's phone test checklist for M3
+## Luke's phone test checklist for M3 (passed 2026-10-17)
 1. Run `npm run dev` and open the **Network** address on the phone, as before. Tap a pad to start audio.
 2. Transport and tempo:
    - [ ] Play / Stop. The metronome is steady and beat 1 is accented. Turn it off and on.
@@ -109,4 +109,4 @@ Commits: step 1 dbcad22, step 2 4adf35c, step 3 0f005a8, step 4 588ef6e, step 5 
 8. `npm run lan` → install → airplane mode: the sequencer and the new bank sounds still work.
 
 ## Next step
-Luke phone-tests M3 with the checklist above. If it passes, merge `feat/m3-sequencer` into `main` and start M4 (MIDI: Web MIDI out, MIDI input mapping, MIDI learn) in plan mode in a fresh chat.
+M3 passed the phone test. Merge `feat/m3-sequencer` into `main` (if not done yet), then start M4 (MIDI: Web MIDI output with pad notes and channel select, MIDI input mapping, MIDI learn) in plan mode in a fresh chat, on a new branch `feat/m4-midi`.
