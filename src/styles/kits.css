@@ -1,0 +1,147 @@
+/* Kits panel (Kits.dc.html) and the PADS / KITS view switch.
+   Loaded after app.css. .app[data-view="kits"] hides the pad grid and shows the panel:
+   - phone portrait: the panel takes everything above the tab bar (controls hidden)
+   - phone landscape and tablet: the panel takes the pad grid's place; the rails stay */
+
+.kits-panel {
+  grid-area: pads;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding-bottom: 12px;
+}
+.app[data-view="kits"] .kits-panel { display: flex; }
+.app[data-view="kits"] .padwell { display: none; }
+
+/* Portrait: panel covers the controls too. */
+.app[data-view="kits"] { grid-template-areas: "pads" "pads" "tabs"; }
+.app[data-view="kits"] .controls { display: none; }
+
+@media (orientation: landscape) and (max-height: 540px) {
+  .app[data-view="kits"] { grid-template-areas: "controls pads" ". pads" "tabs pads"; }
+  .app[data-view="kits"] .controls { display: flex; }
+  .kits-panel { width: var(--pad-size); padding-bottom: 0; }
+}
+
+@media (min-width: 1024px) and (min-height: 600px) {
+  .app[data-view="kits"] { grid-template-areas: "tabs tabs status" "controls pads right"; }
+  .app[data-view="kits"] .controls { display: flex; }
+  .kits-panel { width: var(--pad-size); padding-bottom: 0; }
+}
+
+/* ---------- Header ---------- */
+
+.kp-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.kp-head h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: .04em; color: var(--text-strong); }
+.kp-actions { display: flex; gap: 6px; }
+
+.kp-btn {
+  height: 44px; padding: 0 12px; border-radius: 6px;
+  background: var(--raised); color: var(--text);
+  font-size: 12px; font-weight: 700; letter-spacing: .06em;
+  box-shadow: var(--key-shadow);
+}
+.kp-btn.primary { background: var(--amber); color: var(--body); }
+.kp-btn.danger { background: var(--rec); color: var(--text-strong); }
+
+/* ---------- Category chips ---------- */
+
+.kp-cats {
+  display: flex; gap: 6px; flex: none;
+  overflow-x: auto; scrollbar-width: none; touch-action: pan-x;
+}
+.kp-chip {
+  flex: none; height: 44px; padding: 0 14px; border-radius: 22px;
+  background: var(--raised); color: var(--text);
+  font-size: 13px; font-weight: 700;
+}
+.kp-chip[aria-pressed="true"] { background: var(--amber); color: var(--body); }
+
+/* ---------- Kit list ---------- */
+
+.kp-list { display: flex; flex-direction: column; gap: 6px; }
+.kp-row {
+  display: flex; align-items: center;
+  border-radius: 8px; border: 2px solid transparent;
+  background: color-mix(in srgb, var(--raised) 60%, var(--body));
+}
+.kp-row[aria-current="true"] { background: var(--raised); border-color: var(--amber); }
+.kp-kit {
+  flex: 1; min-width: 0; height: 54px; padding: 0 10px; background: none;
+  display: flex; align-items: center; gap: 12px; text-align: left; color: var(--text);
+}
+.kp-dots { display: grid; grid-template-columns: repeat(4, 6px); gap: 2px; flex: none; }
+.kp-dots span { width: 6px; height: 6px; border-radius: 1px; }
+.kp-kit-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.kp-kit-name { font-size: 15px; font-weight: 700; color: var(--text-strong); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.kp-kit-meta { font-size: 12px; color: var(--text-muted); }
+.kp-tag { font-family: var(--font-mono); font-size: 11px; color: var(--amber); flex: none; }
+.kp-del {
+  width: 44px; height: 44px; margin-right: 4px; border-radius: 6px; flex: none;
+  background: none; color: var(--text-muted); display: grid; place-items: center;
+}
+.kp-empty { margin: 4px 0; font-size: 13px; color: var(--text-muted); }
+
+/* ---------- Pad settings ---------- */
+
+.kp-pad {
+  background: var(--well); border-radius: 12px; padding: 12px;
+  display: flex; gap: 12px; flex: none;
+}
+.kp-pick { display: flex; flex-direction: column; gap: 8px; flex: none; }
+.kp-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--text-muted); }
+.kp-grid { display: grid; grid-template-columns: repeat(4, 40px); gap: 4px; }
+.kp-cell {
+  width: 40px; height: 40px; border-radius: 4px; padding: 0;
+  background: color-mix(in srgb, var(--c) 35%, transparent);
+  border: 2px solid transparent;
+}
+.kp-cell[aria-pressed="true"] { background: color-mix(in srgb, var(--c) 90%, transparent); border-color: var(--text-strong); }
+.kp-swap { height: 40px; font-size: 12px; }
+
+.kp-sliders { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.kp-title { font-family: var(--font-mono); font-size: 13px; color: var(--amber); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kp-sample { font-family: var(--font-mono); font-size: 11px; color: var(--text-muted); margin-top: -4px; overflow: hidden; text-overflow: ellipsis; }
+.kp-slider { display: flex; flex-direction: column; font-size: 12px; color: var(--text-muted); }
+.kp-slider-top { display: flex; justify-content: space-between; }
+.kp-val { font-family: var(--font-mono); color: var(--text); }
+.kp-slider input { accent-color: var(--amber); width: 100%; height: 28px; margin: 0; touch-action: pan-y; }
+
+/* ---------- Dialog (shared) ---------- */
+
+.dlg {
+  width: min(340px, calc(100vw - 32px));
+  padding: 16px; border: 2px solid var(--edge); border-radius: 14px;
+  background: var(--drawer); color: var(--text);
+  font-family: var(--font-ui);
+}
+.dlg::backdrop { background: rgba(0, 0, 0, .6); }
+.dlg h2 { margin: 0 0 12px; font-size: 16px; letter-spacing: .06em; color: var(--text-strong); }
+.dlg p { margin: 0 0 14px; font-size: 14px; line-height: 1.4; }
+.dlg-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--text-muted); }
+.dlg-field input {
+  height: 44px; padding: 0 10px; border-radius: 6px; border: 2px solid var(--edge);
+  background: var(--well); color: var(--text-strong);
+  font: 600 16px var(--font-mono); /* 16px stops Android zooming in on focus */
+  user-select: text; -webkit-user-select: text;
+}
+.dlg-field input:focus { outline: none; border-color: var(--amber); }
+.dlg-btns { display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
+
+/* ---------- Swap sample list ---------- */
+
+.sw-list { max-height: min(60vh, 480px); overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; margin: 0 -4px 12px; }
+.sw-kit { padding: 10px 4px 4px; font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--text-muted); }
+.sw-row { display: flex; align-items: center; gap: 4px; border-radius: 6px; }
+.sw-row.current { background: var(--raised); }
+.sw-play { width: 44px; height: 44px; flex: none; border-radius: 6px; background: none; color: var(--amber); display: grid; place-items: center; }
+.sw-pick { flex: 1; height: 44px; text-align: left; padding: 0 8px; background: none; color: var(--text); font: 13px var(--font-mono); }
+.sw-row.current .sw-pick { color: var(--amber); }
+
+.knob[data-key] { touch-action: none; cursor: ns-resize; border-radius: 8px; }
+.knob[data-key]:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }

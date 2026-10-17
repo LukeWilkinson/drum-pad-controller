@@ -33,6 +33,3 @@ export function factoryKit(kit: KitDef): ActiveKit {
   };
 }
 
-// Milestone 1 names, kept until the engine and screen read the active kit (M2 steps 2 and 4).
-export const PADS = KITS[0].pads;
-export const KIT_NAME = 'KIT 01 · SONIC PI CC0';

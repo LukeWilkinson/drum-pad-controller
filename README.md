@@ -50,3 +50,11 @@ Set `HTTP=1` to turn off HTTPS. This is only for desktop checks; phones need HTT
 - **Velocity:** press higher on a pad to hit harder (40 at the bottom, 127 at the top). **FULL LVL** forces 127.
 - **Multi-touch:** hold as many pads as there are fingers.
 - **Keyboard:** the pad rows top to bottom are `1 2 3 4`, `Q W E R`, `A S D F`, `Z X C V`.
+
+## Kits
+
+- Open **KITS** (or tap the kit name on the LCD) to switch between the 4 built-in kits.
+- Pick a pad, then use the **Volume, Pitch, Pan and Decay** sliders. **SWAP SAMPLE** puts any built-in sample on the pad.
+- **SAVE** stores the kit under **My kits**. It stays in this browser (IndexedDB) and the last kit reloads on startup.
+- On a tablet, the right-hand knobs edit the selected pad too: drag up or down, or double-tap to reset.
+- To add a kit, edit `src/audio/kits.json`, then run `npm run fetch-samples`.

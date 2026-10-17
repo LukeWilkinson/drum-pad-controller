@@ -1,8 +1,6 @@
 // Builds the pad screen DOM once. CSS (app.css) rearranges it for each layout.
 // Controls marked data-todo are styled per the design but wired up in later milestones.
 
-import { KIT_NAME } from '../audio/kits';
-
 const ICON = {
   chevron: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
   undo: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>',
@@ -18,38 +16,46 @@ const ICON = {
 
 const TABS: [cls: string, icon: string, short: string, long: string, todo: string][] = [
   ['pads', ICON.pads, 'PADS', 'PADS', ''],
-  ['kits', ICON.kits, 'KITS', 'KITS', 'M2'],
+  ['kits', ICON.kits, 'KITS', 'KITS', ''],
   ['seq', ICON.seq, 'SEQ', 'SEQUENCER', 'M3'],
   ['keys', ICON.keys, 'KEYS', 'KEYS', 'M5'],
   ['mix', ICON.mix, 'MIX/FX', 'MIX / FX', 'M6'],
   ['setup', ICON.setup, 'SETUP', 'SETUP', 'M4'],
 ];
 
-// Static placeholder values for the selected-pad knobs (wired in M2/M6).
-const KNOBS: [label: string, amount: number, value: string][] = [
-  ['VOLUME', 0.78, '0.0 dB'],
-  ['PITCH', 0.5, '+0 st'],
-  ['PAN', 0.5, 'C'],
-  ['REVERB SEND', 0, '0%'],
-  ['DELAY SEND', 0, '0%'],
+// Selected-pad knobs on the tablet right rail. The first four are live (src/ui/rail.ts sets
+// their arc and readout from the store); the FX sends arrive in M6.
+const KNOBS: [label: string, key: string, todo: string][] = [
+  ['VOLUME', 'volumeDb', ''],
+  ['PITCH', 'pitch', ''],
+  ['PAN', 'pan', ''],
+  ['DECAY', 'decay', ''],
+  ['REVERB SEND', '', 'M6'],
+  ['DELAY SEND', '', 'M6'],
 ];
 
-const ARC = 84.8; // 270° of a r=18 circle
+export const KNOB_ARC = 84.8; // 270° of a r=18 circle
 
-function knob([label, amount, value]: (typeof KNOBS)[number]): string {
+function knob([label, key, todo]: (typeof KNOBS)[number]): string {
+  const attrs = key
+    ? `data-key="${key}" role="slider" tabindex="0" aria-label="${label}"`
+    : `data-todo="${todo}"`;
   return `
-    <div class="knob" data-todo="M2">
-      <svg width="52" height="52" viewBox="0 0 48 48" role="img" aria-label="${label} ${value}">
-        <circle cx="24" cy="24" r="18" fill="none" stroke="#191816" stroke-width="4" stroke-linecap="round" stroke-dasharray="${ARC} 200" transform="rotate(135 24 24)"/>
-        <circle cx="24" cy="24" r="18" fill="none" stroke="#FFB547" stroke-width="4" stroke-linecap="round" stroke-dasharray="${(ARC * amount).toFixed(1)} 200" transform="rotate(135 24 24)"/>
+    <div class="knob" ${attrs}>
+      <svg width="52" height="52" viewBox="0 0 48 48" aria-hidden="true">
+        <circle cx="24" cy="24" r="18" fill="none" stroke="#191816" stroke-width="4" stroke-linecap="round" stroke-dasharray="${KNOB_ARC} 200" transform="rotate(135 24 24)"/>
+        <circle class="knob-arc" cx="24" cy="24" r="18" fill="none" stroke="#FFB547" stroke-width="4" stroke-linecap="round" stroke-dasharray="0 200" transform="rotate(135 24 24)"/>
         <circle cx="24" cy="24" r="12" fill="#4A4844"/>
       </svg>
-      <div class="knob-text"><span class="knob-label">${label}</span><span class="knob-val">${value}</span></div>
+      <div class="knob-text"><span class="knob-label">${label}</span><span class="knob-val">${key ? '' : '0%'}</span></div>
     </div>`;
 }
 
 export interface ScreenRefs {
+  app: HTMLElement;
   padwell: HTMLElement;
+  kitBtn: HTMLButtonElement;
+  kitName: HTMLElement;
   lastLine: HTMLElement;
   lastInline: HTMLElement;
   fullLevel: HTMLButtonElement;
@@ -60,11 +66,11 @@ export interface ScreenRefs {
 
 export function buildScreen(root: HTMLElement): ScreenRefs {
   root.innerHTML = `
-  <div class="app">
+  <div class="app" data-view="pads">
     <div class="controls">
       <section class="lcd" aria-label="Display">
         <div class="lcd-top">
-          <button class="kit-btn" aria-label="Choose kit" data-todo="M2"><span>${KIT_NAME}</span>${ICON.chevron}</button>
+          <button class="kit-btn" aria-label="Choose kit"><span class="kit-name">LOADING…</span>${ICON.chevron}</button>
           <div class="bpm">
             <button aria-label="Tempo down" data-todo="M3">−</button>
             <span class="bpm-val">120.0 <span class="bpm-unit">BPM</span></span>
@@ -92,7 +98,7 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
 
       <div class="bankrow">
         <div class="banks" role="group" aria-label="Pad banks">
-          ${['A', 'B', 'C', 'D'].map((b) => `<button class="bank" aria-label="Pad bank ${b}" aria-pressed="${b === 'A'}"${b === 'A' ? '' : ' data-todo="M2"'}>${b}</button>`).join('')}
+          ${['A', 'B', 'C', 'D'].map((b) => `<button class="bank" aria-label="Pad bank ${b}" aria-pressed="${b === 'A'}"${b === 'A' ? '' : ' data-todo="M3"'}>${b}</button>`).join('')}
         </div>
         <div class="toggles">
           <button class="toggle" aria-pressed="false" data-todo="M3"><span class="lbl-short">NOTE RPT</span><span class="lbl-long">NOTE REPEAT</span></button>
@@ -132,7 +138,10 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
 
   const q = <T extends Element>(sel: string) => root.querySelector(sel) as T;
   return {
+    app: q('.app'),
     padwell: q('.padwell'),
+    kitBtn: q('.kit-btn'),
+    kitName: q('.kit-name'),
     lastLine: q('.lcd-last'),
     lastInline: q('.last-inline'),
     fullLevel: q('.full-level'),

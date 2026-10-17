@@ -53,6 +53,17 @@ export interface ActiveKit {
   params: PadParams[];
 }
 
+/** A kit Luke saved: the whole pad list (so swapped samples are kept) plus pad settings. Stored in IndexedDB. */
+export interface UserKit {
+  id: string;
+  name: string;
+  baseKitId: string;
+  pads: PadDef[];
+  params: PadParams[];
+  /** Date.now() of the last save. */
+  savedAt: number;
+}
+
 export const SOFT_LAYER_BELOW = 72;
 export const SAMPLE_DIR = `${import.meta.env.BASE_URL}samples/sonicpi/`;
 
