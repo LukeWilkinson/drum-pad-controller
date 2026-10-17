@@ -101,7 +101,7 @@
 .sq-grid { display: flex; flex-direction: column; gap: 4px; flex: none; padding: 8px; border-radius: 10px; background: var(--well); }
 .sq-row { display: flex; align-items: center; gap: 4px; }
 .sq-name {
-  width: 46px; flex: none; height: 40px; padding: 0; background: none; color: var(--text);
+  width: 54px; flex: none; height: 40px; padding: 0; background: none; color: var(--text);
   display: flex; align-items: center; gap: 4px; text-align: left;
   font-size: 10px; font-weight: 700; letter-spacing: .02em; line-height: 1.05;
 }

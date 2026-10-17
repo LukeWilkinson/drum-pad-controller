@@ -6,6 +6,7 @@
 // → stereo panner (only when the pad is panned) → master.
 
 import {
+  PADS_PER_BANK,
   SAMPLE_DIR,
   SOFT_LAYER_BELOW,
   sampleNamesOf,
@@ -89,9 +90,14 @@ export class AudioEngine {
     kit: ActiveKit,
     onProgress?: (done: number, total: number) => void,
     stillWanted: () => boolean = () => true,
+    firstBank = 0,
   ): Promise<void> {
-    await this.loadSamples(sampleNamesOf(kit.pads), onProgress);
-    if (stillWanted()) this.kit = kit;
+    // The bank on screen loads first, so the kit is playable quickly; the other banks follow.
+    const first = kit.pads.slice(firstBank * PADS_PER_BANK, (firstBank + 1) * PADS_PER_BANK);
+    await this.loadSamples(sampleNamesOf(first), onProgress);
+    if (!stillWanted()) return;
+    this.kit = kit;
+    this.loadSamples(sampleNamesOf(kit.pads)).catch((err: unknown) => console.warn('[audio] bank samples', err));
   }
 
   /** Length in seconds of a loaded sample, or undefined if it isn't loaded yet. */
@@ -103,7 +109,7 @@ export class AudioEngine {
     this.master.gain.setTargetAtTime(v, this.ctx.currentTime, 0.01);
   }
 
-  /** Plays pad `index` (0–15, screen order) at MIDI velocity 1–127, right now (live hits). */
+  /** Plays pad `index` (bank × 16 + screen index) at MIDI velocity 1–127, right now (live hits). */
   play(index: number, velocity: number): void {
     this.hit(index, velocity, 0);
   }

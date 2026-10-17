@@ -12,7 +12,9 @@ export interface AppState {
   kit: ActiveKit | null;
   /** True when the active kit has unsaved changes. */
   edited: boolean;
-  /** Screen index (0–15) of the pad being edited / last hit. */
+  /** Pad bank on screen, 0–3 (A–D). */
+  bank: number;
+  /** Pad (bank × 16 + screen index, 0–63) being edited / last hit. */
   selectedPad: number;
   view: View;
   /** Saved kits, newest first. */
@@ -45,6 +47,7 @@ type Listener = (s: Readonly<AppState>, changed: ReadonlySet<Change>) => void;
 export const state: AppState = {
   kit: null,
   edited: false,
+  bank: 0,
   selectedPad: 12, // Kick
   view: 'pads',
   userKits: [],

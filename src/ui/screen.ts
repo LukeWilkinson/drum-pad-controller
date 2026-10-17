@@ -60,6 +60,7 @@ export interface ScreenRefs {
   lastLine: HTMLElement;
   lastInline: HTMLElement;
   fullLevel: HTMLButtonElement;
+  banks: HTMLButtonElement[];
   rec: HTMLButtonElement;
   dub: HTMLButtonElement;
   undo: HTMLButtonElement;
@@ -112,7 +113,7 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
 
       <div class="bankrow">
         <div class="banks" role="group" aria-label="Pad banks">
-          ${['A', 'B', 'C', 'D'].map((b) => `<button class="bank" aria-label="Pad bank ${b}" aria-pressed="${b === 'A'}"${b === 'A' ? '' : ' data-todo="M3"'}>${b}</button>`).join('')}
+          ${['A', 'B', 'C', 'D'].map((b) => `<button class="bank" aria-label="Pad bank ${b}" aria-pressed="${b === 'A'}">${b}</button>`).join('')}
         </div>
         <div class="toggles">
           <button class="toggle" aria-pressed="false" data-todo="M3"><span class="lbl-short">NOTE RPT</span><span class="lbl-long">NOTE REPEAT</span></button>
@@ -159,6 +160,7 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
     lastLine: q('.lcd-last'),
     lastInline: q('.last-inline'),
     fullLevel: q('.full-level'),
+    banks: [...root.querySelectorAll<HTMLButtonElement>('.bank')],
     rec: q('.rec'),
     dub: q('.key.dub'),
     undo: q('.key.undo'),

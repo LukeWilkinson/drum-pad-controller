@@ -110,5 +110,71 @@
         { "name": "Backspin", "group": "fx", "hard": "vinyl_backspin" }
       ]
     }
-  ]
+  ],
+  "banksNote": "Pad banks B-D, shared by every kit. A kit can replace any of them with its own \"banks\": { \"C\": [16 pads] }. Same screen order as pads (top row first).",
+  "banks": {
+    "B": [
+      { "name": "Chime", "group": "cym", "hard": "elec_chime" },
+      { "name": "Triangle", "group": "cym", "hard": "elec_triangle" },
+      { "name": "Tom Mid", "group": "tom", "soft": "drum_tom_mid_soft", "hard": "drum_tom_mid_hard" },
+      { "name": "Fuzz Tom", "group": "tom", "hard": "elec_fuzz_tom" },
+
+      { "name": "Gnu Hat", "group": "hat", "hard": "hat_gnu" },
+      { "name": "Metal Hat", "group": "hat", "hard": "hat_metal" },
+      { "name": "Psych Hat", "group": "hat", "hard": "hat_psych" },
+      { "name": "Star Hat", "group": "hat", "hard": "hat_star" },
+
+      { "name": "Mid Snare", "group": "snare", "hard": "elec_mid_snare" },
+      { "name": "Dub Snare", "group": "snare", "hard": "sn_dub" },
+      { "name": "Dolf Snare", "group": "snare", "hard": "sn_dolf" },
+      { "name": "Pop", "group": "perc", "hard": "elec_pop" },
+
+      { "name": "Klub Kick", "group": "kick", "hard": "bd_klub" },
+      { "name": "Pure Kick", "group": "kick", "hard": "bd_pure" },
+      { "name": "Gas Kick", "group": "kick", "hard": "bd_gas" },
+      { "name": "Deep Kick", "group": "kick", "soft": "drum_bass_soft", "hard": "drum_bass_hard" }
+    ],
+    "C": [
+      { "name": "Ghe", "group": "perc", "hard": "tabla_ghe1" },
+      { "name": "Ghe Low", "group": "perc", "hard": "tabla_ghe3" },
+      { "name": "Ke", "group": "perc", "hard": "tabla_ke1" },
+      { "name": "Na", "group": "perc", "hard": "tabla_na" },
+
+      { "name": "Na Open", "group": "perc", "hard": "tabla_na_o" },
+      { "name": "Re", "group": "perc", "hard": "tabla_re" },
+      { "name": "Tas", "group": "perc", "hard": "tabla_tas1" },
+      { "name": "Te", "group": "perc", "hard": "tabla_te1" },
+
+      { "name": "Ping", "group": "perc", "hard": "elec_ping" },
+      { "name": "Plip", "group": "perc", "hard": "elec_plip" },
+      { "name": "Twip", "group": "perc", "hard": "elec_twip" },
+      { "name": "Beep", "group": "perc", "hard": "elec_beep" },
+
+      { "name": "Till", "group": "perc", "hard": "perc_till" },
+      { "name": "Blup", "group": "perc", "hard": "elec_blup" },
+      { "name": "Knock", "group": "perc", "hard": "perc_door" },
+      { "name": "Flip", "group": "perc", "hard": "elec_flip" }
+    ],
+    "D": [
+      { "name": "Choir", "group": "fx", "hard": "ambi_choir" },
+      { "name": "Swoosh", "group": "fx", "hard": "ambi_swoosh" },
+      { "name": "Dark Woosh", "group": "fx", "hard": "ambi_dark_woosh" },
+      { "name": "Buzz", "group": "fx", "hard": "ambi_soft_buzz" },
+
+      { "name": "Glitch 1", "group": "fx", "hard": "glitch_perc1" },
+      { "name": "Glitch 2", "group": "fx", "hard": "glitch_perc2" },
+      { "name": "Glitch 3", "group": "fx", "hard": "glitch_perc3" },
+      { "name": "Robot", "group": "fx", "hard": "glitch_robot1" },
+
+      { "name": "Impact", "group": "fx", "hard": "perc_impact1" },
+      { "name": "Whoosh", "group": "fx", "hard": "perc_swoosh" },
+      { "name": "Rewind", "group": "fx", "hard": "vinyl_rewind" },
+      { "name": "Crow", "group": "fx", "hard": "misc_crow" },
+
+      { "name": "Bass Hit", "group": "kick", "hard": "bass_hit_c" },
+      { "name": "Voxy Hit", "group": "kick", "hard": "bass_voxy_hit_c" },
+      { "name": "Bass Drop", "group": "kick", "hard": "bass_drop_c" },
+      { "name": "DnB Bass", "group": "kick", "hard": "bass_dnb_f" }
+    ]
+  }
 }

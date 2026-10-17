@@ -5,10 +5,11 @@
 
 import type { AudioEngine } from '../audio/engine';
 import * as clock from '../audio/clock';
-import { GROUP_COLOUR } from '../audio/kit';
+import { BANK_NAMES, GROUP_COLOUR, PADS_PER_BANK } from '../audio/kit';
 import { BAR_TICKS, LENGTHS, QUANTS, STEP_TICKS, SWING_MAX, SWING_MIN, hasHits, lengthTicks, type Bars, type Quant } from '../seq/pattern';
 import * as seq from '../seq/sequencer';
 import { state, subscribe, type Change } from '../state';
+import { selectBank } from '../kitControl';
 import { openDialog } from './dialog';
 import { onFrame } from './transport';
 
@@ -22,8 +23,8 @@ const STEPS_PER_BAR = BAR_TICKS / STEP_TICKS;
 const SWING_DRAG_PX = 150; // drag distance for the whole swing range
 const CHEVRON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
 
-const CONTROLS: Change[] = ['patterns', 'pattern', 'queued', 'recMode', 'countIn', 'click', 'quant', 'swing', 'playing'];
-const GRID: Change[] = ['patterns', 'pattern', 'kit', 'pads'];
+const CONTROLS: Change[] = ['patterns', 'pattern', 'queued', 'recMode', 'countIn', 'click', 'quant', 'swing', 'playing', 'bank'];
+const GRID: Change[] = ['patterns', 'pattern', 'kit', 'pads', 'bank'];
 
 export function buildSeqPanel(app: HTMLElement, engine: AudioEngine): void {
   const panel = document.createElement('section');
@@ -89,14 +90,16 @@ export function buildSeqPanel(app: HTMLElement, engine: AudioEngine): void {
   let playCol = -1; // cell index (0–7) outlined as the playhead, -1 for none
 
   const bars = () => state.patterns[state.pattern].bars;
-  const padAt = (row: number) => ROW_PAGES[rowPage][row]; // bank A only until banks arrive (M3 step 4)
+  const padAt = (row: number) => state.bank * PADS_PER_BANK + ROW_PAGES[rowPage][row]; // rows show the bank on screen
   const tickAt = (k: number) => bar * BAR_TICKS + (page * STEPS_PER_PAGE + k) * STEP_TICKS;
 
   // ---------- controls ----------
 
   $('.sq-loop').addEventListener('click', pickLoop);
+  // Steps through every row page of every bank: A 1–8, A 9–16, B 1–8 … D 9–16, then back to A.
   $('.sq-rows').addEventListener('click', () => {
     rowPage = 1 - rowPage;
+    if (rowPage === 0) selectBank((state.bank + 1) % BANK_NAMES.length); // re-renders via the store
     renderControls();
     renderGrid();
   });
@@ -177,8 +180,8 @@ export function buildSeqPanel(app: HTMLElement, engine: AudioEngine): void {
     const queued = state.queued === null ? '' : ` → ${state.queued + 1}`;
     $('.sq-loop-name').textContent = `LOOP ${state.pattern + 1}${queued}`;
     $('.sq-loop').setAttribute('aria-label', `Loop ${state.pattern + 1}${queued ? `, loop ${state.queued! + 1} starts at the next bar` : ''}. Choose loop`);
-    $('.sq-rows').textContent = rowPage === 0 ? 'PADS 9–16' : 'PADS 1–8';
-    $('.sq-rows').setAttribute('aria-label', `Show the ${rowPage === 0 ? 'other 8' : 'first 8'} pads`);
+    $('.sq-rows').textContent = `PADS ${BANK_NAMES[state.bank]} ${rowPage === 0 ? '1–8' : '9–16'}`;
+    $('.sq-rows').setAttribute('aria-label', `Showing pads ${rowPage === 0 ? '1 to 8' : '9 to 16'} of bank ${BANK_NAMES[state.bank]}. Next pads`);
     for (const b of lenBtns) b.setAttribute('aria-pressed', String(Number(b.dataset.bars) === n));
     $('.sq-rec').setAttribute('aria-pressed', String(state.recMode === 'rec' || state.recMode === 'count'));
     $('.sq-rec').classList.toggle('counting', state.recMode === 'count');

@@ -2,7 +2,7 @@
 // Each pointer is tracked separately so many pads can be held at once.
 
 export interface PadInputHandlers {
-  /** Called synchronously inside the input event — play audio first, draw second. */
+  /** Screen index (0–15). Called synchronously inside the input event — play audio first, draw second. */
   onHit(index: number, velocity: number): void;
   onRelease(index: number): void;
 }

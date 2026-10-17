@@ -1,6 +1,11 @@
 // Kit types and helpers shared by the engine and the UI. The built-in kits live in kits.json / kits.ts.
-// Pad order follows the screen: index 0 is the top-left pad, index 15 is bottom-right.
+// A kit has 4 banks (A–D) of 16 pads: pad index = bank × 16 + screen index (0–63).
+// Within a bank, pad order follows the screen: screen index 0 is the top-left pad, 15 bottom-right.
 // Pad numbers follow the MPC layout: pad 1 is bottom-left, pad 16 is top-right.
+
+export const BANK_NAMES = ['A', 'B', 'C', 'D'] as const;
+export const PADS_PER_BANK = 16;
+export const PAD_COUNT = BANK_NAMES.length * PADS_PER_BANK;
 
 export type PadGroup = 'kick' | 'snare' | 'hat' | 'tom' | 'cym' | 'perc' | 'fx';
 
@@ -40,7 +45,7 @@ export const PARAM_RANGE: Record<ParamKey, { min: number; max: number; step: num
 
 export const DEFAULT_PARAMS: Readonly<PadParams> = { volumeDb: 0, pitch: 0, pan: 0, decay: 1 };
 
-/** What the engine plays: 16 pads plus their settings. */
+/** What the engine plays: 64 pads (banks A–D) plus their settings. */
 export interface ActiveKit {
   /** Factory kit id, or the user kit id when a saved kit is loaded. */
   id: string;
@@ -77,9 +82,15 @@ export const GROUP_COLOUR: Record<PadGroup, string> = {
   fx: '#F472B6',
 };
 
-/** MPC numbering: screen index 0 (top-left) is pad 13, index 12 (bottom-left) is pad 1. */
+/** MPC numbering within a bank: screen index 0 (top-left) is pad 13, index 12 (bottom-left) is pad 1. */
 export function padNumber(index: number): number {
-  return (3 - Math.floor(index / 4)) * 4 + (index % 4) + 1;
+  const i = index % PADS_PER_BANK;
+  return (3 - Math.floor(i / 4)) * 4 + (i % 4) + 1;
+}
+
+/** "A13", "C01": bank letter plus the two-digit pad number. */
+export function padLabel(index: number): string {
+  return `${BANK_NAMES[Math.floor(index / PADS_PER_BANK)]}${String(padNumber(index)).padStart(2, '0')}`;
 }
 
 /** Every sample a set of pads needs (hard and soft layers). */

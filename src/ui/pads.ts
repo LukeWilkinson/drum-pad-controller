@@ -1,7 +1,7 @@
 // Pad elements and their hit visuals. Visual updates only touch a class and one CSS
 // variable per pad, so a hit never re-renders the grid.
 
-import { GROUP_COLOUR, padNumber, type PadDef } from '../audio/kit';
+import { GROUP_COLOUR, PADS_PER_BANK, padLabel, padNumber, type PadDef } from '../audio/kit';
 
 const HOT_ABOVE = 75; // text turns dark above this velocity
 
@@ -25,12 +25,13 @@ export function buildPads(well: HTMLElement): HTMLButtonElement[] {
   });
 }
 
-/** Shows a kit's pad names and group colours. */
-export function applyKit(els: HTMLElement[], pads: PadDef[]): void {
+/** Shows the pad names and group colours of one bank (0–3) of a kit's 64 pads. */
+export function applyKit(els: HTMLElement[], pads: PadDef[], bank = 0): void {
   els.forEach((el, i) => {
-    const pad = pads[i];
+    const index = bank * PADS_PER_BANK + i;
+    const pad = pads[index];
     const colour = GROUP_COLOUR[pad.group];
-    el.setAttribute('aria-label', `Pad ${String(padNumber(i)).padStart(2, '0')}, ${pad.name}`);
+    el.setAttribute('aria-label', `Pad ${padLabel(index)}, ${pad.name}`);
     el.style.setProperty('--c', colour);
     el.style.setProperty('--c-tint', rgba(colour, 0.16));
     el.style.setProperty('--c-glow', rgba(colour, 0.7));

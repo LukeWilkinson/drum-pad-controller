@@ -2,7 +2,7 @@
 // active kit, so the engine, the store and IndexedDB never disagree.
 
 import type { AudioEngine } from './audio/engine';
-import { PARAM_RANGE, type ActiveKit, type ParamKey, type UserKit } from './audio/kit';
+import { PADS_PER_BANK, PAD_COUNT, PARAM_RANGE, type ActiveKit, type ParamKey, type UserKit } from './audio/kit';
 import { DEFAULT_KIT_ID, KITS, factoryKit, findKit } from './audio/kits';
 import { deleteUserKit, getPref, listUserKits, saveUserKit, setPref } from './store/db';
 import { state, update } from './state';
@@ -32,21 +32,27 @@ export async function bootKits(e: AudioEngine, onProgress?: Progress): Promise<n
 export async function selectKit(id: string, onProgress?: Progress): Promise<void> {
   const token = ++selectToken;
   const user = state.userKits.find((u) => u.id === id);
-  const active: ActiveKit = user
-    ? {
-        id: user.id,
-        name: user.name,
-        baseKitId: user.baseKitId,
-        user: true,
-        pads: structuredClone(user.pads),
-        params: structuredClone(user.params),
-      }
-    : factoryKit(findKit(id) ?? KITS[0]);
+  const active: ActiveKit = user ? fromUserKit(user) : factoryKit(findKit(id) ?? KITS[0]);
 
-  await engine.loadKit(active, onProgress, () => token === selectToken);
+  await engine.loadKit(active, onProgress, () => token === selectToken, state.bank);
   if (token !== selectToken) return;
   update({ kit: active, edited: false });
   setPref('lastKit', active.id).catch(ignore);
+}
+
+/**
+ * A saved kit ready to play. Kits saved before banks existed (16 pads) get banks B–D from
+ * their base kit, at default settings.
+ */
+function fromUserKit(user: UserKit): ActiveKit {
+  const pads = structuredClone(user.pads);
+  const params = structuredClone(user.params);
+  if (pads.length < PAD_COUNT) {
+    const base = factoryKit(findKit(user.baseKitId) ?? KITS[0]);
+    pads.push(...base.pads.slice(pads.length));
+    params.push(...base.params.slice(params.length));
+  }
+  return { id: user.id, name: user.name, baseKitId: user.baseKitId, user: true, pads, params };
 }
 
 /** Changes one setting of one pad, clamped to its range. Takes effect on the next hit. */
@@ -103,6 +109,12 @@ export async function deleteKit(id: string): Promise<void> {
   } else {
     update({ userKits });
   }
+}
+
+/** Shows pad bank `bank` (0–3). The selected pad moves to the same spot in the new bank. */
+export function selectBank(bank: number): void {
+  if (bank === state.bank) return;
+  update({ bank, selectedPad: bank * PADS_PER_BANK + (state.selectedPad % PADS_PER_BANK) });
 }
 
 export function saveMasterVolume(v: number): void {

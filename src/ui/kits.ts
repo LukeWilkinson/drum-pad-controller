@@ -2,8 +2,8 @@
 // SAVE and LOAD PRESET. Built once; render functions only update what a state change touched.
 
 import type { AudioEngine } from '../audio/engine';
-import { GROUP_COLOUR, PARAM_RANGE, padNumber, type ParamKey } from '../audio/kit';
-import { CATEGORIES, KITS, findKit } from '../audio/kits';
+import { GROUP_COLOUR, PADS_PER_BANK, PARAM_RANGE, padLabel, type PadDef, type ParamKey } from '../audio/kit';
+import { CATEGORIES, KITS, allPads, findKit } from '../audio/kits';
 import { defaultSaveName, deleteKit, saveKit, selectKit, setParam, swapSample } from '../kitControl';
 import { state, subscribe, update, type Change } from '../state';
 import { PARAM_LABEL, formatParam } from './format';
@@ -76,16 +76,16 @@ export function buildKitsPanel(app: HTMLElement, engine: AudioEngine): void {
     const factory: Row[] = KITS.map((k) => ({
       id: k.id,
       name: k.name,
-      meta: `${k.category} · 16 pads`,
+      meta: `${k.category} · 4 banks`,
       user: false,
-      dots: k.pads.map((p) => GROUP_COLOUR[p.group]),
+      dots: k.pads.slice(0, PADS_PER_BANK).map((p) => GROUP_COLOUR[p.group]),
     }));
     const user: Row[] = state.userKits.map((u) => ({
       id: u.id,
       name: u.name,
       meta: `My kit · ${savedWhen(u.savedAt)}`,
       user: true,
-      dots: u.pads.map((p) => GROUP_COLOUR[p.group]),
+      dots: u.pads.slice(0, PADS_PER_BANK).map((p) => GROUP_COLOUR[p.group]),
     }));
     if (category === 'All') return [...factory, ...user];
     if (category === 'My kits') return user;
@@ -132,12 +132,13 @@ export function buildKitsPanel(app: HTMLElement, engine: AudioEngine): void {
     const pad = kit.pads[i];
     const p = kit.params[i];
     cells.forEach((c, n) => {
-      const colour = GROUP_COLOUR[kit.pads[n].group];
-      c.style.setProperty('--c', colour);
-      c.setAttribute('aria-label', `Pad ${padNumber(n)}, ${kit.pads[n].name}`);
-      c.setAttribute('aria-pressed', String(n === i));
+      const index = state.bank * PADS_PER_BANK + n; // the picker shows the bank on screen
+      c.dataset.pad = String(index);
+      c.style.setProperty('--c', GROUP_COLOUR[kit.pads[index].group]);
+      c.setAttribute('aria-label', `Pad ${padLabel(index)}, ${kit.pads[index].name}`);
+      c.setAttribute('aria-pressed', String(index === i));
     });
-    $('.kp-title').textContent = `PAD ${String(padNumber(i)).padStart(2, '0')} · ${pad.name.toUpperCase()}`;
+    $('.kp-title').textContent = `PAD ${padLabel(i)} · ${pad.name.toUpperCase()}`;
     $('.kp-sample').textContent = pad.hard;
     const seconds = engine.sampleDuration(pad.hard);
     for (const input of inputs) {
@@ -231,10 +232,18 @@ export function buildKitsPanel(app: HTMLElement, engine: AudioEngine): void {
     const index = state.selectedPad;
     const current = kit.pads[index].hard;
     const seen = new Set<string>();
-    const groups = KITS.map((k) => {
-      const names = k.pads.flatMap((p) => (p.soft ? [p.soft, p.hard] : [p.hard])).filter((n) => !seen.has(n) && seen.add(n));
+    // Every built-in sample, grouped by the kit (bank A) or shared bank it comes from.
+    const sources: [title: string, pads: PadDef[]][] = [
+      ...KITS.map((k): [string, PadDef[]] => [k.name, k.pads]),
+      ...(['B', 'C', 'D'] as const).map((b, n): [string, PadDef[]] => [
+        `Bank ${b}`,
+        allPads(KITS[0]).slice((n + 1) * PADS_PER_BANK, (n + 2) * PADS_PER_BANK),
+      ]),
+    ];
+    const groups = sources.map(([title, pads]) => {
+      const names = pads.flatMap((p) => (p.soft ? [p.soft, p.hard] : [p.hard])).filter((n) => !seen.has(n) && seen.add(n));
       return names.length
-        ? `<div class="sw-kit">${escapeHtml(k.name.toUpperCase())}</div>` +
+        ? `<div class="sw-kit">${escapeHtml(title.toUpperCase())}</div>` +
             names
               .map(
                 (n) => `<div class="sw-row${n === current ? ' current' : ''}">
@@ -285,7 +294,7 @@ export function buildKitsPanel(app: HTMLElement, engine: AudioEngine): void {
 
   subscribe((_s, changed: ReadonlySet<Change>) => {
     if (changed.has('kit') || changed.has('edited') || changed.has('userKits')) renderList();
-    if (changed.has('kit') || changed.has('params') || changed.has('pads') || changed.has('selectedPad')) renderPad();
+    if (changed.has('kit') || changed.has('params') || changed.has('pads') || changed.has('selectedPad') || changed.has('bank')) renderPad();
   });
   renderChips();
   renderList();

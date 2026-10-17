@@ -93,6 +93,71 @@ Files used, per built-in kit (all in `public/samples/sonicpi/`; the list comes f
 | 3 | Zome Kick | bd_zome |
 | 4 | Backspin | vinyl_backspin |
 
+### Banks B–D (shared by every kit)
+
+#### Bank B
+
+| Pad | Name | File(s) |
+|---|---|---|
+| B13 | Chime | elec_chime |
+| B14 | Triangle | elec_triangle |
+| B15 | Tom Mid | drum_tom_mid_soft, drum_tom_mid_hard |
+| B16 | Fuzz Tom | elec_fuzz_tom |
+| B09 | Gnu Hat | hat_gnu |
+| B10 | Metal Hat | hat_metal |
+| B11 | Psych Hat | hat_psych |
+| B12 | Star Hat | hat_star |
+| B05 | Mid Snare | elec_mid_snare |
+| B06 | Dub Snare | sn_dub |
+| B07 | Dolf Snare | sn_dolf |
+| B08 | Pop | elec_pop |
+| B01 | Klub Kick | bd_klub |
+| B02 | Pure Kick | bd_pure |
+| B03 | Gas Kick | bd_gas |
+| B04 | Deep Kick | drum_bass_soft, drum_bass_hard |
+
+#### Bank C
+
+| Pad | Name | File(s) |
+|---|---|---|
+| C13 | Ghe | tabla_ghe1 |
+| C14 | Ghe Low | tabla_ghe3 |
+| C15 | Ke | tabla_ke1 |
+| C16 | Na | tabla_na |
+| C09 | Na Open | tabla_na_o |
+| C10 | Re | tabla_re |
+| C11 | Tas | tabla_tas1 |
+| C12 | Te | tabla_te1 |
+| C05 | Ping | elec_ping |
+| C06 | Plip | elec_plip |
+| C07 | Twip | elec_twip |
+| C08 | Beep | elec_beep |
+| C01 | Till | perc_till |
+| C02 | Blup | elec_blup |
+| C03 | Knock | perc_door |
+| C04 | Flip | elec_flip |
+
+#### Bank D
+
+| Pad | Name | File(s) |
+|---|---|---|
+| D13 | Choir | ambi_choir |
+| D14 | Swoosh | ambi_swoosh |
+| D15 | Dark Woosh | ambi_dark_woosh |
+| D16 | Buzz | ambi_soft_buzz |
+| D09 | Glitch 1 | glitch_perc1 |
+| D10 | Glitch 2 | glitch_perc2 |
+| D11 | Glitch 3 | glitch_perc3 |
+| D12 | Robot | glitch_robot1 |
+| D05 | Impact | perc_impact1 |
+| D06 | Whoosh | perc_swoosh |
+| D07 | Rewind | vinyl_rewind |
+| D08 | Crow | misc_crow |
+| D01 | Bass Hit | bass_hit_c |
+| D02 | Voxy Hit | bass_voxy_hit_c |
+| D03 | Bass Drop | bass_drop_c |
+| D04 | DnB Bass | bass_dnb_f |
+
 CC0 does not require attribution. The credit is kept here anyway, as thanks and so the source can be traced.
 
 ## Fonts

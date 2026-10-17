@@ -6,7 +6,7 @@ import { registerSW } from 'virtual:pwa-register';
 import { AudioEngine } from './audio/engine';
 import * as clock from './audio/clock';
 import * as seq from './seq/sequencer';
-import { padNumber } from './audio/kit';
+import { PADS_PER_BANK, padLabel } from './audio/kit';
 import { KITS, factoryKit } from './audio/kits';
 import * as kitControl from './kitControl';
 import { bootKits, kitLabel, saveMasterVolume } from './kitControl';
@@ -45,14 +45,17 @@ function setLast(text: string, inline = text): void {
 
 function padTitle(index: number): string {
   const name = state.kit?.pads[index].name ?? '';
-  return `PAD ${String(padNumber(index)).padStart(2, '0')} · ${name.toUpperCase()}`;
+  return `PAD ${padLabel(index)} · ${name.toUpperCase()}`;
 }
 
 subscribe((s, changed) => {
   if (changed.has('kit') || changed.has('edited')) ui.kitName.textContent = kitLabel(s.kit, s.edited);
-  if (s.kit && (changed.has('kit') || changed.has('pads'))) applyKit(padEls, s.kit.pads);
+  if (s.kit && (changed.has('kit') || changed.has('pads') || changed.has('bank'))) applyKit(padEls, s.kit.pads, s.bank);
   if (changed.has('kit') || changed.has('pads') || changed.has('selectedPad')) ui.selName.textContent = padTitle(s.selectedPad);
+  if (changed.has('bank')) ui.banks.forEach((b, i) => b.setAttribute('aria-pressed', String(i === s.bank)));
 });
+
+ui.banks.forEach((b, i) => b.addEventListener('click', () => kitControl.selectBank(i)));
 
 setLast('LOADING KIT…', 'LOADING…');
 
@@ -68,17 +71,18 @@ window.addEventListener('keydown', unlock, { capture: true });
 attachPadInput(
   padEls,
   {
-    onHit(index, velocity) {
+    onHit(screenIndex, velocity) {
+      const index = state.bank * PADS_PER_BANK + screenIndex;
       engine.play(index, velocity); // audio first
       seq.recordHit(index, velocity);
-      showHit(padEls[index], velocity);
+      showHit(padEls[screenIndex], velocity);
       hasHit = true;
       const name = state.kit?.pads[index].name.toUpperCase() ?? '';
       setLast(`${padTitle(index)} · VEL ${velocity}`, `${name} · VEL ${velocity}`);
       update({ selectedPad: index });
     },
-    onRelease(index) {
-      showRelease(padEls[index]);
+    onRelease(screenIndex) {
+      showRelease(padEls[screenIndex]);
     },
   },
   () => fullLevel,

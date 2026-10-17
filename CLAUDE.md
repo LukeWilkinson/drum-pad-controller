@@ -10,8 +10,9 @@ Read SPEC.md (milestones) and DESIGN.md (tokens, layouts) first. The design canv
 - Node lives at `C:\Program Files\nodejs`. `~/.bashrc` is meant to put it on PATH, but on 2026-10-17 a Bash shell still had no `npm`, so prefix `export PATH="/c/Program Files/nodejs:$PATH" &&` when it is missing.
 
 ## Layout of the code
-- `src/audio/kit.ts`: kit types (PadDef, PadParams, ActiveKit) and helpers (screen order: index 0 = top-left = pad 13).
-- `src/audio/kits.json`: the built-in kits (Sonic Pi CC0). Both `src/audio/kits.ts` and `scripts/fetch-samples.mjs` read it, so adding a kit means editing this one file and then running `npm run fetch-samples`. CREDITS.md tables were generated from it.
+- `src/audio/kit.ts`: kit types (PadDef, PadParams, ActiveKit) and helpers. A kit has 64 pads: index = bank × 16 + screen index (screen index 0 = top-left = pad 13). `padLabel(i)` gives "B13".
+- `src/audio/kits.json`: the built-in kits (Sonic Pi CC0). Each kit defines bank A. The top-level `banks` (B, C, D) are shared by every kit, and a kit can override one with its own `"banks": { "C": [...] }`. `allPads()` in `kits.ts` puts the 64 together. Both `src/audio/kits.ts` and `scripts/fetch-samples.mjs` read this file, so adding a kit or bank sound means editing this one file and then running `npm run fetch-samples`. CREDITS.md tables were generated from it.
+- Bank state: `state.bank` (0–3), changed only by `kitControl.selectBank()`. Pad input gives screen indexes, and `main.ts` adds `bank × 16`. The engine loads the bank on screen first and the other banks in the background. Saved 16-pad user kits get B–D from their base kit when loaded.
 - `src/audio/engine.ts`: per-kit sample loading (shared buffer cache), unlock, play with per-pad volume/pitch/pan/decay, choke groups (hats).
 - `src/state.ts`: tiny store (`state`, `update`, `subscribe`). `src/kitControl.ts`: the only code that changes the active kit (select, edit, swap, save, delete); it also saves prefs. `src/store/db.ts`: IndexedDB wrapper.
 - `src/pads/input.ts`: Pointer Events per pad (multi-touch map) and the keyboard. Audio plays before visuals.
@@ -39,6 +40,7 @@ Read SPEC.md (milestones) and DESIGN.md (tokens, layouts) first. The design canv
 - **M3 Sequencer and looping: in progress** on branch `feat/m3-sequencer`. The approved plan is in HANDOFF.md (6 steps, check in with Luke after each).
   - **Step 1, transport, tempo and metronome: done (2026-10-17).** Checked by script in the browser pane: click gaps of 0.5 s at 120 BPM and 0.4 s at 150 BPM, accent on beat 1, tap tempo, clamp to 40–240, metronome off, stop cancels future voices, scheduled hat choke. Layout checked at all 3 sizes. Commit dbcad22.
   - **Step 2, loops, recording, overdub, undo, quantise and loop slots: done (2026-10-17).** Checked by script: 16ths 0.125 s apart at 120 BPM, swing 66% → 0.165 / 0.085 s, count-in → REC, recorded hits land on the grid and aren't heard twice, DUB/undo steps, REC on a full loop clears it (undoable), queued switch at the bar line, hold-to-clear, Shift+R vs R. Layout checked at all 3 sizes. Commit 4adf35c.
-  - **Step 3, SEQ tab: done (2026-10-17).** Checked by script: cell toggle + undo, step pages, PADS 9–16 rows, bar picker, quantise/swing/count-in controls, loop picker dialog, following the playhead (bar 2 step 5 shown with column 5 outlined). Layout checked at all 3 sizes.
+  - **Step 3, SEQ tab: done (2026-10-17).** Checked by script: cell toggle + undo, step pages, PADS 9–16 rows, bar picker, quantise/swing/count-in controls, loop picker dialog, following the playhead (bar 2 step 5 shown with column 5 outlined). Layout checked at all 3 sizes. Commit 0f005a8.
+  - **Step 4, pad banks B–D: done (2026-10-17).** 44 more Sonic Pi CC0 samples (106 in all, 5.0 MB, all precached). Checked by script: bank buttons, pad names and sounds per bank, keyboard follows the bank, LCD "PAD B13 · CHIME", Kits picker shows the bank, sequenced hits on bank C, a 16-pad saved kit upgrades to 64, SEQ PADS button steps A 1–8 … D 9–16.
   - **Browser pane quirk:** when the pane isn't showing, `requestAnimationFrame` and `<dialog>` close events stall. Front the tab (`tabs_select` + a screenshot) before testing dialogs or the LCD.
-- **Next:** M3 step 4 (pad banks B–D).
+- **Next:** M3 step 5 (Note Repeat).

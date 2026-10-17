@@ -8,15 +8,20 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const OUT = join(ROOT, 'public', 'samples', 'sonicpi');
-const { source, kits } = JSON.parse(readFileSync(join(ROOT, 'src', 'audio', 'kits.json'), 'utf8'));
+const { source, kits, banks } = JSON.parse(readFileSync(join(ROOT, 'src', 'audio', 'kits.json'), 'utf8'));
 
 const FILES = new Set();
-for (const kit of kits) {
-  for (const pad of kit.pads) {
+const addPads = (pads) => {
+  for (const pad of pads) {
     FILES.add(pad.hard);
     if (pad.soft) FILES.add(pad.soft);
   }
+};
+for (const kit of kits) {
+  addPads(kit.pads);
+  for (const pads of Object.values(kit.banks ?? {})) addPads(pads);
 }
+for (const pads of Object.values(banks)) addPads(pads);
 
 mkdirSync(OUT, { recursive: true });
 let got = 0, skipped = 0, failed = 0;

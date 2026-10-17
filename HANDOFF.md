@@ -35,7 +35,7 @@ Milestone 1 (Pads) passed Luke's phone test. Milestone 2 (Kits and presets) is b
 - The pad picker cells on the Kits panel are 40px, slightly under the 44px touch-target rule, so they fit beside the sliders on a 390px-wide phone, as in the design. Hitting a real pad also selects it.
 - On phone portrait, long kit names are cut short in the LCD (e.g. "KIT 01 · STUDIO ACOUSTI…").
 - Shaker, Rim, Clap and Vox FX in Studio Acoustic still use the closest Sonic Pi sample (there is no real clap or vocal). They can be changed with SWAP SAMPLE.
-- Styled but not working yet (`data-todo`; `grep -r data-todo src` lists them): banks B–D (M3), Note Repeat, KEYS/MIX/SETUP tabs, and the FX send knobs (M6).
+- Styled but not working yet (`data-todo`; `grep -r data-todo src` lists them): Note Repeat (M3), KEYS/MIX/SETUP tabs, and the FX send knobs (M6).
 - The desktop artboard extras (step strip, shortcut legend) are not built.
 
 ## M3 (Sequencer and looping): in progress on `feat/m3-sequencer`
@@ -66,9 +66,15 @@ Milestone 1 (Pads) passed Luke's phone test. Milestone 2 (Kits and presets) is b
    - The PADS 9–16 button in the header shows the other 8 pads. Tapping a row name plays that pad.
    - Tapping a cell adds a hit at velocity 100 (the pad plays if stopped) or removes the hits in that 16th. Each tap is one undo step. Cells are tinted by velocity, beat-start cells are lighter, and the playhead column is outlined.
    - Row labels are the kit's full pad names on up to 2 lines, since names differ per kit.
-4. Pad banks B–D (64-pad kits; saved 16-pad kits are upgraded when loaded).
+4. **Pad banks B–D: done (2026-10-17)**
+   - One shared set for all kits: B = extra drums, C = tabla and electro percussion, D = FX and bass hits. Defined in `kits.json` `banks`; a kit can override any bank.
+   - 44 new Sonic Pi CC0 samples were fetched (106 in all, 5.0 MB, all cached for offline). CREDITS.md has the new tables.
+   - Bank buttons A–D work. The keyboard keys play the bank on screen, and the LCD shows e.g. "PAD B13 · CHIME". The Kits pad picker and the rail edit pads in the current bank. SWAP SAMPLE lists the bank samples too.
+   - In the SEQ tab, the PADS button steps through A 1–8, A 9–16, B 1–8 … D 9–16 (phone portrait has no bank buttons on that screen).
+   - The bank on screen loads first, so a kit is playable quickly; the other banks load in the background.
+   - Kits saved before banks existed (16 pads) get banks B–D from their base kit when loaded. Saving writes all 64 pads.
 5. Note Repeat.
 6. Autosave, docs, commit, phone checklist.
 
 ## Next step
-M3 step 4, pad banks B–D. Model tip: Sonnet, high (it touches the kit format everywhere).
+M3 step 5, Note Repeat. Model tip: Sonnet, medium (Opus, high if the timing gets fiddly).
