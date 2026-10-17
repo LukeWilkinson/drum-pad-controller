@@ -2,7 +2,8 @@
 // Every hit creates a fresh AudioBufferSourceNode and starts it immediately (no look-ahead),
 // so the only delay is the device's output latency.
 
-import { PADS, SAMPLE_DIR, SOFT_LAYER_BELOW, allSampleNames } from './kit';
+import { SAMPLE_DIR, SOFT_LAYER_BELOW, sampleNamesOf } from './kit';
+import { PADS } from './kits';
 
 const CHOKE_FADE = 0.01; // seconds; short fade avoids a click when a hat is cut off
 
@@ -40,7 +41,7 @@ export class AudioEngine {
   }
 
   async loadKit(onProgress?: (done: number, total: number) => void): Promise<void> {
-    const names = allSampleNames();
+    const names = sampleNamesOf(PADS);
     let done = 0;
     await Promise.all(
       names.map(async (name) => {

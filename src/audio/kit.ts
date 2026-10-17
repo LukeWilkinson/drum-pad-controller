@@ -1,5 +1,5 @@
-// Default kit (bank A). Samples are CC0 from Sonic Pi — see CREDITS.md.
-// Pad order follows the screen: index 0 is the top-left pad (Crash), index 15 is bottom-right.
+// Kit types and helpers shared by the engine and the UI. The built-in kits live in kits.json / kits.ts.
+// Pad order follows the screen: index 0 is the top-left pad, index 15 is bottom-right.
 // Pad numbers follow the MPC layout: pad 1 is bottom-left, pad 16 is top-right.
 
 export type PadGroup = 'kick' | 'snare' | 'hat' | 'tom' | 'cym' | 'perc' | 'fx';
@@ -17,32 +17,44 @@ export interface PadDef {
   chokedOnly?: boolean;
 }
 
+/** Per-pad sound settings, edited on the Kits screen and the tablet right rail. */
+export interface PadParams {
+  /** Pad volume in dB, PARAM_RANGE.volumeDb. */
+  volumeDb: number;
+  /** Pitch in semitones, PARAM_RANGE.pitch. */
+  pitch: number;
+  /** Stereo pan, -1 (left) to 1 (right). */
+  pan: number;
+  /** How much of the sample plays, 0–1. 1 plays the whole sample. */
+  decay: number;
+}
+
+export type ParamKey = keyof PadParams;
+
+export const PARAM_RANGE: Record<ParamKey, { min: number; max: number; step: number }> = {
+  volumeDb: { min: -24, max: 6, step: 0.5 },
+  pitch: { min: -24, max: 24, step: 1 },
+  pan: { min: -1, max: 1, step: 0.02 },
+  decay: { min: 0.05, max: 1, step: 0.01 },
+};
+
+export const DEFAULT_PARAMS: Readonly<PadParams> = { volumeDb: 0, pitch: 0, pan: 0, decay: 1 };
+
+/** What the engine plays: 16 pads plus their settings. */
+export interface ActiveKit {
+  /** Factory kit id, or the user kit id when a saved kit is loaded. */
+  id: string;
+  name: string;
+  /** The factory kit this one started from. */
+  baseKitId: string;
+  /** True when this is a saved user kit. */
+  user: boolean;
+  pads: PadDef[];
+  params: PadParams[];
+}
+
 export const SOFT_LAYER_BELOW = 72;
 export const SAMPLE_DIR = `${import.meta.env.BASE_URL}samples/sonicpi/`;
-
-export const KIT_NAME = 'KIT 01 · SONIC PI CC0';
-
-export const PADS: PadDef[] = [
-  { name: 'Crash', group: 'cym', soft: 'drum_splash_soft', hard: 'drum_splash_hard' },
-  { name: 'Ride', group: 'cym', soft: 'drum_cymbal_soft', hard: 'drum_cymbal_hard' },
-  { name: 'Tom Hi', group: 'tom', soft: 'drum_tom_hi_soft', hard: 'drum_tom_hi_hard' },
-  { name: 'Tom Lo', group: 'tom', soft: 'drum_tom_lo_soft', hard: 'drum_tom_lo_hard' },
-
-  { name: 'Open Hat', group: 'hat', hard: 'drum_cymbal_open', choke: 'hat', chokedOnly: true },
-  { name: 'Closed Hat', group: 'hat', hard: 'drum_cymbal_closed', choke: 'hat' },
-  { name: 'Pedal Hat', group: 'hat', hard: 'drum_cymbal_pedal', choke: 'hat' },
-  { name: 'Shaker', group: 'perc', hard: 'perc_swash' },
-
-  { name: 'Snare', group: 'snare', soft: 'drum_snare_soft', hard: 'drum_snare_hard' },
-  { name: 'Rim', group: 'snare', hard: 'elec_wood' },
-  { name: 'Clap', group: 'snare', hard: 'perc_snap2' },
-  { name: 'Snap', group: 'perc', hard: 'perc_snap' },
-
-  { name: 'Kick', group: 'kick', hard: 'drum_heavy_kick' },
-  { name: 'Kick 2', group: 'kick', hard: 'bd_haus' },
-  { name: '808', group: 'kick', hard: 'bd_808' },
-  { name: 'Vox FX', group: 'fx', hard: 'elec_blip' },
-];
 
 export const GROUP_COLOUR: Record<PadGroup, string> = {
   kick: '#FF5A4E',
@@ -59,9 +71,10 @@ export function padNumber(index: number): number {
   return (3 - Math.floor(index / 4)) * 4 + (index % 4) + 1;
 }
 
-export function allSampleNames(): string[] {
+/** Every sample a set of pads needs (hard and soft layers). */
+export function sampleNamesOf(pads: PadDef[]): string[] {
   const names = new Set<string>();
-  for (const p of PADS) {
+  for (const p of pads) {
     names.add(p.hard);
     if (p.soft) names.add(p.soft);
   }

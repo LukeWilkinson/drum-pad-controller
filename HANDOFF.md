@@ -8,7 +8,7 @@ Milestone 1 (Pads) is built and committed.
 - **PWA:** manifest, icons and an offline service worker.
 - **LAN:** HTTPS dev server reachable on the local network.
 
-## Luke's phone test checklist
+## Luke's phone test checklist (passed 2026-10-17, Luke reported all good)
 1. Run `npm run dev`, then open `https://192.168.x.x:5173` on the phone. The IP may change; use the **Network** line the terminal prints.
 2. Accept the certificate warning (Advanced → Proceed). Allow Node.js through Windows Firewall if asked.
 3. Tap a pad to start audio. Check:
@@ -29,8 +29,10 @@ Report anything off (with a screenshot if it's layout-related).
 - The desktop artboard extras (step strip, shortcut legend) are not built. The tablet layout is used for desktop widths.
 
 ## Next step
-Milestone 2: kits and presets. Planned work:
-- several kits and kit switching
-- per-pad volume, pitch, pan and decay
-- saving and loading presets in IndexedDB
-- read `Kits.dc.html` from the canvas first
+Milestone 2: kits and presets is in progress. The plan is at `C:\Users\LukeW\.claude\plans\polymorphic-dancing-dongarra.md`.
+- [x] Step 1 (kit data and fetch script): 4 kits (Studio Acoustic, Neon Electronic, Dusty Hip-hop, Lo-fi Tape) in `src/audio/kits.json`. 62 samples. CREDITS.md updated.
+- [ ] Step 2: engine (lazy per-kit loading, volume/pitch/pan/decay)
+- [ ] Step 3: IndexedDB storage and state store
+- [ ] Step 4: Kits panel and view switching
+- [ ] Step 5: swap sample and live right-rail knobs
+- [ ] Step 6: verify, docs, commit

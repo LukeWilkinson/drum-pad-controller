@@ -1,7 +1,7 @@
 // Builds the pad screen DOM once. CSS (app.css) rearranges it for each layout.
 // Controls marked data-todo are styled per the design but wired up in later milestones.
 
-import { KIT_NAME } from '../audio/kit';
+import { KIT_NAME } from '../audio/kits';
 
 const ICON = {
   chevron: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',

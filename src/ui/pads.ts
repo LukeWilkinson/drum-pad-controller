@@ -1,7 +1,8 @@
 // Pad elements and their hit visuals. Visual updates only touch a class and one CSS
 // variable per pad, so a hit never re-renders the grid.
 
-import { GROUP_COLOUR, PADS, padNumber } from '../audio/kit';
+import { GROUP_COLOUR, padNumber } from '../audio/kit';
+import { PADS } from '../audio/kits';
 
 const HOT_ABOVE = 75; // text turns dark above this velocity
 

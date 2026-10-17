@@ -9,7 +9,8 @@ Read SPEC.md (milestones) and DESIGN.md (tokens, layouts) first. The design canv
 - Node lives at `C:\Program Files\nodejs`. `~/.bashrc` puts it on PATH for every Bash shell (added 2026-10-17), so there's no need to prefix `export PATH=...`.
 
 ## Layout of the code
-- `src/audio/kit.ts`: the 16-pad kit definition (screen order: index 0 = top-left = pad 13). The sample list must match `scripts/fetch-samples.mjs`.
+- `src/audio/kit.ts`: kit types (PadDef, PadParams, ActiveKit) and helpers (screen order: index 0 = top-left = pad 13).
+- `src/audio/kits.json`: the built-in kits (Sonic Pi CC0). Both `src/audio/kits.ts` and `scripts/fetch-samples.mjs` read it, so adding a kit means editing this one file and then running `npm run fetch-samples`. CREDITS.md tables were generated from it.
 - `src/audio/engine.ts`: loading, unlock, play, choke groups (hats).
 - `src/pads/input.ts`: Pointer Events per pad (multi-touch map) and the keyboard. Audio plays before visuals.
 - `src/ui/screen.ts`: builds the whole DOM once. `src/ui/pads.ts` handles the pad visuals (class + `--v` CSS var only).
@@ -25,4 +26,6 @@ Read SPEC.md (milestones) and DESIGN.md (tokens, layouts) first. The design canv
 ## Status
 - **M1 Pads: done (2026-10-17).** Checked in the browser pane at 390×844, 844×390 and 1280×800. Velocity, 4-pointer multi-touch, keyboard and Full Level were checked by simulated events.
   - **Phone test passed (2026-10-17):** Luke reported the HANDOFF.md checklist all good on the real phone.
-- **Next:** M2 Kits and presets (planning in plan mode first).
+- **M2 Kits and presets: in progress.** Plan: `C:\Users\LukeW\.claude\plans\polymorphic-dancing-dongarra.md` (6 steps).
+  - Step 1 done (2026-10-17): 4 kits in `kits.json`, 62 samples (2.7 MB) fetched, CREDITS.md updated. `kits.ts` still exports temporary `PADS`/`KIT_NAME` for the M1 code, to be removed in steps 2 and 4.
+- **Next:** M2 step 2, the engine (per-kit lazy loading; per-pad volume, pitch, pan and decay).

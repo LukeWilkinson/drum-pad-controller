@@ -1,0 +1,114 @@
+{
+  "source": {
+    "name": "Sonic Pi sample library",
+    "tag": "v4.5.1",
+    "url": "https://raw.githubusercontent.com/sonic-pi-net/sonic-pi/v4.5.1/etc/samples",
+    "licence": "CC0 1.0"
+  },
+  "kits": [
+    {
+      "id": "studio-acoustic",
+      "name": "Studio Acoustic",
+      "category": "Acoustic",
+      "pads": [
+        { "name": "Crash", "group": "cym", "soft": "drum_splash_soft", "hard": "drum_splash_hard" },
+        { "name": "Ride", "group": "cym", "soft": "drum_cymbal_soft", "hard": "drum_cymbal_hard" },
+        { "name": "Tom Hi", "group": "tom", "soft": "drum_tom_hi_soft", "hard": "drum_tom_hi_hard" },
+        { "name": "Tom Lo", "group": "tom", "soft": "drum_tom_lo_soft", "hard": "drum_tom_lo_hard" },
+
+        { "name": "Open Hat", "group": "hat", "hard": "drum_cymbal_open", "choke": "hat", "chokedOnly": true },
+        { "name": "Closed Hat", "group": "hat", "hard": "drum_cymbal_closed", "choke": "hat" },
+        { "name": "Pedal Hat", "group": "hat", "hard": "drum_cymbal_pedal", "choke": "hat" },
+        { "name": "Shaker", "group": "perc", "hard": "perc_swash" },
+
+        { "name": "Snare", "group": "snare", "soft": "drum_snare_soft", "hard": "drum_snare_hard" },
+        { "name": "Rim", "group": "snare", "hard": "elec_wood" },
+        { "name": "Clap", "group": "snare", "hard": "perc_snap2" },
+        { "name": "Snap", "group": "perc", "hard": "perc_snap" },
+
+        { "name": "Kick", "group": "kick", "hard": "drum_heavy_kick" },
+        { "name": "Kick 2", "group": "kick", "hard": "bd_haus" },
+        { "name": "808", "group": "kick", "hard": "bd_808" },
+        { "name": "Vox FX", "group": "fx", "hard": "elec_blip" }
+      ]
+    },
+    {
+      "id": "neon-electronic",
+      "name": "Neon Electronic",
+      "category": "Electronic",
+      "pads": [
+        { "name": "Crash", "group": "cym", "hard": "elec_cymbal" },
+        { "name": "Bell", "group": "cym", "hard": "elec_bell" },
+        { "name": "Fuzz Tom", "group": "tom", "hard": "elec_fuzz_tom" },
+        { "name": "Bong", "group": "tom", "hard": "elec_bong" },
+
+        { "name": "Open Hat", "group": "hat", "hard": "hat_zild", "choke": "hat", "chokedOnly": true },
+        { "name": "Closed Hat", "group": "hat", "hard": "hat_tap", "choke": "hat" },
+        { "name": "Zap Hat", "group": "hat", "hard": "hat_zap", "choke": "hat" },
+        { "name": "Noise", "group": "perc", "hard": "hat_noiz" },
+
+        { "name": "Snare", "group": "snare", "hard": "elec_snare" },
+        { "name": "Hi Snare", "group": "snare", "hard": "elec_hi_snare" },
+        { "name": "Filt Snare", "group": "snare", "hard": "elec_filt_snare" },
+        { "name": "Tick", "group": "perc", "hard": "elec_tick" },
+
+        { "name": "Kick", "group": "kick", "hard": "elec_hollow_kick" },
+        { "name": "Soft Kick", "group": "kick", "hard": "elec_soft_kick" },
+        { "name": "Tek Kick", "group": "kick", "hard": "bd_tek" },
+        { "name": "Blip", "group": "fx", "hard": "elec_blip2" }
+      ]
+    },
+    {
+      "id": "dusty-hiphop",
+      "name": "Dusty Hip-hop",
+      "category": "Hip-hop",
+      "pads": [
+        { "name": "Crash", "group": "cym", "soft": "drum_splash_soft", "hard": "drum_splash_hard" },
+        { "name": "Ride", "group": "cym", "hard": "drum_cymbal_soft" },
+        { "name": "Tom Mid", "group": "tom", "soft": "drum_tom_mid_soft", "hard": "drum_tom_mid_hard" },
+        { "name": "Tom Lo", "group": "tom", "soft": "drum_tom_lo_soft", "hard": "drum_tom_lo_hard" },
+
+        { "name": "Open Hat", "group": "hat", "hard": "hat_cats", "choke": "hat", "chokedOnly": true },
+        { "name": "Closed Hat", "group": "hat", "hard": "hat_cab", "choke": "hat" },
+        { "name": "Gump Hat", "group": "hat", "hard": "hat_gump", "choke": "hat" },
+        { "name": "Cowbell", "group": "perc", "hard": "drum_cowbell" },
+
+        { "name": "Snare", "group": "snare", "hard": "sn_dub" },
+        { "name": "Snare 2", "group": "snare", "hard": "sn_dolf" },
+        { "name": "Clap", "group": "snare", "hard": "perc_snap2" },
+        { "name": "Snap", "group": "perc", "hard": "perc_snap" },
+
+        { "name": "Boom Kick", "group": "kick", "hard": "bd_boom" },
+        { "name": "Fat Kick", "group": "kick", "hard": "bd_fat" },
+        { "name": "808", "group": "kick", "hard": "bd_808" },
+        { "name": "Scratch", "group": "fx", "hard": "vinyl_scratch" }
+      ]
+    },
+    {
+      "id": "lofi-tape",
+      "name": "Lo-fi Tape",
+      "category": "Lo-fi",
+      "pads": [
+        { "name": "Crash", "group": "cym", "hard": "drum_splash_soft" },
+        { "name": "Ride", "group": "cym", "hard": "drum_cymbal_soft" },
+        { "name": "Tabla Hi", "group": "tom", "hard": "tabla_tun1" },
+        { "name": "Tabla Lo", "group": "tom", "hard": "tabla_ghe4" },
+
+        { "name": "Open Hat", "group": "hat", "hard": "hat_mess", "choke": "hat", "chokedOnly": true },
+        { "name": "Closed Hat", "group": "hat", "hard": "hat_bdu", "choke": "hat" },
+        { "name": "Soft Hat", "group": "hat", "hard": "hat_hier", "choke": "hat" },
+        { "name": "Bell", "group": "perc", "hard": "perc_bell" },
+
+        { "name": "Snare", "group": "snare", "hard": "sn_generic" },
+        { "name": "Lo Snare", "group": "snare", "hard": "elec_lo_snare" },
+        { "name": "Zome Snare", "group": "snare", "hard": "sn_zome" },
+        { "name": "Knock", "group": "perc", "hard": "perc_door" },
+
+        { "name": "Kick", "group": "kick", "hard": "bd_ada" },
+        { "name": "Sone Kick", "group": "kick", "hard": "bd_sone" },
+        { "name": "Zome Kick", "group": "kick", "hard": "bd_zome" },
+        { "name": "Backspin", "group": "fx", "hard": "vinyl_backspin" }
+      ]
+    }
+  ]
+}
