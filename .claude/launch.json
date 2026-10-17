@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "C:\\Program Files\\nodejs\\node.exe",
+      "runtimeArgs": ["node_modules/vite/bin/vite.js"],
+      "port": 5173,
+      "url": "https://localhost:5173"
+    },
+    {
+      "name": "dev-http",
+      "runtimeExecutable": "C:\\Program Files\\nodejs\\node.exe",
+      "runtimeArgs": ["node_modules/vite/bin/vite.js", "--port", "5180"],
+      "env": { "HTTP": "1" },
+      "port": 5180
+    }
+  ]
+}

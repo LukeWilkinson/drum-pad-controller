@@ -1,0 +1,42 @@
+/* Design tokens from DESIGN.md — keep in sync with the design canvas. */
+:root {
+  /* surfaces */
+  --body: #2B2A28;        /* app background (chassis) */
+  --raised: #3C3B38;      /* buttons, cards */
+  --well: #1F1E1C;        /* recessed areas: pad well, sliders, sections */
+  --drawer: #232220;      /* tab bar / drawer */
+  --edge: #191816;        /* borders, deep shadow */
+  --pad-rubber: #45433F;  /* pad base under the colour tint */
+
+  /* text */
+  --text: #D6D1C6;
+  --text-strong: #ECE7DC;
+  --text-muted: #A8A399;
+
+  /* LCD */
+  --lcd-bg: #241A0C;
+  --lcd-text: #FFB547;
+  --lcd-dim: #C98A2E;
+
+  /* accents */
+  --amber: #FFB547;       /* selected / active state, primary button */
+  --rec: #E8432E;
+  --play: #8FD16A;        /* also "switch on" */
+  --switch-off: #55534E;
+
+  /* pad groups */
+  --kick: #FF5A4E;
+  --snare: #FF9F1C;
+  --hat: #FFD447;
+  --tom: #5FD38A;
+  --cym: #5BC0EB;
+  --perc: #B794F6;
+  --fx: #F472B6;
+
+  /* type */
+  --font-ui: 'Archivo Narrow', 'Arial Narrow', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* hardware key look */
+  --key-shadow: inset 0 -3px 0 rgba(0, 0, 0, .35);
+}
