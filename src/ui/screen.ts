@@ -61,6 +61,12 @@ export interface ScreenRefs {
   lastInline: HTMLElement;
   fullLevel: HTMLButtonElement;
   rec: HTMLButtonElement;
+  dub: HTMLButtonElement;
+  undo: HTMLButtonElement;
+  loops: HTMLButtonElement[];
+  lcdQ: HTMLElement;
+  lcdSwing: HTMLElement;
+  recState: HTMLElement;
   play: HTMLButtonElement;
   metro: HTMLButtonElement;
   bpmDown: HTMLButtonElement;
@@ -86,22 +92,22 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
           </div>
         </div>
         <div class="lcd-status">
-          <span class="lcd-bar">BAR 01.1</span><span>Q 1/16</span><span>SWING 50%</span>
+          <span class="lcd-bar">BAR 01.1</span><span class="lcd-q">Q 1/16</span><span class="lcd-swing">SWING 50%</span>
           <span class="rec-state">READY</span><span class="last-inline"></span>
         </div>
         <div class="lcd-last" aria-live="polite"></div>
       </section>
 
       <div class="transport">
-        <button class="key" aria-label="Undo" data-todo="M3">${ICON.undo}</button>
+        <button class="key undo" aria-label="Undo">${ICON.undo}</button>
         <button class="key metro" aria-label="Metronome" aria-pressed="true">${ICON.metro}</button>
         <button class="rec" aria-label="Record" aria-pressed="false"><span></span></button>
         <button class="key play" aria-label="Play" aria-pressed="false">${ICON.play}${ICON.stop}</button>
-        <button class="key dub" aria-label="Overdub" data-todo="M3">DUB</button>
+        <button class="key dub" aria-label="Overdub" aria-pressed="false">DUB</button>
       </div>
 
       <div class="loops" role="group" aria-label="Loop slots">
-        ${[1, 2, 3, 4].map((n) => `<button class="loop" aria-label="Loop ${n}, empty" data-todo="M3">+ EMPTY</button>`).join('')}
+        ${[0, 1, 2, 3].map((i) => `<button class="loop" data-slot="${i}"><span class="loop-text">+ EMPTY</span><span class="loop-bar" aria-hidden="true"></span></button>`).join('')}
       </div>
 
       <div class="bankrow">
@@ -154,6 +160,12 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
     lastInline: q('.last-inline'),
     fullLevel: q('.full-level'),
     rec: q('.rec'),
+    dub: q('.key.dub'),
+    undo: q('.key.undo'),
+    loops: [...root.querySelectorAll<HTMLButtonElement>('.loop')],
+    lcdQ: q('.lcd-q'),
+    lcdSwing: q('.lcd-swing'),
+    recState: q('.rec-state'),
     play: q('.key.play'),
     metro: q('.key.metro'),
     bpmDown: q('.bpm-down'),

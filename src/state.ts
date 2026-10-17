@@ -3,6 +3,7 @@
 // (pad settings, swapped samples) are announced with the extra change names 'params' and 'pads'.
 
 import type { ActiveKit, UserKit } from './audio/kit';
+import { PATTERN_COUNT, emptyPattern, type Pattern, type Quant } from './seq/pattern';
 
 export type View = 'pads' | 'kits';
 
@@ -21,7 +22,22 @@ export interface AppState {
   bpm: number;
   /** Metronome on/off. It only sounds while the transport plays. */
   click: boolean;
+  /** Loops 1–4 (changed only by src/seq/sequencer.ts; edits in place are announced as 'patterns'). */
+  patterns: Pattern[];
+  /** Index of the loop playing / being edited. */
+  pattern: number;
+  /** Loop waiting to take over at the next bar line, or null. */
+  queued: number | null;
+  recMode: RecMode;
+  quant: Quant;
+  /** Swing percent, SWING_MIN–SWING_MAX. */
+  swing: number;
+  /** One bar of clicks before recording starts from stop. */
+  countIn: boolean;
 }
+
+/** 'count' = count-in bar before recording starts. */
+export type RecMode = 'off' | 'count' | 'rec' | 'dub';
 
 export type Change = keyof AppState | 'params' | 'pads';
 type Listener = (s: Readonly<AppState>, changed: ReadonlySet<Change>) => void;
@@ -35,6 +51,13 @@ export const state: AppState = {
   playing: false,
   bpm: 120,
   click: true,
+  patterns: Array.from({ length: PATTERN_COUNT }, () => emptyPattern()),
+  pattern: 0,
+  queued: null,
+  recMode: 'off',
+  quant: '1/16',
+  swing: 50,
+  countIn: true,
 };
 
 const listeners = new Set<Listener>();

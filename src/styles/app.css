@@ -111,15 +111,38 @@ svg { display: block; }
 .rec span { width: 35%; height: 35%; border-radius: 50%; background: var(--rec); }
 .rec[aria-pressed="true"] { background: var(--rec); box-shadow: 0 0 24px rgba(232, 67, 46, .7); }
 .rec[aria-pressed="true"] span { background: var(--lcd-bg); }
+.rec.counting { animation: blink .5s steps(2, jump-none) infinite; }
+.key.dub[aria-pressed="true"] { background: var(--amber); color: var(--body); }
+.key.undo:active { color: var(--amber); }
+.lcd-status .rec-state.live { color: var(--rec); font-weight: 600; }
 
 /* ---------- Loop slots ---------- */
 
 .loops { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
 .loop {
+  position: relative; display: flex; align-items: center;
   height: 44px; border-radius: 6px; padding: 0 8px; text-align: left;
   border: 1.5px dashed var(--switch-off); background: none; color: var(--text-muted);
   font-size: 12px; font-weight: 700; letter-spacing: .05em; white-space: nowrap; overflow: hidden;
 }
+.loop.full { border-style: solid; border-color: var(--raised); background: var(--raised); color: var(--text); box-shadow: var(--key-shadow); }
+.loop.current { border-color: var(--amber); color: var(--text-strong); }
+.loop.current:not(.full) { color: var(--amber); }
+.loop.recording { border-color: var(--rec); }
+.loop.queued { border-style: solid; border-color: var(--amber); animation: blink 1s steps(2, jump-none) infinite; }
+.loop-bar {
+  display: none; position: absolute; left: 6px; right: 6px; bottom: 4px; height: 3px;
+  border-radius: 2px; background: var(--well); overflow: hidden;
+}
+.loop.full .loop-bar, .loop.current .loop-bar { display: block; }
+.loop-bar::after {
+  content: ''; position: absolute; inset: 0; background: var(--amber);
+  transform: scaleX(var(--p, 0)); transform-origin: left;
+}
+.loop.recording .loop-bar::after { background: var(--rec); }
+
+@keyframes blink { 50% { opacity: .45; } }
+@media (prefers-reduced-motion: reduce) { .loop.queued, .rec.counting { animation: none; } }
 
 /* ---------- Banks + toggles ---------- */
 

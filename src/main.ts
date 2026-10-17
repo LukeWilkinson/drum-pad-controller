@@ -4,6 +4,7 @@ import './styles/kits.css';
 import { registerSW } from 'virtual:pwa-register';
 import { AudioEngine } from './audio/engine';
 import * as clock from './audio/clock';
+import * as seq from './seq/sequencer';
 import { padNumber } from './audio/kit';
 import { KITS, factoryKit } from './audio/kits';
 import * as kitControl from './kitControl';
@@ -23,6 +24,7 @@ const ui = buildScreen(document.getElementById('app')!);
 const padEls = buildPads(ui.padwell);
 const engine = new AudioEngine();
 clock.initClock(engine);
+seq.initSequencer(engine);
 initTransport(ui);
 applyKit(padEls, KITS[0].pads); // colours straight away; replaced if a different kit is restored
 buildKitsPanel(ui.app, engine);
@@ -65,6 +67,7 @@ attachPadInput(
   {
     onHit(index, velocity) {
       engine.play(index, velocity); // audio first
+      seq.recordHit(index, velocity);
       showHit(padEls[index], velocity);
       hasHit = true;
       const name = state.kit?.pads[index].name.toUpperCase() ?? '';
@@ -81,11 +84,6 @@ attachPadInput(
 ui.fullLevel.addEventListener('click', () => {
   fullLevel = !fullLevel;
   ui.fullLevel.setAttribute('aria-pressed', String(fullLevel));
-});
-
-// REC only toggles its look until recording arrives in milestone 3.
-ui.rec.addEventListener('click', () => {
-  ui.rec.setAttribute('aria-pressed', String(ui.rec.getAttribute('aria-pressed') !== 'true'));
 });
 
 ui.master.addEventListener('input', () => engine.setMasterVolume(Number(ui.master.value) / 100));
@@ -113,4 +111,4 @@ bootKits(engine, (done, total) => setLast(`LOADING KIT ${done}/${total}`, `LOADI
 registerSW({ immediate: true });
 
 // Dev-only handle for checking the engine and store from the browser console.
-if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, state, KITS, factoryKit, ...kitControl } });
+if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, seq, state, KITS, factoryKit, ...kitControl } });

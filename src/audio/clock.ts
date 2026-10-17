@@ -4,11 +4,11 @@
 
 import { Context, getTransport, setContext } from 'tone';
 import type { AudioEngine } from './engine';
+import { BEATS_PER_BAR, PPQ } from '../seq/pattern';
 import { state, update } from '../state';
 
 export const BPM_MIN = 40;
 export const BPM_MAX = 240;
-export const BEATS_PER_BAR = 4;
 const LOOK_AHEAD = 0.1; // seconds Tone schedules ahead; covers main-thread hiccups
 const TAP_RESET = 2; // seconds without a tap start a new tap-tempo count
 const TAP_INTERVALS = 4; // how many recent intervals tap tempo averages
@@ -34,9 +34,10 @@ export function initClock(e: AudioEngine): void {
   );
 }
 
-export function start(): void {
+/** Starts the transport now, or at context time `at` (used after a count-in). */
+export function start(at?: number): void {
   if (state.playing) return;
-  transport.start();
+  transport.start(at);
   update({ playing: true });
 }
 
@@ -79,24 +80,30 @@ export function toggleClick(): void {
   update({ click: !state.click });
 }
 
-export interface Position {
-  /** 1-based bar. */
-  bar: number;
-  /** 1-based beat in the bar. */
-  beat: number;
-  /** 16th note within the beat, 0–3. */
-  sixteenth: number;
+/**
+ * The context time of what the listener hears now: currentTime minus the device's output latency.
+ * A pad hit lines up with this (Luke plays along to what he hears).
+ */
+export function heardTime(): number {
+  const ctx = engine.ctx;
+  return ctx.currentTime - (ctx.outputLatency || ctx.baseLatency || 0);
 }
 
-/** Where the listener is now: Transport time minus the device's output latency. */
-export function position(): Position {
-  const ctx = engine.ctx;
-  const heard = ctx.currentTime - (ctx.outputLatency || ctx.baseLatency || 0);
-  const ticks = state.playing ? Math.max(0, transport.getTicksAtTime(heard)) : 0;
-  const sixteenths = Math.floor(ticks / (transport.PPQ / 4));
-  return {
-    bar: Math.floor(sixteenths / (BEATS_PER_BAR * 4)) + 1,
-    beat: (Math.floor(sixteenths / 4) % BEATS_PER_BAR) + 1,
-    sixteenth: sixteenths % 4,
-  };
+/** Transport position at context time `time`, in pattern ticks (PPQ per beat, fractional). 0 when stopped. */
+export function ticksAt(time: number): number {
+  if (!state.playing) return 0;
+  return Math.max(0, transport.getTicksAtTime(time)) * (PPQ / transport.PPQ);
+}
+
+export function secondsPerTick(): number {
+  return 60 / transport.bpm.value / PPQ;
+}
+
+/** Calls `fn` ahead of time for every 16th while playing, with its context time and 16th count since start. */
+export function onSixteenth(fn: (time: number, step: number) => void): void {
+  transport.scheduleRepeat(
+    (time) => fn(time, Math.round(transport.getTicksAtTime(time) / (transport.PPQ / 4))),
+    '16n',
+    0,
+  );
 }

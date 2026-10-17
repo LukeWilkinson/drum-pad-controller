@@ -59,7 +59,7 @@ export function attachPadInput(
 
   const keysDown = new Set<string>();
   window.addEventListener('keydown', (e) => {
-    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return; // Shift+R is record
     if (e.target instanceof HTMLInputElement || document.querySelector('dialog[open]')) return;
     const key = e.key.toLowerCase();
     const index = KEY_TO_INDEX.get(key);
