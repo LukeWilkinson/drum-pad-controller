@@ -77,7 +77,11 @@ export function tapTempo(): void {
 }
 
 export function toggleClick(): void {
-  update({ click: !state.click });
+  setClick(!state.click);
+}
+
+export function setClick(click: boolean): void {
+  if (click !== state.click) update({ click });
 }
 
 /**

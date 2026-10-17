@@ -1,7 +1,7 @@
 # Handoff
 
 ## Where things stand (2026-10-17)
-Milestone 1 (Pads) passed Luke's phone test. Milestone 2 (Kits and presets) is built, committed, and passed Luke's phone test (2026-10-17).
+Milestone 1 (Pads) and Milestone 2 (Kits and presets) passed Luke's phone test (2026-10-17). Milestone 3 (Sequencer and looping) is built and committed on `feat/m3-sequencer` and is waiting for Luke's phone test (checklist below).
 
 ### M1 (Pads)
 - 4×4 grid in all three layouts, multi-touch, position velocity, keyboard and Full Level.
@@ -38,7 +38,7 @@ Milestone 1 (Pads) passed Luke's phone test. Milestone 2 (Kits and presets) is b
 - Styled but not working yet (`data-todo`; `grep -r data-todo src` lists them): KEYS/MIX/SETUP tabs, and the FX send knobs (M6).
 - The desktop artboard extras (step strip, shortcut legend) are not built.
 
-## M3 (Sequencer and looping): in progress on `feat/m3-sequencer`
+## M3 (Sequencer and looping): built on `feat/m3-sequencer`, waiting for the phone test
 
 ### Decisions from Luke (2026-10-17)
 - **Loops are patterns.** Loop slots 1–4 on the pad screen are the same loops as in the SEQ tab (called LOOP 1–4 everywhere). One plays at a time; tapping another slot while playing switches at the next bar line.
@@ -49,7 +49,7 @@ Milestone 1 (Pads) passed Luke's phone test. Milestone 2 (Kits and presets) is b
 - **Claude's choices:** quantise is applied when a hit is recorded (OFF keeps the raw timing). Swing is applied at playback to the off-beat 16ths. Events are `{ tick, pad 0–63, vel }` at 96 ticks per beat. REC on a full slot replaces it; DUB adds to it. Count-in is one bar.
 
 ### Steps (Luke checks in after each; one commit per step)
-Commits: step 1 dbcad22, step 2 4adf35c, step 3 0f005a8, step 4 588ef6e, step 5 5562f80.
+Commits: step 1 dbcad22, step 2 4adf35c, step 3 0f005a8, step 4 588ef6e, step 5 5562f80, step 6 is the final M3 commit.
 1. **Transport, tempo and metronome: done (2026-10-17)**
    - Play/Stop (Space), metronome on/off (M, accent on beat 1)
    - BPM −/+ (hold to repeat, 40–240), tap tempo (tap the BPM number or press T)
@@ -61,7 +61,7 @@ Commits: step 1 dbcad22, step 2 4adf35c, step 3 0f005a8, step 4 588ef6e, step 5 
    - The LCD shows the loop bar, Q, SWING and READY / PLAY / COUNT / REC / DUB.
    - New loops are 2 bars; quantise defaults to 1/16 and swing to 50%. Their controls (and count-in on/off) arrive with the SEQ tab in step 3.
    - Loops are called **LOOP 1–4** everywhere, not "PATTERN A–D" as in the design, so they don't get mixed up with pad banks A–D.
-   - Loops are not saved yet (step 6).
+   - Loops autosave from step 6 on.
 3. **SEQ tab: done (2026-10-17)**
    - Built from `Seq.dc.html`: loop picker (LOOP n ▾ opens a list; while playing, the choice is queued), loop length, REC / OVERDUB / COUNT-IN / CLICK, QNT, and SWING (drag up or down, arrow keys, double-tap resets to 50%).
    - STEPS 1–8 / 9–16, plus a BAR n/N button when the loop is longer than 1 bar. While playing, the grid follows the playhead until a page or bar is picked by hand.
@@ -80,7 +80,33 @@ Commits: step 1 dbcad22, step 2 4adf35c, step 3 0f005a8, step 4 588ef6e, step 5 
    - Playing: repeats lock to the beat grid, with swing. Stopped: the grid starts at the press. A grid point closer to the press than a third of the rate is skipped, so there is no flam.
    - Sliding the finger up or down the pad changes the velocity of later repeats, and the pad fill follows the finger. Letting go cancels any repeat not yet heard.
    - With REC or DUB on, every repeat is recorded at its exact time.
-6. Autosave, docs, commit, phone checklist.
+6. **Autosave: done (2026-10-17)**
+   - The song autosaves to IndexedDB as one `song` pref: loops 1–4, the current loop, BPM, click, quantise, swing, count-in and Note Repeat. A save happens half a second after the last change, and straight away when the app is hidden (phone home button, app switch).
+   - It is restored at boot, before the kit finishes loading. Saved values that are missing or out of range keep their defaults, so an old or damaged save can't break the app.
+   - Undo history is not saved: after a reload there is nothing to undo.
+   - Checked by script: a full round trip (loop 4, 8 bars, OFF, swing 55, 143.2 BPM on the Tone transport and the LCD, click off, NOTE RPT on), the save on hide, and a damaged save (bad bars, pad 99, junk events, bad BPM / quantise / loop index).
+
+## Luke's phone test checklist for M3
+1. Run `npm run dev` and open the **Network** address on the phone, as before. Tap a pad to start audio.
+2. Transport and tempo:
+   - [ ] Play / Stop. The metronome is steady and beat 1 is accented. Turn it off and on.
+   - [ ] BPM − / + (hold to repeat) and tap tempo on the BPM number. The loop and click follow straight away.
+3. Recording (Claude can't hear the browser pane, so timing by ear is the main check):
+   - [ ] REC from stop: one bar of count-in, then recording. Played hits land in time on the next pass and aren't heard twice.
+   - [ ] DUB adds hits without clearing. Undo removes the last take.
+   - [ ] Try quantise 1/8, 1/16 and OFF, and swing at about 60%. Does the groove feel right?
+4. Loops:
+   - [ ] Record something in LOOP 1 and LOOP 2. While playing, tap the other slot: it switches on the next bar line.
+   - [ ] Hold a full slot to clear it (undo brings it back).
+5. SEQ tab:
+   - [ ] Tap cells to add and remove hits. The grid follows the playhead. PADS steps through the banks.
+   - [ ] Are the 40px grid cells easy enough to hit on the phone (see Known gaps)?
+6. Banks and Note Repeat:
+   - [ ] Banks B–D play their own sounds, and a loop can use pads from several banks.
+   - [ ] NOTE RPT: holding a pad repeats in time while playing. Sliding the finger changes the loudness. Letting go stops at once.
+7. Autosave:
+   - [ ] Make a loop, change BPM and swing, then close the tab (or swipe the app away) and reopen. Everything comes back.
+8. `npm run lan` → install → airplane mode: the sequencer and the new bank sounds still work.
 
 ## Next step
-M3 step 6: autosave the song (loops, BPM, swing, quantise, click, count-in, current loop, Note Repeat) to IndexedDB and restore it on reload. Then the phone checklist, docs and the final M3 commit. Model tip: Sonnet, medium.
+Luke phone-tests M3 with the checklist above. If it passes, merge `feat/m3-sequencer` into `main` and start M4 (MIDI: Web MIDI out, MIDI input mapping, MIDI learn) in plan mode in a fresh chat.

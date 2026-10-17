@@ -28,6 +28,7 @@ const padEls = buildPads(ui.padwell);
 const engine = new AudioEngine();
 clock.initClock(engine);
 seq.initSequencer(engine);
+seq.loadSong(); // the saved loops and tempo; independent of the kit loading below
 repeat.initRepeat(engine);
 initTransport(ui);
 applyKit(padEls, KITS[0].pads); // colours straight away; replaced if a different kit is restored

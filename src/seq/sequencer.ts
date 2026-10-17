@@ -7,13 +7,20 @@
 
 import * as clock from '../audio/clock';
 import type { AudioEngine } from '../audio/engine';
-import { state, subscribe, update, type RecMode } from '../state';
+import { PAD_COUNT } from '../audio/kit';
+import { state, subscribe, update, type Change, type RecMode } from '../state';
+import { getPref, setPref } from '../store/db';
 import {
+  BAR_TICKS,
   BEATS_PER_BAR,
+  LENGTHS,
+  PATTERN_COUNT,
+  QUANTS,
   STEP_TICKS,
   SWING_MAX,
   SWING_MIN,
   clonePattern,
+  emptyPattern,
   insertEvent,
   lengthTicks,
   quantise,
@@ -61,6 +68,12 @@ export function initSequencer(e: AudioEngine): void {
     if (s.queued !== null) Object.assign(patch, { pattern: s.queued, queued: null });
     if (Object.keys(patch).length) update(patch);
   });
+  subscribe((_, changed) => {
+    if (songLoaded && SONG_FIELDS.some((f) => changed.has(f))) saveSoon();
+  });
+  // A phone may close the app without warning once it is hidden, so a pending save goes now.
+  document.addEventListener('visibilitychange', () => document.hidden && flushSave());
+  window.addEventListener('pagehide', flushSave);
 }
 
 function current(): Pattern {
@@ -261,6 +274,87 @@ export function setSwing(swing: number): void {
 
 export function toggleCountIn(): void {
   update({ countIn: !state.countIn });
+}
+
+// ---------- Saving ----------
+// The song (loops and their settings) autosaves to IndexedDB as one 'song' pref, a short while
+// after any change. Undo history is not saved.
+
+const SONG_KEY = 'song';
+const SAVE_DELAY = 500; // ms; a burst of edits (or a recorded take) becomes one write
+const SONG_FIELDS = ['patterns', 'pattern', 'bpm', 'click', 'quant', 'swing', 'countIn', 'noteRepeat'] as const satisfies readonly Change[];
+
+interface Song {
+  patterns: Pattern[];
+  pattern: number;
+  bpm: number;
+  click: boolean;
+  quant: Quant;
+  swing: number;
+  countIn: boolean;
+  noteRepeat: boolean;
+}
+
+/** False until loadSong() has run, so the defaults never overwrite a saved song. */
+let songLoaded = false;
+let saveTimer = 0;
+
+const warn = (err: unknown) => console.warn('[store]', err);
+
+function saveSoon(): void {
+  clearTimeout(saveTimer);
+  saveTimer = window.setTimeout(flushSave, SAVE_DELAY);
+}
+
+function flushSave(): void {
+  if (!saveTimer) return;
+  clearTimeout(saveTimer);
+  saveTimer = 0;
+  const { patterns, pattern, bpm, click, quant, swing, countIn, noteRepeat } = state;
+  const song: Song = { patterns, pattern, bpm, click, quant, swing, countIn, noteRepeat };
+  setPref(SONG_KEY, song).catch(warn); // IndexedDB copies the data straight away
+}
+
+/** Restores the saved song, if any. Call once at boot, while stopped. Bad or missing fields keep their defaults. */
+export async function loadSong(): Promise<void> {
+  try {
+    const song = await getPref<Partial<Song>>(SONG_KEY).catch(warn);
+    if (!song || typeof song !== 'object') return;
+
+    const patch: Partial<typeof state> = {};
+    if (Array.isArray(song.patterns)) {
+      patch.patterns = Array.from({ length: PATTERN_COUNT }, (_, i) => cleanPattern(song.patterns![i]));
+      history.length = 0;
+    }
+    if (Number.isInteger(song.pattern) && song.pattern! >= 0 && song.pattern! < PATTERN_COUNT) patch.pattern = song.pattern;
+    if (QUANTS.includes(song.quant as Quant)) patch.quant = song.quant;
+    if (typeof song.swing === 'number') patch.swing = Math.min(SWING_MAX, Math.max(SWING_MIN, Math.round(song.swing)));
+    if (typeof song.countIn === 'boolean') patch.countIn = song.countIn;
+    // Nothing is held at boot, so Note Repeat can be set directly (repeat.ts imports this file).
+    if (typeof song.noteRepeat === 'boolean') patch.noteRepeat = song.noteRepeat;
+    if (Object.keys(patch).length) update(patch);
+    if (typeof song.bpm === 'number' && Number.isFinite(song.bpm)) clock.setBpm(song.bpm);
+    if (typeof song.click === 'boolean') clock.setClick(song.click);
+  } finally {
+    songLoaded = true;
+  }
+}
+
+/** A saved loop, with anything out of range dropped. */
+function cleanPattern(raw: unknown): Pattern {
+  const r = raw as Partial<Pattern> | undefined;
+  const bars = LENGTHS.includes(r?.bars as Bars) ? (r!.bars as Bars) : undefined;
+  if (!bars || !Array.isArray(r!.events)) return emptyPattern();
+  const maxTick = LENGTHS[LENGTHS.length - 1] * BAR_TICKS;
+  const events: SeqEvent[] = [];
+  for (const e of r!.events as Partial<SeqEvent>[]) {
+    const { tick, pad, vel } = e ?? {};
+    if (!Number.isInteger(tick) || tick! < 0 || tick! >= maxTick) continue;
+    if (!Number.isInteger(pad) || pad! < 0 || pad! >= PAD_COUNT) continue;
+    if (!Number.isInteger(vel) || vel! < 1 || vel! > 127) continue;
+    insertEvent(events, { tick: tick!, pad: pad!, vel: vel! });
+  }
+  return { bars, events };
 }
 
 /** LCD label for the recording / transport state. */
