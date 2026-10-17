@@ -12,6 +12,7 @@
     "make-icons": "pwa-assets-generator --preset minimal-2023 public/icons/icon.svg"
   },
   "devDependencies": {
+    "@types/node": "^26.6.5",
     "@vite-pwa/assets-generator": "^2.0.0",
     "@vitejs/plugin-basic-ssl": "^2.3.0",
     "typescript": "^7.0.2",
