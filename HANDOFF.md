@@ -1,7 +1,7 @@
 # Handoff
 
 ## Where things stand (2026-10-17)
-Milestone 1 (Pads) passed Luke's phone test. Milestone 2 (Kits and presets) is built and committed. M2 has not been tested on the phone yet.
+Milestone 1 (Pads) passed Luke's phone test. Milestone 2 (Kits and presets) is built, committed, and passed Luke's phone test (2026-10-17).
 
 ### M1 (Pads)
 - 4×4 grid in all three layouts, multi-touch, position velocity, keyboard and Full Level.
@@ -19,7 +19,7 @@ Milestone 1 (Pads) passed Luke's phone test. Milestone 2 (Kits and presets) is b
 - **Saved kits** are stored in IndexedDB. The last kit and the master volume are restored on reload. Switching away from an edited kit asks first.
 - **Tablet right rail:** Volume, Pitch, Pan and Decay knobs are live. Drag up or down, use the arrow keys (Shift for bigger steps), or double-tap to reset.
 
-## Luke's phone test checklist for M2
+## Luke's phone test checklist for M2 (passed 2026-10-17)
 1. Run `npm run dev` and open the **Network** address on the phone, as before.
 2. Tap a pad to start audio, then open **KITS**. Check:
    - [ ] Each of the 4 kits loads and plays. Do the sample choices sound right? (Claude can't hear the browser pane.)
@@ -38,4 +38,4 @@ Milestone 1 (Pads) passed Luke's phone test. Milestone 2 (Kits and presets) is b
 - The desktop artboard extras (step strip, shortcut legend) are not built.
 
 ## Next step
-Luke tests M2 on the phone (checklist above). After that comes **Milestone 3: sequencer and looping** (tempo, metronome, record into loops, overdub, undo, quantise, step view). Read `Seq.dc.html` from the canvas first. Tone.js comes in here and must share `engine.ctx`.
+Start **Milestone 3: sequencer and looping** (tempo, metronome, record into loops, overdub, undo, quantise, step view). Read `Seq.dc.html` from the canvas first. Tone.js comes in here and must share `engine.ctx`.

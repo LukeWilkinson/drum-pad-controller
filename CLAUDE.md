@@ -29,7 +29,7 @@ Read SPEC.md (milestones) and DESIGN.md (tokens, layouts) first. The design canv
 - **M1 Pads: done (2026-10-17).** Checked in the browser pane at 390×844, 844×390 and 1280×800. Velocity, 4-pointer multi-touch, keyboard and Full Level were checked by simulated events.
   - **Phone test passed (2026-10-17):** Luke reported the HANDOFF.md checklist all good on the real phone.
 - **M2 Kits and presets: done (2026-10-17).** 4 kits, Kits panel, IndexedDB user kits, swap sample, and live tablet rail knobs. Checked in the browser pane by script at all 3 sizes.
-  - **Not yet checked on a real phone:** how the kits, pitch, pan and decay sound; swap preview; save → reload; offline with all kits.
+  - **Phone test passed (2026-10-17):** Luke reported the M2 HANDOFF.md checklist all good on the real phone.
   - Dev builds expose `window.__drum` (engine, state, KITS, every `kitControl` function) for console checks.
   - If the browser pane serves stale code after an edit, restart the `dev-http` server (Vite's watcher missed an edit once on Windows).
-- **Next:** Luke tests M2 on the phone (HANDOFF.md checklist), then M3 Sequencer and looping.
+- **Next:** M3 Sequencer and looping. Ask Luke about plan mode first; read `Seq.dc.html` from the canvas.
