@@ -15,6 +15,14 @@ const REPEAT_EVERY = 70; // ms between repeats
 /** Store fields the transport controls and LCD status line show. */
 const SHOWN: Change[] = ['playing', 'bpm', 'click', 'recMode', 'quant', 'swing'];
 
+type Playhead = ReturnType<typeof seq.playhead>;
+const frameFns: ((head: Playhead) => void)[] = [];
+
+/** Calls `fn` every animation frame while playing, and once on stop (with null). */
+export function onFrame(fn: (head: Playhead) => void): void {
+  frameFns.push(fn);
+}
+
 export function initTransport(ui: ScreenRefs): void {
   ui.play.addEventListener('click', clock.togglePlay);
   ui.rec.addEventListener('click', seq.toggleRec);
@@ -73,6 +81,7 @@ export function initTransport(ui: ScreenRefs): void {
     const text = `BAR ${String(Math.floor(t / BAR_TICKS) + 1).padStart(2, '0')}.${(Math.floor(t / PPQ) % BEATS_PER_BAR) + 1}`;
     if (text !== shown) ui.lcdBar.textContent = shown = text;
     showLoopProgress(head?.progress ?? 0);
+    for (const fn of frameFns) fn(head);
   }
   function tick(): void {
     showPosition();

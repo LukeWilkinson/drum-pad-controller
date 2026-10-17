@@ -1,6 +1,7 @@
 import './styles/tokens.css';
 import './styles/app.css';
 import './styles/kits.css';
+import './styles/seq.css';
 import { registerSW } from 'virtual:pwa-register';
 import { AudioEngine } from './audio/engine';
 import * as clock from './audio/clock';
@@ -14,6 +15,7 @@ import { state, subscribe, update } from './state';
 import { applyKit, buildPads, showHit, showRelease } from './ui/pads';
 import { buildKitsPanel } from './ui/kits';
 import { buildScreen } from './ui/screen';
+import { buildSeqPanel } from './ui/seq';
 import { initRail } from './ui/rail';
 import { initTransport } from './ui/transport';
 import { initViews } from './ui/views';
@@ -28,6 +30,7 @@ seq.initSequencer(engine);
 initTransport(ui);
 applyKit(padEls, KITS[0].pads); // colours straight away; replaced if a different kit is restored
 buildKitsPanel(ui.app, engine);
+buildSeqPanel(ui.app, engine);
 initViews(ui);
 initRail(ui.app.querySelector('.rail-right')!, engine);
 

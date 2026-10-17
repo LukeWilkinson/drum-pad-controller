@@ -5,7 +5,7 @@
 import type { ActiveKit, UserKit } from './audio/kit';
 import { PATTERN_COUNT, emptyPattern, type Pattern, type Quant } from './seq/pattern';
 
-export type View = 'pads' | 'kits';
+export type View = 'pads' | 'kits' | 'seq';
 
 export interface AppState {
   /** The kit playing now (null until the first kit has loaded). */

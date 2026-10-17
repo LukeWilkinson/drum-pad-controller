@@ -15,7 +15,7 @@ Read SPEC.md (milestones) and DESIGN.md (tokens, layouts) first. The design canv
 - `src/audio/engine.ts`: per-kit sample loading (shared buffer cache), unlock, play with per-pad volume/pitch/pan/decay, choke groups (hats).
 - `src/state.ts`: tiny store (`state`, `update`, `subscribe`). `src/kitControl.ts`: the only code that changes the active kit (select, edit, swap, save, delete); it also saves prefs. `src/store/db.ts`: IndexedDB wrapper.
 - `src/pads/input.ts`: Pointer Events per pad (multi-touch map) and the keyboard. Audio plays before visuals.
-- `src/ui/kits.ts`: Kits panel. `src/ui/views.ts`: PADS/KITS switching. `src/ui/dialog.ts`: shared modal. `src/ui/format.ts`: pad-setting readouts.
+- `src/ui/kits.ts`: Kits panel. `src/ui/seq.ts` + `src/styles/seq.css`: SEQ panel (step grid; it follows the playhead via `onFrame()` from `transport.ts`). `src/ui/views.ts`: PADS/KITS/SEQ switching. `src/ui/dialog.ts`: shared modal. `src/ui/format.ts`: pad-setting readouts.
 - `src/seq/pattern.ts`: pattern types and pure helpers (96 ticks per beat, quantise, swing, `BEATS_PER_BAR`). It imports nothing, so `clock.ts` and `state.ts` can import it without a cycle.
 - `src/seq/sequencer.ts`: the only code that changes loops, `recMode`, quantise and swing. It schedules each 16th, records hits (`recordHit`), handles REC/DUB/count-in, keeps one shared undo stack (50 steps) and queues loop switches to the next bar line.
 - `src/ui/transport.ts`: Play/Stop, REC, DUB, Undo, metronome, BPM −/+ (hold to repeat), tap tempo, the LCD status line (rAF while playing), and the shortcuts: Space, Shift+R (plain R is a pad), O, Ctrl+Z, M, T. `src/ui/loops.ts`: loop slots (tap to select or queue, hold to clear).
@@ -38,6 +38,7 @@ Read SPEC.md (milestones) and DESIGN.md (tokens, layouts) first. The design canv
   - If the browser pane serves stale code after an edit, restart the `dev-http` server (Vite's watcher missed an edit once on Windows).
 - **M3 Sequencer and looping: in progress** on branch `feat/m3-sequencer`. The approved plan is in HANDOFF.md (6 steps, check in with Luke after each).
   - **Step 1, transport, tempo and metronome: done (2026-10-17).** Checked by script in the browser pane: click gaps of 0.5 s at 120 BPM and 0.4 s at 150 BPM, accent on beat 1, tap tempo, clamp to 40–240, metronome off, stop cancels future voices, scheduled hat choke. Layout checked at all 3 sizes. Commit dbcad22.
-  - **Step 2, loops, recording, overdub, undo, quantise and loop slots: done (2026-10-17).** Checked by script: 16ths 0.125 s apart at 120 BPM, swing 66% → 0.165 / 0.085 s, count-in → REC, recorded hits land on the grid and aren't heard twice, DUB/undo steps, REC on a full loop clears it (undoable), queued switch at the bar line, hold-to-clear, Shift+R vs R. Layout checked at all 3 sizes.
+  - **Step 2, loops, recording, overdub, undo, quantise and loop slots: done (2026-10-17).** Checked by script: 16ths 0.125 s apart at 120 BPM, swing 66% → 0.165 / 0.085 s, count-in → REC, recorded hits land on the grid and aren't heard twice, DUB/undo steps, REC on a full loop clears it (undoable), queued switch at the bar line, hold-to-clear, Shift+R vs R. Layout checked at all 3 sizes. Commit 4adf35c.
+  - **Step 3, SEQ tab: done (2026-10-17).** Checked by script: cell toggle + undo, step pages, PADS 9–16 rows, bar picker, quantise/swing/count-in controls, loop picker dialog, following the playhead (bar 2 step 5 shown with column 5 outlined). Layout checked at all 3 sizes.
   - **Browser pane quirk:** when the pane isn't showing, `requestAnimationFrame` and `<dialog>` close events stall. Front the tab (`tabs_select` + a screenshot) before testing dialogs or the LCD.
-- **Next:** M3 step 3 (SEQ tab, step grid).
+- **Next:** M3 step 4 (pad banks B–D).

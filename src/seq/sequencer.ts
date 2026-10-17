@@ -26,6 +26,7 @@ import {
 } from './pattern';
 
 const UNDO_LEVELS = 50;
+export const STEP_VELOCITY = 100; // hits added on the step grid
 const STEPS_PER_BAR = BEATS_PER_BAR * 4;
 const COUNT_IN_LEAD = 0.05; // seconds between pressing REC and the first count-in click
 
@@ -210,6 +211,19 @@ export function clearPattern(index = state.pattern): void {
   if (!p.events.length) return;
   pushHistory(index);
   p.events = [];
+  update({}, 'patterns');
+}
+
+/**
+ * Step grid tap: if `pad` has any hit inside the 16th starting at `tick`, removes them all;
+ * otherwise adds one there at velocity `vel`. One undo step either way.
+ */
+export function toggleStep(pad: number, tick: number, vel = STEP_VELOCITY): void {
+  const p = current();
+  const inCell = (e: SeqEvent) => e.pad === pad && e.tick >= tick && e.tick < tick + STEP_TICKS;
+  pushHistory();
+  if (p.events.some(inCell)) p.events = p.events.filter((e) => !inCell(e));
+  else insertEvent(p.events, { tick, pad, vel });
   update({}, 'patterns');
 }
 

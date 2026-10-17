@@ -18,7 +18,7 @@ const ICON = {
 const TABS: [cls: string, icon: string, short: string, long: string, todo: string][] = [
   ['pads', ICON.pads, 'PADS', 'PADS', ''],
   ['kits', ICON.kits, 'KITS', 'KITS', ''],
-  ['seq', ICON.seq, 'SEQ', 'SEQUENCER', 'M3'],
+  ['seq', ICON.seq, 'SEQ', 'SEQUENCER', ''],
   ['keys', ICON.keys, 'KEYS', 'KEYS', 'M5'],
   ['mix', ICON.mix, 'MIX/FX', 'MIX / FX', 'M6'],
   ['setup', ICON.setup, 'SETUP', 'SETUP', 'M4'],

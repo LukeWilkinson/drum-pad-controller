@@ -1,0 +1,116 @@
+/* SEQ panel (Seq.dc.html). Loaded after app.css and kits.css.
+   .app[data-view="seq"] hides the pad grid and shows the panel, placed like the Kits panel:
+   - phone portrait: the panel takes everything above the tab bar (controls hidden)
+   - phone landscape and tablet: the panel takes the pad grid's place; the rails stay */
+
+.seq-panel {
+  grid-area: pads;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding-bottom: 12px;
+}
+.app[data-view="seq"] .seq-panel { display: flex; }
+.app[data-view="seq"] .padwell { display: none; }
+
+.app[data-view="seq"] { grid-template-areas: "pads" "pads" "tabs"; }
+.app[data-view="seq"] .controls { display: none; }
+
+@media (orientation: landscape) and (max-height: 540px) {
+  .app[data-view="seq"] { grid-template-areas: "controls pads" ". pads" "tabs pads"; }
+  .app[data-view="seq"] .controls { display: flex; }
+  .seq-panel { width: var(--pad-size); padding-bottom: 0; }
+}
+
+@media (min-width: 1024px) and (min-height: 600px) {
+  .app[data-view="seq"] { grid-template-areas: "tabs tabs status" "controls pads right"; }
+  .app[data-view="seq"] .controls { display: flex; }
+  .seq-panel { width: var(--pad-size); padding-bottom: 0; }
+}
+
+/* ---------- Header ---------- */
+
+.sq-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.sq-head h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: .04em; color: var(--text-strong); }
+.sq-head-btns { display: flex; gap: 6px; }
+.sq-btn {
+  height: 44px; padding: 0 10px; border-radius: 6px; white-space: nowrap;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 700; letter-spacing: .05em;
+}
+.sq-rows { background: var(--raised); color: var(--text); box-shadow: var(--key-shadow); }
+.sq-loop { background: var(--lcd-bg); color: var(--lcd-text); font-family: var(--font-mono); font-size: 13px; font-weight: 600; }
+.sq-loop-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.sq-loop-list .kp-btn { width: 100%; text-align: left; }
+
+/* ---------- Segmented rows ---------- */
+
+.sq-len { display: flex; flex-direction: column; gap: 6px; }
+.sq-len-top { display: flex; justify-content: space-between; font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--text-muted); }
+.sq-pos { font-family: var(--font-mono); color: var(--amber); letter-spacing: 0; }
+.sq-seg, .sq-toggles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.sq-seg button, .sq-toggles button, .sq-pages button {
+  height: 44px; border-radius: 6px; background: var(--raised); color: var(--text);
+  font-size: 13px; font-weight: 700; letter-spacing: .05em; box-shadow: var(--key-shadow);
+}
+.sq-toggles button { height: 48px; font-size: 12px; letter-spacing: .06em; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.sq-seg button[aria-pressed="true"], .sq-toggles button[aria-pressed="true"], .sq-pages button[aria-pressed="true"] {
+  background: var(--amber); color: var(--body);
+}
+.sq-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--rec); }
+.sq-toggles .sq-rec[aria-pressed="true"] { background: var(--rec); color: var(--edge); }
+.sq-rec[aria-pressed="true"] .sq-dot { background: var(--edge); }
+.sq-rec.counting { animation: blink .5s steps(2, jump-none) infinite; }
+
+/* ---------- Quantise + swing ---------- */
+
+.sq-qrow { display: flex; align-items: center; gap: 8px; }
+.sq-label { width: 34px; flex: none; font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--text-muted); }
+.sq-quant {
+  flex: 1; min-width: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px;
+  padding: 3px; border-radius: 6px; background: var(--well);
+}
+.sq-quant button {
+  height: 38px; border-radius: 4px; background: none; color: var(--text);
+  font-family: var(--font-mono); font-size: 12px;
+}
+.sq-quant button[aria-pressed="true"] { background: var(--amber); color: var(--body); }
+.sq-swing {
+  flex: none; height: 44px; min-width: 52px; padding: 0 8px; border-radius: 6px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1;
+  background: var(--raised); color: var(--text); box-shadow: var(--key-shadow);
+  font-size: 12px; font-weight: 700; cursor: ns-resize; touch-action: none;
+}
+.sq-swing-label { font-size: 10px; color: var(--text-muted); }
+
+/* ---------- Pages ---------- */
+
+.sq-pages { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+.sq-pages.with-bar { grid-template-columns: repeat(2, minmax(0, 1fr)) auto; }
+.sq-pages button { height: 44px; font-family: var(--font-mono); font-size: 12px; font-weight: 400; letter-spacing: 0; }
+.sq-pages .sq-bar { padding: 0 12px; color: var(--amber); }
+.sq-pages .sq-bar[hidden] { display: none; }
+
+/* ---------- Step grid ---------- */
+
+.sq-grid { display: flex; flex-direction: column; gap: 4px; flex: none; padding: 8px; border-radius: 10px; background: var(--well); }
+.sq-row { display: flex; align-items: center; gap: 4px; }
+.sq-name {
+  width: 46px; flex: none; height: 40px; padding: 0; background: none; color: var(--text);
+  display: flex; align-items: center; gap: 4px; text-align: left;
+  font-size: 10px; font-weight: 700; letter-spacing: .02em; line-height: 1.05;
+}
+.sq-strip { width: 4px; height: 20px; flex: none; border-radius: 2px; background: var(--c); }
+.sq-name-text { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; }
+.sq-cell {
+  flex: 1; min-width: 0; height: 40px; padding: 0; border-radius: 4px;
+  background: var(--raised); border: 2px solid transparent;
+}
+.sq-cell.beat { background: color-mix(in srgb, var(--raised) 85%, var(--text-strong)); }
+.sq-cell[aria-pressed="true"] { background: color-mix(in srgb, var(--c) calc(var(--a, 1) * 100%), var(--raised)); }
+.sq-cell.playhead { border-color: var(--text-strong); }

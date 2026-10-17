@@ -31,10 +31,11 @@ Milestone 1 (Pads) passed Luke's phone test. Milestone 2 (Kits and presets) is b
 3. `npm run lan` → install → airplane mode: all 4 kits still play.
 
 ## Known gaps / choices
+- The SEQ grid cells are 40px tall (the design has 36px) and about 33px wide on a 390px phone, so they are under the 44px rule. Eight steps across leave no more room.
 - The pad picker cells on the Kits panel are 40px, slightly under the 44px touch-target rule, so they fit beside the sliders on a 390px-wide phone, as in the design. Hitting a real pad also selects it.
 - On phone portrait, long kit names are cut short in the LCD (e.g. "KIT 01 · STUDIO ACOUSTI…").
 - Shaker, Rim, Clap and Vox FX in Studio Acoustic still use the closest Sonic Pi sample (there is no real clap or vocal). They can be changed with SWAP SAMPLE.
-- Styled but not working yet (`data-todo`; `grep -r data-todo src` lists them): banks B–D (M3), Note Repeat, SEQ/KEYS/MIX/SETUP tabs, and the FX send knobs (M6).
+- Styled but not working yet (`data-todo`; `grep -r data-todo src` lists them): banks B–D (M3), Note Repeat, KEYS/MIX/SETUP tabs, and the FX send knobs (M6).
 - The desktop artboard extras (step strip, shortcut legend) are not built.
 
 ## M3 (Sequencer and looping): in progress on `feat/m3-sequencer`
@@ -59,10 +60,15 @@ Milestone 1 (Pads) passed Luke's phone test. Milestone 2 (Kits and presets) is b
    - New loops are 2 bars; quantise defaults to 1/16 and swing to 50%. Their controls (and count-in on/off) arrive with the SEQ tab in step 3.
    - Loops are called **LOOP 1–4** everywhere, not "PATTERN A–D" as in the design, so they don't get mixed up with pad banks A–D.
    - Loops are not saved yet (step 6).
-3. SEQ tab: the step grid from `Seq.dc.html`.
+3. **SEQ tab: done (2026-10-17)**
+   - Built from `Seq.dc.html`: loop picker (LOOP n ▾ opens a list; while playing, the choice is queued), loop length, REC / OVERDUB / COUNT-IN / CLICK, QNT, and SWING (drag up or down, arrow keys, double-tap resets to 50%).
+   - STEPS 1–8 / 9–16, plus a BAR n/N button when the loop is longer than 1 bar. While playing, the grid follows the playhead until a page or bar is picked by hand.
+   - The PADS 9–16 button in the header shows the other 8 pads. Tapping a row name plays that pad.
+   - Tapping a cell adds a hit at velocity 100 (the pad plays if stopped) or removes the hits in that 16th. Each tap is one undo step. Cells are tinted by velocity, beat-start cells are lighter, and the playhead column is outlined.
+   - Row labels are the kit's full pad names on up to 2 lines, since names differ per kit.
 4. Pad banks B–D (64-pad kits; saved 16-pad kits are upgraded when loaded).
 5. Note Repeat.
 6. Autosave, docs, commit, phone checklist.
 
 ## Next step
-M3 step 3, the SEQ tab. Model tip: Sonnet, medium (UI built from a clear design).
+M3 step 4, pad banks B–D. Model tip: Sonnet, high (it touches the kit format everywhere).
