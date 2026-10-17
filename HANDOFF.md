@@ -35,7 +35,7 @@ Milestone 1 (Pads) passed Luke's phone test. Milestone 2 (Kits and presets) is b
 - The pad picker cells on the Kits panel are 40px, slightly under the 44px touch-target rule, so they fit beside the sliders on a 390px-wide phone, as in the design. Hitting a real pad also selects it.
 - On phone portrait, long kit names are cut short in the LCD (e.g. "KIT 01 · STUDIO ACOUSTI…").
 - Shaker, Rim, Clap and Vox FX in Studio Acoustic still use the closest Sonic Pi sample (there is no real clap or vocal). They can be changed with SWAP SAMPLE.
-- Styled but not working yet (`data-todo`; `grep -r data-todo src` lists them): Note Repeat (M3), KEYS/MIX/SETUP tabs, and the FX send knobs (M6).
+- Styled but not working yet (`data-todo`; `grep -r data-todo src` lists them): KEYS/MIX/SETUP tabs, and the FX send knobs (M6).
 - The desktop artboard extras (step strip, shortcut legend) are not built.
 
 ## M3 (Sequencer and looping): in progress on `feat/m3-sequencer`
@@ -73,8 +73,12 @@ Milestone 1 (Pads) passed Luke's phone test. Milestone 2 (Kits and presets) is b
    - In the SEQ tab, the PADS button steps through A 1–8, A 9–16, B 1–8 … D 9–16 (phone portrait has no bank buttons on that screen).
    - The bank on screen loads first, so a kit is playable quickly; the other banks load in the background.
    - Kits saved before banks existed (16 pads) get banks B–D from their base kit when loaded. Saving writes all 64 pads.
-5. Note Repeat.
+5. **Note Repeat: done (2026-10-17)**
+   - Toggle NOTE RPT on the bank row. While it's on, a held pad (touch, mouse or key) retriggers at the quantise rate (1/16 when quantise is OFF).
+   - Playing: repeats lock to the beat grid, with swing. Stopped: the grid starts at the press. A grid point closer to the press than a third of the rate is skipped, so there is no flam.
+   - Sliding the finger up or down the pad changes the velocity of later repeats, and the pad fill follows the finger. Letting go cancels any repeat not yet heard.
+   - With REC or DUB on, every repeat is recorded at its exact time.
 6. Autosave, docs, commit, phone checklist.
 
 ## Next step
-M3 step 5, Note Repeat. Model tip: Sonnet, medium (Opus, high if the timing gets fiddly).
+M3 step 6: autosave the song (loops, BPM, swing, quantise, click, count-in, current loop, Note Repeat) to IndexedDB and restore it on reload. Then the phone checklist, docs and the final M3 commit. Model tip: Sonnet, medium.

@@ -60,6 +60,7 @@ export interface ScreenRefs {
   lastLine: HTMLElement;
   lastInline: HTMLElement;
   fullLevel: HTMLButtonElement;
+  noteRepeat: HTMLButtonElement;
   banks: HTMLButtonElement[];
   rec: HTMLButtonElement;
   dub: HTMLButtonElement;
@@ -116,7 +117,7 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
           ${['A', 'B', 'C', 'D'].map((b) => `<button class="bank" aria-label="Pad bank ${b}" aria-pressed="${b === 'A'}">${b}</button>`).join('')}
         </div>
         <div class="toggles">
-          <button class="toggle" aria-pressed="false" data-todo="M3"><span class="lbl-short">NOTE RPT</span><span class="lbl-long">NOTE REPEAT</span></button>
+          <button class="toggle note-repeat" aria-pressed="false"><span class="lbl-short">NOTE RPT</span><span class="lbl-long">NOTE REPEAT</span></button>
           <button class="toggle full-level" aria-pressed="false"><span class="lbl-short">FULL LVL</span><span class="lbl-long">FULL LEVEL</span></button>
         </div>
       </div>
@@ -160,6 +161,7 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
     lastLine: q('.lcd-last'),
     lastInline: q('.last-inline'),
     fullLevel: q('.full-level'),
+    noteRepeat: q('.note-repeat'),
     banks: [...root.querySelectorAll<HTMLButtonElement>('.bank')],
     rec: q('.rec'),
     dub: q('.key.dub'),

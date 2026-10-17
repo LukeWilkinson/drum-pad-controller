@@ -6,6 +6,7 @@ import { registerSW } from 'virtual:pwa-register';
 import { AudioEngine } from './audio/engine';
 import * as clock from './audio/clock';
 import * as seq from './seq/sequencer';
+import * as repeat from './seq/repeat';
 import { PADS_PER_BANK, padLabel } from './audio/kit';
 import { KITS, factoryKit } from './audio/kits';
 import * as kitControl from './kitControl';
@@ -27,6 +28,7 @@ const padEls = buildPads(ui.padwell);
 const engine = new AudioEngine();
 clock.initClock(engine);
 seq.initSequencer(engine);
+repeat.initRepeat(engine);
 initTransport(ui);
 applyKit(padEls, KITS[0].pads); // colours straight away; replaced if a different kit is restored
 buildKitsPanel(ui.app, engine);
@@ -35,6 +37,8 @@ initViews(ui);
 initRail(ui.app.querySelector('.rail-right')!, engine);
 
 let fullLevel = false;
+/** Pad index each screen pad was pressed as (bank × 16 + screen index). */
+const heldPad: number[] = [];
 let kitReady = false;
 let hasHit = false;
 
@@ -73,8 +77,10 @@ attachPadInput(
   {
     onHit(screenIndex, velocity) {
       const index = state.bank * PADS_PER_BANK + screenIndex;
+      heldPad[screenIndex] = index; // a bank switch mid-hold still releases the right pad
       engine.play(index, velocity); // audio first
       seq.recordHit(index, velocity);
+      repeat.press(index, velocity);
       showHit(padEls[screenIndex], velocity);
       hasHit = true;
       const name = state.kit?.pads[index].name.toUpperCase() ?? '';
@@ -82,11 +88,22 @@ attachPadInput(
       update({ selectedPad: index });
     },
     onRelease(screenIndex) {
+      repeat.release(heldPad[screenIndex]);
       showRelease(padEls[screenIndex]);
+    },
+    onMove(screenIndex, velocity) {
+      if (!state.noteRepeat) return;
+      repeat.move(heldPad[screenIndex], velocity);
+      showHit(padEls[screenIndex], velocity); // the fill follows the finger
     },
   },
   () => fullLevel,
 );
+
+ui.noteRepeat.addEventListener('click', repeat.toggleNoteRepeat);
+subscribe((s, changed) => {
+  if (changed.has('noteRepeat')) ui.noteRepeat.setAttribute('aria-pressed', String(s.noteRepeat));
+});
 
 ui.fullLevel.addEventListener('click', () => {
   fullLevel = !fullLevel;
@@ -118,4 +135,4 @@ bootKits(engine, (done, total) => setLast(`LOADING KIT ${done}/${total}`, `LOADI
 registerSW({ immediate: true });
 
 // Dev-only handle for checking the engine and store from the browser console.
-if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, seq, state, KITS, factoryKit, ...kitControl } });
+if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, seq, repeat, state, KITS, factoryKit, ...kitControl } });

@@ -5,6 +5,8 @@ export interface PadInputHandlers {
   /** Screen index (0–15). Called synchronously inside the input event — play audio first, draw second. */
   onHit(index: number, velocity: number): void;
   onRelease(index: number): void;
+  /** A finger or mouse moved while holding a pad: the velocity at its new position. */
+  onMove(index: number, velocity: number): void;
 }
 
 /** Top row to bottom row, matching screen order (index 0 = top-left). */
@@ -45,6 +47,10 @@ export function attachPadInput(
       if (prev !== undefined) release(prev);
       pointerPad.set(e.pointerId, index);
       press(index, velocityFromPosition(e.clientY, el.getBoundingClientRect()));
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (pointerPad.get(e.pointerId) !== index) return;
+      handlers.onMove(index, isFullLevel() ? 127 : velocityFromPosition(e.clientY, el.getBoundingClientRect()));
     });
     const end = (e: PointerEvent) => {
       if (pointerPad.get(e.pointerId) !== index) return;

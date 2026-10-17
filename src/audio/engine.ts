@@ -114,10 +114,19 @@ export class AudioEngine {
     this.hit(index, velocity, 0);
   }
 
-  /** Plays pad `index` at context time `when` (sequenced hits). Cancelled by cancelScheduled(). */
-  playAt(index: number, velocity: number, when: number): void {
+  /**
+   * Plays pad `index` at context time `when` (sequenced hits, note repeat). Cancelled by
+   * cancelScheduled(), or by calling the returned function before it starts.
+   */
+  playAt(index: number, velocity: number, when: number): () => void {
     const voice = this.hit(index, velocity, when);
-    if (voice) this.track(voice);
+    if (!voice) return () => {};
+    this.track(voice);
+    return () => {
+      if (voice.when <= this.ctx.currentTime) return; // already sounding: let it ring
+      voice.src.stop();
+      this.scheduled.delete(voice);
+    };
   }
 
   /** A metronome click at context time `when`; `accent` marks beat 1 of the bar. */

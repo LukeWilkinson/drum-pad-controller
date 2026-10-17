@@ -36,6 +36,8 @@ export interface AppState {
   swing: number;
   /** One bar of clicks before recording starts from stop. */
   countIn: boolean;
+  /** Held pads retrigger at the quantise rate (src/seq/repeat.ts). */
+  noteRepeat: boolean;
 }
 
 /** 'count' = count-in bar before recording starts. */
@@ -61,6 +63,7 @@ export const state: AppState = {
   quant: '1/16',
   swing: 50,
   countIn: true,
+  noteRepeat: false,
 };
 
 const listeners = new Set<Listener>();

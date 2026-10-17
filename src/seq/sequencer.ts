@@ -158,10 +158,13 @@ function stopRecording(): void {
   update({ recMode: 'off' });
 }
 
-/** Called for every live pad hit. Records it when REC or DUB is on. */
-export function recordHit(pad: number, vel: number): void {
+/**
+ * Called for every live pad hit (and each note repeat). Records it when REC or DUB is on.
+ * `heard` is the context time the hit belongs to: by default what the listener hears now;
+ * note repeats pass the exact time they were scheduled for.
+ */
+export function recordHit(pad: number, vel: number, heard = clock.heardTime()): void {
   if (state.recMode === 'off') return;
-  const heard = clock.heardTime();
   let abs: number;
   if (state.recMode === 'count') {
     // A hit just before the downbeat (within half a beat) belongs on beat 1; earlier ones are ignored.
