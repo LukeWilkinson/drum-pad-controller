@@ -1,7 +1,7 @@
 # Handoff
 
 ## Where things stand (2026-10-17)
-Milestone 1 (Pads) and Milestone 2 (Kits and presets) passed Luke's phone test (2026-10-17). Milestone 3 (Sequencer and looping) is built and committed on `feat/m3-sequencer` and passed Luke's phone test (2026-10-17).
+Milestone 1 (Pads) and Milestone 2 (Kits and presets) passed Luke's phone test (2026-10-17). Milestone 3 (Sequencer and looping) passed Luke's phone test (2026-10-17) and was merged into `main` (125ea1d). Milestone 4 (MIDI) passed Luke's hardware test (2026-10-18) and was merged into `main` (see "M4" at the end).
 
 ### M1 (Pads)
 - 4×4 grid in all three layouts, multi-touch, position velocity, keyboard and Full Level.
@@ -108,5 +108,72 @@ Commits: step 1 dbcad22, step 2 4adf35c, step 3 0f005a8, step 4 588ef6e, step 5 
    - [ ] Make a loop, change BPM and swing, then close the tab (or swipe the app away) and reopen. Everything comes back.
 8. `npm run lan` → install → airplane mode: the sequencer and the new bank sounds still work.
 
+## M4 (MIDI): planned 2026-10-17, building on `feat/m4-midi`
+
+### Decisions from Luke (2026-10-17)
+- **Note map:** chromatic from 36. Note = 36 + bank × 16 + (padNumber − 1): A1–A16 = 36–51, B = 52–67, C = 68–83, D = 84–99.
+- **MIDI out:** everything: live hits, Note Repeat hits and sequenced loop hits. A "Play sounds in app" switch mutes the app's own audio.
+- **MIDI Learn:** pads, buttons and knobs.
+- **Input:** read on all channels. The Channel setting is for output only (default 10 · Drums).
+- **Clock:** "Send MIDI clock" is in M4, as the last step. Off by default.
+- **SETUP tab:** the MIDI card only. Latency, Auto-tune and Theme cards come in their own milestones.
+- **Test gear:** none yet. The PC test setup will be loopMIDI (free virtual MIDI cable) + a MIDI monitor (MIDI-OX or similar) in Chrome/Edge.
+
+### Claude's choices (Luke can override)
+- The app asks for MIDI only when Luke taps ENABLE MIDI in SETUP, then reconnects at boot. Devices are remembered by name; plugging in or unplugging is picked up live.
+- No MIDI thru: hits from MIDI input play and record but are not sent back out (so a loopMIDI port used both ways can't feed back). Loops recorded from MIDI input do go out on playback.
+- Live hits send note-off on release; scheduled hits 60 ms later (or just before the next hit on that note). Stop, output change and disable send All Notes Off (CC 123).
+- Scheduled hits get a Web MIDI timestamp from `engine.ctx.getOutputTimestamp()`, so MIDI lines up with the app's audio as heard. Each send waits on a timer until ~20 ms before its time, so the cancel `playAt()` returns still works.
+- Learned pad mappings point at an exact pad and override the chromatic map for that note. CCs drive knobs; notes or CCs (≥ 64, rising) drive buttons.
+- Firefox etc. without Web MIDI: the card says to use Chrome or Edge.
+- Saved as one `midi` pref: enabled, output name, input name, channel, local sound, clock, mappings.
+
+### Steps (Luke checks in after each; one commit per step)
+Suggested model: Sonnet, medium for steps 1, 2, 3, 5; Opus, medium for step 4.
+1. **MIDI core and the SETUP tab: done (2026-10-18).** `src/midi/midi.ts` (access, devices, hot-plug, `midi` pref, store field), `src/midi/fake.ts` (dev-only fake MIDI via `?fakemidi`, logs sends, injects input), `'setup'` view, `src/ui/setup.ts` + `src/styles/setup.css` (MIDI card from Settings.dc.html), SETUP tab, tablet gear and MIDI chip.
+2. **MIDI output: done (2026-10-18).** `src/midi/out.ts`; an `onHit` hook in `engine.ts` so `play()`/`playAt()` send MIDI (covers live, repeat and sequencer); `echo` flag; `localSound` flag; note-off on release; All Notes Off on stop.
+3. **MIDI input → pads: done (2026-10-18).** move pad hit/release out of `main.ts` into `src/pads/hits.ts` (shared by touch, keys and MIDI); `src/midi/in.ts` (chromatic 36–99 or learned map, note-off releases, all channels, activity blink).
+4. **MIDI Learn: done (2026-10-18).** `src/midi/targets.ts` (pads; Play, REC, DUB, Undo, metronome, tap, banks, Note Repeat, Full Level, loop slots; BPM, swing, master, selected pad volume/pitch/pan/decay), `data-learn` attributes, learn mode across tabs with a capture-phase listener, mappings list with ×. Full Level moves into the store.
+5. **Send MIDI clock: done (2026-10-18).** `src/midi/clock.ts`: Song Position 0 + Start at transport start (after count-in too), 24 clocks per beat via Tone `scheduleRepeat`, Stop on stop.
+
+### Checks
+- Claude, per step, by script in the browser pane with `?fakemidi` (no real MIDI there).
+- Luke, at the end: loopMIDI + MIDI monitor in Chrome/Edge on the PC (notes, channel, clock, learn; a DAW if available), and on the phone the SETUP layout, permission prompt and "no devices" state.
+
+Step 1 notes (2026-10-18):
+- SETUP shows an ENABLE switch (MIDI), Output / Input / Channel selects, "Play sounds in app" and the (not yet working) clock switch and MIDI LEARN button. Off → the controls dim and are disabled. Unsupported / denied / waiting show a message.
+- With no saved choice, the first output and first input that appear are picked once. A saved device that is unplugged stays listed as "(not connected)" and reconnects when plugged back in.
+- Settings save as the `midi` pref and MIDI reconnects at boot if it was on. A refused permission turns it off again.
+- `?fakemidi` (dev only, not in the production build): fake devices "Fake MIDI Out", "Fake MIDI Out 2", "Fake MIDI In". `__fakeMidi.log` lists sent messages, `.inject(name, bytes)`, `.plug(name)`, `.unplug(name)`, `.clearLog()`.
+- `midi.outputPort()` and `midi.onMidiMessage(fn)` are ready for steps 2 and 3.
+
+Step 2 notes (2026-10-18):
+- `src/midi/notes.ts`: `noteOfPad()` / `padOfNote()` (36–99; step 3 uses `padOfNote`). `src/midi/out.ts` hooks into the engine (`engine.setHitHook`), so every `play()` / `playAt()` goes out, including auditions and step taps (those send a 60 ms note). A pad held on the pad screen calls `midiOut.hold()` and ends with `midiOut.release()`.
+- `engine.play(…, echo)` / `playAt(…, echo)`: `echo = false` keeps a hit from going out (for MIDI-input hits in step 3). `engine.localSound = false` mutes the app's sound; main.ts only mutes while an output device is connected, so the app can't go silent by accident.
+- Scheduled notes are sent ~25 ms ahead with a timestamp from `getOutputTimestamp()`; the note-off follows 60 ms later, or goes just before a retrigger of the same note. Transport stop, output change, channel change and MIDI off send note-offs and CC 123 on the old output/channel.
+
+Step 3 notes (2026-10-18):
+- `src/pads/hits.ts` is the one pad-hit path (`hit`, `release`, `move`, `setLast`, `padTitle`): touch and keys call it from `main.ts`, MIDI input from `src/midi/in.ts`. `fromMidi` hits skip MIDI output, including their Note Repeat repeats (`repeat.press(pad, vel, echo)`).
+- Notes 36–99 play pads A1–D16 on every channel; note-on vel 0 counts as note-off. Other messages (CC etc.) are ignored until step 4. The pad is shown hit only if its bank is on screen; the LCD and selected pad follow. Held pads are released when the input changes or MIDI goes off. The tablet MIDI chip dot blinks amber on any incoming message.
+- Full Level applies to touch only; MIDI velocity is used as sent.
+
+Step 4 notes (2026-10-18):
+- Luke's choices: learn mode stays on until DONE; an amber bar with DONE shows on every screen; knob CCs are absolute (0–127 → the full range).
+- `src/midi/targets.ts`: target ids saved in the pref (`pad:0–63`, `play`, `rec`, `dub`, `undo`, `metro`, `tap`, `bpm-down`, `bpm-up`, `bank:0–3`, `loop:0–3`, `note-repeat`, `full-level`, `swing`, `master`, `param:volumeDb|pitch|pan|decay`). Each acts through the code that owns the control. Notes press; a CC sets a knob, or presses a button when it rises past 64. `tap` (the BPM readout) is tap tempo from a note and BPM 40–240 from a CC. A CC on a pad hits it (value = velocity) and releases below 64. Param knobs act on the selected pad.
+- `data-learn` is on: transport keys, BPM −/readout/+, loop slots, banks, Note Repeat, Full Level, tablet rail knobs and master, SEQ REC/OVERDUB/CLICK/swing, Kits panel sliders, and the pads (`data-learn="pad"` + `data-screen`; a tapped pad is learned as that exact pad of the bank on screen).
+- `src/midi/learn.ts` (only code that changes `state.learn`): a window capture-phase listener stops taps while learning, so the control doesn't act; tapping a `data-learn` control arms it (solid outline; others dashed). Tabs, the learn bar, SETUP, the tablet header and dialogs still work. The next note-on or CC from the input (`in.ts` calls `capture()`) becomes a mapping; the same message learned again replaces the old one. MIDI going off ends learn mode.
+- Mappings are `state.midi.mappings` (saved in the `midi` pref; bad entries dropped on load). `in.ts` checks a mapping first; unmapped notes still use the chromatic map, unmapped CCs are ignored. SETUP lists them ("CC 21 → SWING") with a × each.
+- The learn bar sits at the bottom of the screen and the layout shrinks to make room (`--learn-h` in app.css), so it covers nothing.
+- Full Level is now `state.fullLevel` (`hits.toggleFullLevel()`), so MIDI can toggle it. Still not saved.
+- Checked by script with `?fakemidi`: learning pads, buttons and knobs across PADS, SEQ and KITS; a tapped control doesn't act while learning; mapped note plays its pad and unmapped note 36 still plays A1; swing 50/75 at CC 0/127; PLAY only on a rising CC; BPM 40/240 from CC and tap tempo from a note; Full Level, bank, loop, master, pad volume; relearn replaces; × removes; reload keeps mappings; MIDI off ends learn. Layout at 390×844, 844×390 and 1280×800.
+- Not checked here: real hardware (Luke's loopMIDI test at the end of M4), and real touch on a range slider while learning (the scripts used synthetic events).
+
+Step 5 notes (2026-10-18):
+- `src/midi/clock.ts` (`initMidiClock`, called in main.ts): a Tone `scheduleRepeat` every `PPQ/24` ticks. At transport tick 0 it sends Song Position 0 (F2 00 00) then Start (FA); every callback sends a clock (F8). Clocks use `out.timestampOf()` (now exported) and go to the browser ~25 ms ahead on cancelable timers. Stop (FC) is sent, and pending clocks dropped, when the transport stops, the switch goes off or MIDI goes off (only if clocks were running).
+- Switching clock on while playing sends clocks only (no Start; the receiver is not told a song restarted). Off by default; the SETUP switch (`midi.setClockOut`) is disabled while MIDI is off.
+- Checked by script with `?fakemidi`: nothing sent with the switch off; F2 00 00, FA, then F8 spaced 20.8 ms at 120 BPM (52 messages in ~1.1 s); Stop sends CC 123 then FC and nothing after; mid-play enable = clocks only; mid-play disable = FC; REC count-in sends no clock until the bar ends, then Start at ~1.98 s. Not checked: real hardware, and tempo changes mid-play (Tone follows the BPM, but not measured).
+
 ## Next step
-M3 passed the phone test. Merge `feat/m3-sequencer` into `main` (if not done yet), then start M4 (MIDI: Web MIDI output with pad notes and channel select, MIDI input mapping, MIDI learn) in plan mode in a fresh chat, on a new branch `feat/m4-midi`.
+M4 is done: Luke's hardware test passed (2026-10-18) for notes, channel, clock, learn, the SETUP layout, the permission prompt, the "no devices" state and the SEQ header Play/Stop button (abfbd25). `feat/m4-midi` is merged into `main`.
+
+Next: M5 Instruments (keyboard/melodic mode, Tone.js synth presets, sampled instruments, scale snap). Start with plan mode.

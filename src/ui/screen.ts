@@ -21,7 +21,7 @@ const TABS: [cls: string, icon: string, short: string, long: string, todo: strin
   ['seq', ICON.seq, 'SEQ', 'SEQUENCER', ''],
   ['keys', ICON.keys, 'KEYS', 'KEYS', 'M5'],
   ['mix', ICON.mix, 'MIX/FX', 'MIX / FX', 'M6'],
-  ['setup', ICON.setup, 'SETUP', 'SETUP', 'M4'],
+  ['setup', ICON.setup, 'SETUP', 'SETUP', ''],
 ];
 
 // Selected-pad knobs on the tablet right rail. The first four are live (src/ui/rail.ts sets
@@ -39,7 +39,7 @@ export const KNOB_ARC = 84.8; // 270° of a r=18 circle
 
 function knob([label, key, todo]: (typeof KNOBS)[number]): string {
   const attrs = key
-    ? `data-key="${key}" role="slider" tabindex="0" aria-label="${label}"`
+    ? `data-key="${key}" data-learn="param:${key}" role="slider" tabindex="0" aria-label="${label}"`
     : `data-todo="${todo}"`;
   return `
     <div class="knob" ${attrs}>
@@ -78,6 +78,12 @@ export interface ScreenRefs {
   lcdBar: HTMLElement;
   selName: HTMLElement;
   master: HTMLInputElement;
+  /** Tablet header: MIDI status chip and the gear. Both open the SETUP panel. */
+  midiChip: HTMLButtonElement;
+  midiText: HTMLElement;
+  gear: HTMLButtonElement;
+  /** MIDI Learn bar, shown on every screen while learning (src/midi/learn.ts). */
+  learnBar: HTMLElement;
 }
 
 export function buildScreen(root: HTMLElement): ScreenRefs {
@@ -88,9 +94,9 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
         <div class="lcd-top">
           <button class="kit-btn" aria-label="Choose kit"><span class="kit-name">LOADING…</span>${ICON.chevron}</button>
           <div class="bpm">
-            <button class="bpm-down" aria-label="Tempo down">−</button>
-            <button class="bpm-tap" aria-label="Tempo 120 BPM. Tap repeatedly to set the tempo"><span class="bpm-num">120.0</span> <span class="bpm-unit">BPM</span></button>
-            <button class="bpm-up" aria-label="Tempo up">+</button>
+            <button class="bpm-down" data-learn="bpm-down" aria-label="Tempo down">−</button>
+            <button class="bpm-tap" data-learn="tap" aria-label="Tempo 120 BPM. Tap repeatedly to set the tempo"><span class="bpm-num">120.0</span> <span class="bpm-unit">BPM</span></button>
+            <button class="bpm-up" data-learn="bpm-up" aria-label="Tempo up">+</button>
           </div>
         </div>
         <div class="lcd-status">
@@ -101,24 +107,24 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
       </section>
 
       <div class="transport">
-        <button class="key undo" aria-label="Undo">${ICON.undo}</button>
-        <button class="key metro" aria-label="Metronome" aria-pressed="true">${ICON.metro}</button>
-        <button class="rec" aria-label="Record" aria-pressed="false"><span></span></button>
-        <button class="key play" aria-label="Play" aria-pressed="false">${ICON.play}${ICON.stop}</button>
-        <button class="key dub" aria-label="Overdub" aria-pressed="false">DUB</button>
+        <button class="key undo" data-learn="undo" aria-label="Undo">${ICON.undo}</button>
+        <button class="key metro" data-learn="metro" aria-label="Metronome" aria-pressed="true">${ICON.metro}</button>
+        <button class="rec" data-learn="rec" aria-label="Record" aria-pressed="false"><span></span></button>
+        <button class="key play" data-learn="play" aria-label="Play" aria-pressed="false">${ICON.play}${ICON.stop}</button>
+        <button class="key dub" data-learn="dub" aria-label="Overdub" aria-pressed="false">DUB</button>
       </div>
 
       <div class="loops" role="group" aria-label="Loop slots">
-        ${[0, 1, 2, 3].map((i) => `<button class="loop" data-slot="${i}"><span class="loop-text">+ EMPTY</span><span class="loop-bar" aria-hidden="true"></span></button>`).join('')}
+        ${[0, 1, 2, 3].map((i) => `<button class="loop" data-slot="${i}" data-learn="loop:${i}"><span class="loop-text">+ EMPTY</span><span class="loop-bar" aria-hidden="true"></span></button>`).join('')}
       </div>
 
       <div class="bankrow">
         <div class="banks" role="group" aria-label="Pad banks">
-          ${['A', 'B', 'C', 'D'].map((b) => `<button class="bank" aria-label="Pad bank ${b}" aria-pressed="${b === 'A'}">${b}</button>`).join('')}
+          ${['A', 'B', 'C', 'D'].map((b, i) => `<button class="bank" data-learn="bank:${i}" aria-label="Pad bank ${b}" aria-pressed="${b === 'A'}">${b}</button>`).join('')}
         </div>
         <div class="toggles">
-          <button class="toggle note-repeat" aria-pressed="false"><span class="lbl-short">NOTE RPT</span><span class="lbl-long">NOTE REPEAT</span></button>
-          <button class="toggle full-level" aria-pressed="false"><span class="lbl-short">FULL LVL</span><span class="lbl-long">FULL LEVEL</span></button>
+          <button class="toggle note-repeat" data-learn="note-repeat" aria-pressed="false"><span class="lbl-short">NOTE RPT</span><span class="lbl-long">NOTE REPEAT</span></button>
+          <button class="toggle full-level" data-learn="full-level" aria-pressed="false"><span class="lbl-short">FULL LVL</span><span class="lbl-long">FULL LEVEL</span></button>
         </div>
       </div>
     </div>
@@ -136,8 +142,8 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
     </nav>
 
     <div class="status">
-      <span class="midi-chip"><span class="midi-dot"></span>MIDI OFF</span>
-      <button class="icon-btn" aria-label="Settings" data-todo="M4">${ICON.setup}</button>
+      <button class="midi-chip" aria-label="MIDI settings"><span class="midi-dot"></span><span class="midi-text">MIDI OFF</span></button>
+      <button class="icon-btn" aria-label="Setup">${ICON.setup}</button>
     </div>
 
     <aside class="rail-right" aria-label="Selected pad">
@@ -146,10 +152,14 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
         <span class="sel-name"></span>
       </div>
       ${KNOBS.map(knob).join('')}
-      <label class="master">MASTER
+      <label class="master" data-learn="master">MASTER
         <input type="range" min="0" max="100" value="82" aria-label="Master volume">
       </label>
     </aside>
+
+    <div class="learn-bar" role="status" hidden>
+      <span class="learn-text"></span><button class="learn-done">DONE</button>
+    </div>
   </div>`;
 
   const q = <T extends Element>(sel: string) => root.querySelector(sel) as T;
@@ -179,5 +189,9 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
     lcdBar: q('.lcd-bar'),
     selName: q('.sel-name'),
     master: q('.master input'),
+    midiChip: q('.midi-chip'),
+    midiText: q('.midi-text'),
+    gear: q('.icon-btn'),
+    learnBar: q('.learn-bar'),
   };
 }

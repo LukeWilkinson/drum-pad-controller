@@ -25,8 +25,21 @@ interface Voice {
   when: number;
 }
 
+/**
+ * Told about every pad hit so it can go out as MIDI (src/midi/out.ts). `at()` returns a cancel
+ * function like playAt() does; cancelAll() is called when the transport stops.
+ */
+export interface HitHook {
+  now(index: number, velocity: number): void;
+  at(index: number, velocity: number, when: number): () => void;
+  cancelAll(): void;
+}
+
 export class AudioEngine {
   readonly ctx: AudioContext;
+  /** False mutes the app's own sound (a DAW plays the MIDI notes instead). The hit hook still hears every hit. */
+  localSound = true;
+  private hook: HitHook | null = null;
   private master: GainNode;
   private buffers = new Map<string, AudioBuffer>();
   /** Samples being fetched, so two kits asking for the same file share one download. */
@@ -109,21 +122,30 @@ export class AudioEngine {
     this.master.gain.setTargetAtTime(v, this.ctx.currentTime, 0.01);
   }
 
-  /** Plays pad `index` (bank × 16 + screen index) at MIDI velocity 1–127, right now (live hits). */
-  play(index: number, velocity: number): void {
-    this.hit(index, velocity, 0);
+  setHitHook(hook: HitHook | null): void {
+    this.hook = hook;
+  }
+
+  /**
+   * Plays pad `index` (bank × 16 + screen index) at MIDI velocity 1–127, right now (live hits).
+   * `echo` false keeps the hit from going out as MIDI (it came in as MIDI).
+   */
+  play(index: number, velocity: number, echo = true): void {
+    if (this.localSound) this.hit(index, velocity, 0);
+    if (echo) this.hook?.now(index, velocity);
   }
 
   /**
    * Plays pad `index` at context time `when` (sequenced hits, note repeat). Cancelled by
    * cancelScheduled(), or by calling the returned function before it starts.
    */
-  playAt(index: number, velocity: number, when: number): () => void {
-    const voice = this.hit(index, velocity, when);
-    if (!voice) return () => {};
-    this.track(voice);
+  playAt(index: number, velocity: number, when: number, echo = true): () => void {
+    const voice = this.localSound ? this.hit(index, velocity, when) : undefined;
+    if (voice) this.track(voice);
+    const cancelMidi = echo ? this.hook?.at(index, velocity, when) : undefined;
     return () => {
-      if (voice.when <= this.ctx.currentTime) return; // already sounding: let it ring
+      cancelMidi?.();
+      if (!voice || voice.when <= this.ctx.currentTime) return; // already sounding: let it ring
       voice.src.stop();
       this.scheduled.delete(voice);
     };
@@ -147,6 +169,7 @@ export class AudioEngine {
 
   /** Stops every scheduled voice that hasn't started yet (used when the transport stops). */
   cancelScheduled(): void {
+    this.hook?.cancelAll();
     const now = this.ctx.currentTime;
     for (const v of this.scheduled) {
       if (v.when > now) {
