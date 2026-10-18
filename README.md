@@ -11,14 +11,14 @@ npm run dev
 
 The terminal prints two addresses:
 - **Local:** `https://localhost:5173`
-- **Network:** `https://192.168.x.x:5173`
+- **Network:** the PC's address on the local network, port 5173
 
 If `npm` isn't recognised, open a new terminal so it picks up the Node install.
 
 ## Open it on an Android phone (same Wi-Fi)
 
 1. Run `npm run dev` on the PC.
-2. In Chrome on the phone, open the **Network** address, e.g. `https://192.168.x.x:5173`.
+2. In Chrome on the phone, open the **Network** address the terminal printed.
 3. Chrome warns the connection isn't private, because the certificate is self-signed. Tap **Advanced → Proceed**. This is only needed once per address.
 4. If the page doesn't load, Windows Firewall may be blocking Node. Allow **Node.js** on **Private** networks: the Windows prompt appears the first time, or go to Windows Security → Firewall → Allow an app.
 5. Tap any pad to start the audio. Phones only allow sound after a tap.
@@ -31,7 +31,7 @@ The service worker, needed for installing and offline use, only runs in the prod
 npm run lan
 ```
 
-Open `https://192.168.x.x:4173` on the phone, then use Chrome menu → **Install app** or **Add to Home screen**.
+Open the **Network** address it prints (port 4173) on the phone, then use Chrome menu → **Install app** or **Add to Home screen**.
 
 ## Scripts
 

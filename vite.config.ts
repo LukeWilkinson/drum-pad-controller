@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import basicSsl from '@vitejs/plugin-basic-ssl';
 import { VitePWA } from 'vite-plugin-pwa';
 
-// host: true exposes the server on the local network (https://192.168.x.x:5173).
+// host: true exposes the server on the local network (the "Network" address Vite prints).
 // basicSsl gives a self-signed certificate so phones treat the page as a secure context.
 // HTTP=1 turns it off for desktop-only checks (localhost is already a secure context).
 const useHttps = !process.env.HTTP;
