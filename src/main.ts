@@ -3,6 +3,7 @@ import './styles/app.css';
 import './styles/kits.css';
 import './styles/seq.css';
 import './styles/setup.css';
+import './styles/keys.css';
 import { registerSW } from 'virtual:pwa-register';
 import { AudioEngine } from './audio/engine';
 import * as clock from './audio/clock';
@@ -21,6 +22,10 @@ import { KITS, factoryKit } from './audio/kits';
 import * as kitControl from './kitControl';
 import { bootKits, kitLabel, saveMasterVolume } from './kitControl';
 import { attachPadInput } from './pads/input';
+import * as keys from './keys/keys';
+import * as notes from './keys/notes';
+import { attachKeysInput } from './keys/input';
+import { buildKeysPanel } from './ui/keys';
 import { state, subscribe } from './state';
 import { applyKit, buildPads } from './ui/pads';
 import { buildKitsPanel } from './ui/kits';
@@ -45,6 +50,9 @@ applyKit(padEls, KITS[0].pads); // colours straight away; replaced if a differen
 buildKitsPanel(ui.app, engine);
 buildSeqPanel(ui.app, engine);
 buildSetupPanel(ui.app, ui);
+const keysBoard = buildKeysPanel(ui.app);
+const instrument = keys.initKeys(engine); // after initClock: Tone runs on the engine's context
+notes.initNotes(instrument);
 initHits(engine, ui, padEls);
 midiOut.initOut(engine);
 midiClock.initMidiClock(engine);
@@ -97,6 +105,8 @@ attachPadInput(
   () => state.fullLevel,
 );
 
+attachKeysInput(keysBoard, { onDown: notes.noteOn, onUp: notes.noteOff, onOctave: keys.nudgeOctave });
+
 // With "Play sounds in app" off the app is silent, so only mute while an output device is connected.
 subscribe((s, changed) => {
   if (!changed.has('midi')) return;
@@ -140,4 +150,4 @@ bootKits(engine, (done, total) => hits.setLast(`LOADING KIT ${done}/${total}`, `
 registerSW({ immediate: true });
 
 // Dev-only handle for checking the engine and store from the browser console.
-if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, seq, repeat, midi, learn, state, KITS, factoryKit, ...kitControl } });
+if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, seq, repeat, midi, learn, state, KITS, factoryKit, keys, notes, instrument, ...kitControl } });

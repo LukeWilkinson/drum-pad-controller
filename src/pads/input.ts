@@ -1,5 +1,8 @@
 // Pad input: Pointer Events (multi-touch, mouse, pen) and the desktop keyboard.
 // Each pointer is tracked separately so many pads can be held at once.
+// While the KEYS tab shows, the letter keys play notes instead (src/keys/input.ts).
+
+import { state } from '../state';
 
 export interface PadInputHandlers {
   /** Screen index (0–15). Called synchronously inside the input event — play audio first, draw second. */
@@ -65,6 +68,7 @@ export function attachPadInput(
 
   const keysDown = new Set<string>();
   window.addEventListener('keydown', (e) => {
+    if (state.view === 'keys') return;
     if (e.ctrlKey || e.metaKey || e.altKey || e.shiftKey) return; // Shift+R is record
     if (e.target instanceof HTMLInputElement || document.querySelector('dialog[open]')) return;
     const key = e.key.toLowerCase();

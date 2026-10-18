@@ -216,5 +216,15 @@ Suggested model: Opus, medium for steps 1 and 4; Opus, high for step 5; Sonnet, 
 - Claude can't hear the browser pane, so the sound of each preset, glide, release tails, bend and timing by ear are Luke's checks.
 - Luke, at the end: the phone test (touch keyboard, chords, slide, layout, offline with `npm run lan`) and loopMIDI (keys channel out, notes in, pitch bend, sustain).
 
+Step 1 notes (2026-10-18):
+- New files: `src/keys/types.ts` (KeysState, PRESETS, `noteName`, `cOf`; imports nothing), `src/audio/keys.ts` (`KeysEngine`: Tone presets, PolyVoice / MonoVoice, keys bus into `engine.input`), `src/keys/keys.ts` (only code that changes `state.keys`; `keys` pref), `src/keys/notes.ts` (the one note path: sound, then lit key and LCD; counts presses per note so a note ends when the last finger/key lets go), `src/keys/input.ts` (pointer + PC keys), `src/ui/keys.ts` + `src/styles/keys.css` (the panel).
+- Touch: the board captures each pointer, so sliding plays every key reached and a finger leaving the keyboard stops its note. Pressing lower on a key plays it harder (v = 40 + 87 × y/height), like the front of a real key.
+- PC keys on the KEYS tab only: A S D F G H J K L ; = white, W E T Y U O P = black, Z / X = octave. The pad keys and the O / T shortcuts are off on that tab; Space, Shift+R, Ctrl+Z and M still work.
+- The 4 synth presets sound only in the app for now; SAMPLED presets can be picked but are silent until step 2. Snap chip, HOLD, ARP and PITCH are `data-todo="M5"` (steps 3–4); MOD is `data-todo="LATER"`.
+- Fixed while checking: Tone throws if a mono synth is restarted at the same audio time (two keys in one event), so a mono voice keeps its attacks at least 1 ms apart.
+- The SYNTH / SAMPLED buttons are 38px tall inside a 44px strip, as in the design (under the 44px rule).
+- Checked by script at 390×844: C-E-G chord with 3 pointers (3 voices), slide C4 → D4 → C#4, release, LCD `KEYS · G4 · VEL 110 · WARM PAD`; Saw Lead last-note priority (C, E, G held → release G → E sounds); same note pressed twice ends on the second release; 10-note Warm Pad cluster; octave Z/X and −/+ (clamped C1–C7, labels follow); T = F#4 with tap tempo and DUB untouched; M still toggles the click; A plays a pad again on the PADS tab; `keys` pref round trip (SAMPLED, Strings, C2, synth choice kept) and a damaged pref → defaults. Layout measured at 844×390 (head, presets, octave and strips rows 44px, keyboard 158px) and 1280×800 (15 white keys C4–C6, rails kept).
+- Not checked: the sound of the presets (Claude can't hear the pane), real multi-touch on a phone.
+
 ## Next step
-Step 1 of M5: the KEYS tab with the synth presets (Opus, medium).
+Step 2 of M5: sampled instruments (Sonnet, medium).

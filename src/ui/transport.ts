@@ -1,7 +1,8 @@
 // Transport controls on the pad screen: Play/Stop, REC, DUB, Undo, metronome, BPM −/+ (hold to
 // repeat), tap tempo, the LCD status line, and the keyboard shortcuts:
 // Space play/stop · Shift+R record · O overdub · Ctrl+Z undo · M metronome · T tap tempo.
-// (Plain R plays a pad, so record needs Shift.) The clock and sequencer do the work.
+// (Plain R plays a pad, so record needs Shift.) On the KEYS tab, O and T are piano keys
+// (src/keys/input.ts), so they do nothing here. The clock and sequencer do the work.
 
 import * as clock from '../audio/clock';
 import { BAR_TICKS, BEATS_PER_BAR, PPQ } from '../seq/pattern';
@@ -46,6 +47,7 @@ export function initTransport(ui: ScreenRefs): void {
       return;
     }
     if (e.ctrlKey || e.metaKey || e.altKey || e.repeat) return;
+    if (state.view === 'keys' && !e.shiftKey && (key === 'o' || key === 't')) return;
     const action = (e.shiftKey ? shifted : plain)[key];
     if (!action) return;
     e.preventDefault(); // Space would otherwise also press the focused button

@@ -1,0 +1,56 @@
+// KEYS types, preset names and note helpers. This file imports nothing, so state.ts, the audio
+// code and the UI can all use it.
+
+export type KeysSource = 'synth' | 'sampled';
+
+export interface PresetInfo {
+  name: string;
+  /** Second line on the preset button. */
+  meta: string;
+}
+
+/** Four presets per source, in screen order (Keys.dc.html). */
+export const PRESETS: Record<KeysSource, PresetInfo[]> = {
+  synth: [
+    { name: 'Warm Pad', meta: 'Poly · slow attack' },
+    { name: 'Saw Lead', meta: 'Mono · glide' },
+    { name: 'Sub Bass', meta: 'Mono · sine + drive' },
+    { name: 'Glass Pluck', meta: 'Poly · short' },
+  ],
+  sampled: [
+    { name: 'Grand Piano', meta: 'Sampled · Kawai grand' },
+    { name: 'FM Piano', meta: 'Sampled · TX81Z' },
+    { name: 'Strings', meta: 'Sampled · ensemble' },
+    { name: 'Concert Harp', meta: 'Sampled · plucked' },
+  ],
+};
+
+/** KEYS settings (changed only by src/keys/keys.ts). */
+export interface KeysState {
+  source: KeysSource;
+  /** The preset picked on each source, 0–3, so switching SYNTH/SAMPLED keeps each choice. */
+  preset: Record<KeysSource, number>;
+  /** Octave of the keyboard's left-most C (C4 = middle C). */
+  octave: number;
+}
+
+export const OCTAVE_MIN = 1;
+export const OCTAVE_MAX = 7;
+
+export const DEFAULT_KEYS: KeysState = { source: 'synth', preset: { synth: 0, sampled: 0 }, octave: 4 };
+
+const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+
+/** MIDI note → "C#4" (C4 = 60). */
+export function noteName(note: number): string {
+  return `${NOTE_NAMES[note % 12]}${Math.floor(note / 12) - 1}`;
+}
+
+/** The MIDI note of C in `octave` (C4 = 60). */
+export function cOf(octave: number): number {
+  return (octave + 1) * 12;
+}
+
+export function presetOf(k: Readonly<KeysState>): PresetInfo {
+  return PRESETS[k.source][k.preset[k.source]];
+}

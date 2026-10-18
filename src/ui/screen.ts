@@ -19,7 +19,7 @@ const TABS: [cls: string, icon: string, short: string, long: string, todo: strin
   ['pads', ICON.pads, 'PADS', 'PADS', ''],
   ['kits', ICON.kits, 'KITS', 'KITS', ''],
   ['seq', ICON.seq, 'SEQ', 'SEQUENCER', ''],
-  ['keys', ICON.keys, 'KEYS', 'KEYS', 'M5'],
+  ['keys', ICON.keys, 'KEYS', 'KEYS', ''],
   ['mix', ICON.mix, 'MIX/FX', 'MIX / FX', 'M6'],
   ['setup', ICON.setup, 'SETUP', 'SETUP', ''],
 ];

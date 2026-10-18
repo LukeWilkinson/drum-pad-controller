@@ -1,10 +1,10 @@
-// Switches between the PADS screen and the KITS and SEQ panels. CSS does the layout work via
-// .app[data-view]; this only keeps the attribute and the tab highlight in step with the store.
+// Switches between the PADS screen and the KITS, SEQ, KEYS and SETUP panels. CSS does the layout work
+// via .app[data-view]; this only keeps the attribute and the tab highlight in step with the store.
 
 import { subscribe, update, type View } from '../state';
 import type { ScreenRefs } from './screen';
 
-const VIEWS: View[] = ['pads', 'kits', 'seq', 'setup'];
+const VIEWS: View[] = ['pads', 'kits', 'seq', 'keys', 'setup'];
 
 export function initViews(ui: ScreenRefs): void {
   for (const view of VIEWS) {

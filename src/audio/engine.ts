@@ -61,6 +61,11 @@ export class AudioEngine {
     return this.ctx.state === 'running';
   }
 
+  /** Where other sound sources (the KEYS instrument) connect: the master gain. */
+  get input(): AudioNode {
+    return this.master;
+  }
+
   /** The kit currently playing (null until the first kit is set). */
   get activeKit(): ActiveKit | null {
     return this.kit;

@@ -3,10 +3,11 @@
 // (pad settings, swapped samples) are announced with the extra change names 'params' and 'pads'.
 
 import type { ActiveKit, UserKit } from './audio/kit';
+import { DEFAULT_KEYS, type KeysState } from './keys/types';
 import { DEFAULT_CHANNEL, type LearnState, type MidiState } from './midi/types';
 import { PATTERN_COUNT, emptyPattern, type Pattern, type Quant } from './seq/pattern';
 
-export type View = 'pads' | 'kits' | 'seq' | 'setup';
+export type View = 'pads' | 'kits' | 'seq' | 'keys' | 'setup';
 
 export interface AppState {
   /** The kit playing now (null until the first kit has loaded). */
@@ -45,6 +46,8 @@ export interface AppState {
   midi: MidiState;
   /** MIDI Learn mode (changed only by src/midi/learn.ts). */
   learn: LearnState;
+  /** KEYS instrument settings (changed only by src/keys/keys.ts). */
+  keys: KeysState;
 }
 
 /** 'count' = count-in bar before recording starts. */
@@ -84,6 +87,7 @@ export const state: AppState = {
     mappings: [],
   },
   learn: { on: false, armed: null, last: null },
+  keys: { ...DEFAULT_KEYS, preset: { ...DEFAULT_KEYS.preset } },
 };
 
 const listeners = new Set<Listener>();
