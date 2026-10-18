@@ -68,4 +68,5 @@ Read SPEC.md (milestones) and DESIGN.md (tokens, layouts) first. The design canv
   - **Step 7, docs and checklist: done (2026-10-18).** README Keys section and `fetch-instruments` row, DESIGN Keys notes, and Luke's M5 phone / hardware checklist in HANDOFF.md. Not run on any device.
   - **Phone test passed (2026-10-18):** Luke reported checklist sections 1–4 (KEYS, extras, recording, offline) all fine on the real phone. Section 5 (MIDI hardware: loopMIDI or a keyboard) is not run yet.
   - **M5 merged into `main` (2856f83, 2026-10-18).**
-- **Next:** Plan M6 (read SPEC.md). Run M5 checklist section 5 (MIDI hardware) whenever MIDI hardware is handy.
+- **M6 Effects and settings: planning paused (2026-10-18), not approved.** Luke's 4 decisions, the 4 open questions and the draft steps are in HANDOFF.md ("M6").
+- **Next:** Resume M6 planning in plan mode from HANDOFF.md ("M6"): ask the 4 open questions, finalise the steps, get approval. Run M5 checklist section 5 (MIDI hardware) whenever MIDI hardware is handy.

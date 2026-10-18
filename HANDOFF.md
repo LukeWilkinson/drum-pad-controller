@@ -300,5 +300,46 @@ Run `npm run dev` (or `npm run lan` for the offline check) and open the **Networ
    - [ ] MIDI Learn on octave, HOLD, ARP, snap and the presets.
 6. Known gaps: incoming pitch bend doesn't move the PITCH thumb; MOD strip is a placeholder; memory use with all four sampled instruments loaded on a phone is untested.
 
+## M6 (Effects and settings): planning paused 2026-10-18, not approved yet
+No code changed yet. When resumed, build on a new branch `feat/m6-effects`.
+
+### Scope (SPEC.md + design)
+SPEC milestone 6: reverb, delay, filter, master volume, latency calibration, theme. Design artboards: `Fx.dc.html` and `Settings.dc.html` on the canvas.
+- **MIX / FX tab:** header "MIX / FX" + "OUT −3.2 dB" readout. Mixer well with 6 strips: KICKS, SNARE, HATS, PERC, KEYS, MASTER. Each strip: fader, level meter, dB readout, M (mute) button.
+- **FX cards:** REVERB (SIZE e.g. HALL, DECAY e.g. 1.8 s, MIX), DELAY (TIME e.g. 1/8 D, FDBK, MIX), FILTER (TYPE LOW-P, CUTOFF e.g. 8.2 kHz, RES). Each card has an on/off switch and three 270° arc knobs.
+- **SETUP › Audio & Latency:** MEASURED value (LCD style, e.g. 18 ms), "CALIBRATE — TAP ALONG TO 8 CLICKS", manual offset slider (−50 to +50 ms), Low-latency mode switch.
+- **SETUP › Theme:** Chassis / Chassis light / High contrast buttons, Pad colours (By drum type / Single colour), Vibrate on hit switch.
+
+### Where it hooks into the code
+- `src/audio/engine.ts`: every voice goes straight to one `master` GainNode (0.82) → destination. `engine.input` is where the KEYS bus (`src/audio/keys.ts`) plugs in. `setMasterVolume()` is used by the tablet rail slider (`main.ts`) and MIDI Learn (`midi/targets.ts`); saved by `kitControl.saveMasterVolume`.
+- `src/ui/screen.ts`: the MIX/FX tab and the tablet rail's REVERB SEND / DELAY SEND knobs are `data-todo="M6"`. `src/ui/rail.ts` has knob drag / arrow / double-tap code to reuse.
+- `src/audio/clock.ts` `heardTime()` = `currentTime − outputLatency`; every recording path in `seq/sequencer.ts` uses it, so latency calibration hooks in there.
+- `src/ui/setup.ts` + `src/styles/setup.css`: new SETUP cards go here.
+- Colours: ~28 hard-coded hex values remain outside `tokens.css` (`app.css`, `keys.css`, `kits.css`, `screen.ts` knob SVGs, `pads.ts`, `kit.ts` `GROUP_COLOUR`). They must move to tokens for themes to work.
+
+### Decisions from Luke (2026-10-18)
+- **Strips:** KICKS = kick. SNARE = snare. HATS = hat + cym. PERC = tom + perc + fx. KEYS = the KEYS bus.
+- **Saving:** mixer and FX settings are one global `mix` pref (like master volume), not per song or per kit.
+- **KEYS FX:** two small REVERB / DELAY send knobs on the KEYS tab, saved in the `keys` pref.
+- **Low-latency mode:** On = smallest buffer (`latencyHint: 'interactive'`, today's setting). Off = bigger buffer for fewer crackles on slow phones. Applies after a reload.
+
+### Still to ask Luke (Claude's recommendation first)
+1. **Per-pad sends on phones:** add REVERB SEND / DELAY SEND sliders to the Kits panel too (recommended), or tablet rail only?
+2. **MIDI Learn targets:** faders, mutes, FX switches, all 9 FX knobs and the per-pad sends (recommended), or FX knobs only, or none?
+3. **Metronome click:** skips mixer and FX but follows master volume (recommended), or fully dry?
+4. **Vibrate on hit default:** off (recommended) or on (as drawn)?
+
+### Draft steps (not final)
+1. **Audio graph.** New mixer + FX module: pad voices → group strip (gain, mute, analyser) → master; per-pad reverb/delay sends (`reverbSend`, `delaySend` in `PadParams`, old kits default 0); KEYS bus → KEYS strip + its sends; reverb (ConvolverNode, generated IR), tempo-synced delay (feedback loop), master filter (LP/HP/BP); master strip = existing master volume. A `src/mix/` control module is the only code that changes `state.mix` and saves the `mix` pref.
+2. **MIX / FX tab** at 390×844, 844×390 and 1280×800: faders, meters (rAF while visible), mutes, FX cards with knobs; live tablet-rail send knobs; KEYS send knobs.
+3. **Latency card:** 8-click tap-along calibration, manual offset, Low-latency mode; `heardTime()` uses the measured + offset value.
+4. **Theme card:** move hard-coded colours to tokens; three themes via `data-theme`; pad colours single / by type; vibrate on hit.
+5. **MIDI Learn targets** (scope depends on question 2).
+6. **Docs and Luke's phone checklist.**
+
+### Checks (planned)
+- Claude, per step, by script in the browser pane (`dev-http`), plus layout at the 3 sizes.
+- Claude can't hear the browser pane: reverb / delay / filter sound, meters vs. what's heard, and calibration on a real phone are Luke's checks.
+
 ## Next step
-M5 step 7 is written up. Luke's phone test (checklist sections 1–4) passed on 2026-10-18. Section 5 (MIDI hardware) is not run yet. M5 merged into `main` (2856f83, 2026-10-18). Next: plan M6.
+M5 merged into `main` (2856f83, 2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 planning is paused (see "M6" above): resume in plan mode, ask Luke the 4 open questions, finalise the steps and get plan approval.
