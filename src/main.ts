@@ -24,6 +24,7 @@ import { bootKits, kitLabel, saveMasterVolume } from './kitControl';
 import { attachPadInput } from './pads/input';
 import * as keys from './keys/keys';
 import * as notes from './keys/notes';
+import * as arp from './keys/arp';
 import { attachKeysInput } from './keys/input';
 import { buildKeysPanel } from './ui/keys';
 import { state, subscribe } from './state';
@@ -50,9 +51,10 @@ applyKit(padEls, KITS[0].pads); // colours straight away; replaced if a differen
 buildKitsPanel(ui.app, engine);
 buildSeqPanel(ui.app, engine);
 buildSetupPanel(ui.app, ui);
-const keysBoard = buildKeysPanel(ui.app);
+const keysBoard = buildKeysPanel(ui.app, { onBend: notes.bend });
 const instrument = keys.initKeys(engine); // after initClock: Tone runs on the engine's context
 notes.initNotes(instrument);
+arp.initArp(engine, instrument);
 initHits(engine, ui, padEls);
 midiOut.initOut(engine);
 midiClock.initMidiClock(engine);
@@ -150,4 +152,4 @@ bootKits(engine, (done, total) => hits.setLast(`LOADING KIT ${done}/${total}`, `
 registerSW({ immediate: true });
 
 // Dev-only handle for checking the engine and store from the browser console.
-if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, seq, repeat, midi, learn, state, KITS, factoryKit, keys, notes, instrument, ...kitControl } });
+if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, seq, repeat, midi, learn, state, KITS, factoryKit, keys, notes, arp, instrument, ...kitControl } });

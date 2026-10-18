@@ -1,4 +1,4 @@
-// KEYS settings: SYNTH / SAMPLED, the preset, the octave and scale snap. This is the only code that changes
+// KEYS settings: SYNTH / SAMPLED, the preset, the octave, scale snap, HOLD and ARP. This is the only code that changes
 // state.keys and state.keysLoad (as kitControl.ts is for kits). It keeps the instrument on the
 // chosen preset and saves the settings as the 'keys' pref.
 
@@ -7,7 +7,17 @@ import { KeysEngine } from '../audio/keys';
 import { state, update, type AppState } from '../state';
 import { getPref, setPref } from '../store/db';
 import { SCALE_IDS, type ScaleId } from './scales';
-import { OCTAVE_MAX, OCTAVE_MIN, PRESETS, type KeysSource, type KeysState } from './types';
+import {
+  ARP_MODES,
+  ARP_RATES,
+  OCTAVE_MAX,
+  OCTAVE_MIN,
+  PRESETS,
+  type ArpMode,
+  type ArpRate,
+  type KeysSource,
+  type KeysState,
+} from './types';
 
 const PREF = 'keys';
 const SOURCES: KeysSource[] = ['synth', 'sampled'];
@@ -85,6 +95,24 @@ export function setScale(scale: ScaleId): void {
   if (SCALE_IDS.includes(scale) && scale !== state.keys.scale) set({ scale });
 }
 
+/** HOLD off lets go of the notes it was keeping (src/keys/notes.ts follows the store). */
+export function toggleHold(): void {
+  set({ hold: !state.keys.hold });
+}
+
+/** ARP on or off. Notes sounding are stopped either way (src/keys/notes.ts). */
+export function toggleArp(): void {
+  set({ arp: !state.keys.arp });
+}
+
+export function setArpMode(arpMode: ArpMode): void {
+  if (ARP_MODES.includes(arpMode) && arpMode !== state.keys.arpMode) set({ arpMode });
+}
+
+export function setArpRate(arpRate: ArpRate): void {
+  if (arpRate in ARP_RATES && arpRate !== state.keys.arpRate) set({ arpRate });
+}
+
 /** Restores the saved settings. Missing or out-of-range values keep their defaults. */
 async function loadKeys(): Promise<void> {
   const saved = await getPref<Partial<KeysState>>(PREF).catch(warn);
@@ -101,5 +129,8 @@ async function loadKeys(): Promise<void> {
   if (typeof saved.snap === 'boolean') patch.snap = saved.snap;
   if (Number.isInteger(saved.key) && saved.key! >= 0 && saved.key! < 12) patch.key = saved.key;
   if (SCALE_IDS.includes(saved.scale as ScaleId)) patch.scale = saved.scale;
+  if (ARP_MODES.includes(saved.arpMode as ArpMode)) patch.arpMode = saved.arpMode;
+  if (typeof saved.arpRate === 'string' && saved.arpRate in ARP_RATES) patch.arpRate = saved.arpRate;
+  // HOLD and ARP start off: nothing is held at boot.
   set(patch, false);
 }

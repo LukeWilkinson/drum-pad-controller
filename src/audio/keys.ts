@@ -3,7 +3,9 @@
 // ctx.currentTime, so Tone's look-ahead never delays them. Sampled presets are raw Web Audio voices
 // like the drums: the nearest recorded note, re-pitched with playbackRate (samples from
 // src/audio/instruments.json, loaded into the engine's buffer cache when first picked).
-// Every preset plays into one keys bus, which feeds the master.
+// Scheduled notes (ARP, loops) go through playAt(), which hands them over just before their time so
+// they can still be cancelled. bend() moves every sounding note. Every preset plays into one keys
+// bus, which feeds the master.
 
 import { Distortion, FMSynth, Filter, MonoSynth, PolySynth, Synth, type ToneAudioNode } from 'tone';
 import type { AudioEngine } from './engine';
@@ -37,6 +39,8 @@ interface Voice {
   noteOn(note: number, velocity: number, time: number): void;
   noteOff(note: number, time: number): void;
   allOff(time: number): void;
+  /** Pitch bend in cents, for sounding notes and the ones that follow. */
+  bend(cents: number, time: number): void;
 }
 
 interface Built {
@@ -47,6 +51,9 @@ interface Built {
 
 const hz = (note: number) => 440 * Math.pow(2, (note - 69) / 12);
 const MIN_STEP = 0.001; // seconds between two attacks on a mono voice
+const BEND_RAMP = 0.015; // seconds; smooths pitch-bend steps so they don't zip
+/** Scheduled notes (arp, loops) are handed to the voice this long before their time. */
+const HANDOVER = 0.03;
 
 /** Many notes at once. A note played again while it still sounds is ended first. */
 class PolyVoice implements Voice {
@@ -63,6 +70,9 @@ class PolyVoice implements Voice {
   allOff(time: number): void {
     this.synth.releaseAll(time);
     this.sounding.clear();
+  }
+  bend(cents: number): void {
+    (this.synth as PolySynth).set({ detune: cents });
   }
 }
 
@@ -95,6 +105,10 @@ class MonoVoice implements Voice {
     this.held = [];
     this.synth.triggerRelease(time);
   }
+  bend(cents: number, time: number): void {
+    this.synth.detune.cancelScheduledValues(time);
+    this.synth.detune.linearRampToValueAtTime(cents, time + BEND_RAMP);
+  }
 }
 
 /**
@@ -104,6 +118,7 @@ class MonoVoice implements Voice {
 class SampledVoice implements Voice {
   private sounding = new Map<number, { src: AudioBufferSourceNode; gain: GainNode }>();
   private level: number;
+  private cents = 0;
   /** Buffers whose loop crossfade is already baked in. */
   private looped = new WeakSet<AudioBuffer>();
 
@@ -124,6 +139,7 @@ class SampledVoice implements Voice {
     const src = this.ctx.createBufferSource();
     src.buffer = buffer;
     src.playbackRate.value = Math.pow(2, (note - root) / 12);
+    src.detune.value = this.cents;
     const loop = this.inst.loop;
     if (loop && buffer.duration > loop[1]) {
       this.bakeLoop(buffer, loop[0], loop[1]);
@@ -156,6 +172,14 @@ class SampledVoice implements Voice {
 
   allOff(time: number): void {
     for (const note of [...this.sounding.keys()]) this.noteOff(note, time);
+  }
+
+  bend(cents: number, time: number): void {
+    this.cents = cents;
+    for (const { src } of this.sounding.values()) {
+      src.detune.cancelScheduledValues(time);
+      src.detune.linearRampToValueAtTime(cents, time + BEND_RAMP);
+    }
   }
 
   /**
@@ -247,6 +271,10 @@ export class KeysEngine {
   private synths: (Built | undefined)[] = [];
   private sampled: (SampledVoice | undefined)[] = [];
   private voice: Voice | null = null;
+  /** Current pitch bend in cents (the PITCH strip). */
+  private cents = 0;
+  /** Cancel functions of scheduled notes not yet finished. */
+  private scheduled = new Set<() => void>();
 
   constructor(private engine: AudioEngine) {
     this.bus = engine.ctx.createGain();
@@ -258,7 +286,8 @@ export class KeysEngine {
    * as soon as it is picked; notes are silent until their samples have loaded (the promise).
    */
   setPreset(source: KeysSource, index: number, onProgress?: (done: number, total: number) => void): Promise<void> {
-    this.voice?.allOff(this.engine.ctx.currentTime);
+    const now = this.engine.ctx.currentTime;
+    this.voice?.allOff(now);
     if (source === 'sampled') {
       const inst = INSTRUMENTS[index];
       let voice = this.sampled[index];
@@ -267,6 +296,7 @@ export class KeysEngine {
         this.sampled[index] = voice;
       }
       this.voice = voice;
+      voice.bend(this.cents, now);
       return this.engine.loadSamples(inst.samples.map((s) => sampleName(inst, s.note)), onProgress);
     }
     let built = this.synths[index];
@@ -276,6 +306,7 @@ export class KeysEngine {
       this.synths[index] = built;
     }
     this.voice = built.voice;
+    this.voice.bend(this.cents, now);
     return Promise.resolve();
   }
 
@@ -291,5 +322,62 @@ export class KeysEngine {
 
   allOff(): void {
     this.voice?.allOff(this.engine.ctx.currentTime);
+  }
+
+  /**
+   * Plays `note` at context time `when` for `length` seconds (ARP, loops). The note is handed to
+   * the voice just before its time, so the returned cancel function still works: before the note
+   * starts it never sounds; while it sounds it ends now.
+   */
+  playAt(note: number, velocity: number, when: number, length: number): () => void {
+    if (!this.engine.localSound) return () => {};
+    const ctx = this.engine.ctx;
+    const vel = Math.pow(velocity / 127, 1.3);
+    let voice: Voice | null = null; // the preset playing when the note started
+    let onTimer = 0;
+    let offTimer = 0;
+    let done = false;
+    const finish = () => {
+      done = true;
+      this.scheduled.delete(cancel);
+    };
+    const cancel = () => {
+      if (done) return;
+      clearTimeout(onTimer);
+      clearTimeout(offTimer);
+      voice?.noteOff(note, ctx.currentTime);
+      finish();
+    };
+    onTimer = this.after(when, () => {
+      voice = this.voice;
+      voice?.noteOn(note, vel, Math.max(when, ctx.currentTime));
+    });
+    offTimer = this.after(when + length, () => {
+      voice?.noteOff(note, Math.max(when + length, ctx.currentTime));
+      finish();
+    });
+    if (!done) this.scheduled.add(cancel);
+    return cancel;
+  }
+
+  /** Cancels every scheduled note (the transport stopped, ARP went off). */
+  cancelScheduled(): void {
+    for (const cancel of [...this.scheduled]) cancel();
+  }
+
+  /** Pitch bend in semitones (±2 from the PITCH strip). */
+  bend(semitones: number): void {
+    this.cents = semitones * 100;
+    this.voice?.bend(this.cents, this.engine.ctx.currentTime);
+  }
+
+  /** Runs `fn` HANDOVER seconds before context time `t` (at once if that has passed). Returns the timer. */
+  private after(t: number, fn: () => void): number {
+    const delay = (t - HANDOVER - this.engine.ctx.currentTime) * 1000;
+    if (delay <= 0) {
+      fn();
+      return 0;
+    }
+    return window.setTimeout(fn, delay);
   }
 }

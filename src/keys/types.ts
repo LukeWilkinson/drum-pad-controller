@@ -39,7 +39,21 @@ export interface KeysState {
   /** Key of the scale, a pitch class 0–11 (C = 0). */
   key: number;
   scale: ScaleId;
+  /** HOLD: notes keep sounding after their key comes up (not restored at boot). */
+  hold: boolean;
+  /** ARP: held notes play one at a time (not restored at boot). */
+  arp: boolean;
+  arpMode: ArpMode;
+  arpRate: ArpRate;
 }
+
+export const ARP_MODES = ['up', 'down', 'updown', 'random'] as const;
+export type ArpMode = (typeof ARP_MODES)[number];
+export const ARP_MODE_NAMES: Record<ArpMode, string> = { up: 'UP', down: 'DOWN', updown: 'UP-DOWN', random: 'RANDOM' };
+
+/** ARP rates and their length in pattern ticks (96 per beat; 1/8T = a triplet eighth). */
+export const ARP_RATES = { '1/8': 48, '1/16': 24, '1/32': 12, '1/8T': 32 } as const;
+export type ArpRate = keyof typeof ARP_RATES;
 
 export const OCTAVE_MIN = 1;
 export const OCTAVE_MAX = 7;
@@ -51,6 +65,10 @@ export const DEFAULT_KEYS: KeysState = {
   snap: false,
   key: 9, // A
   scale: 'minor',
+  hold: false,
+  arp: false,
+  arpMode: 'up',
+  arpRate: '1/16',
 };
 
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];

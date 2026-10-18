@@ -65,6 +65,13 @@
 .ky-spacer { flex: 1; }
 .ky-toggle { height: 44px; padding: 0 10px; border-radius: 6px; background: var(--raised); color: var(--text); font-weight: 700; font-size: 12px; letter-spacing: .06em; }
 .ky-toggle[aria-pressed="true"] { background: var(--amber); color: var(--body); }
+.ky-arp-info { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0; white-space: nowrap; }
+
+/* ARP options dialog */
+.ky-opt-label { margin: 0 0 6px !important; font-size: 11px !important; font-weight: 700; letter-spacing: .08em; color: var(--text-muted); }
+.ky-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-bottom: 14px; }
+.ky-opt { min-height: 44px; }
+.ky-opt[aria-pressed="true"] { background: var(--amber); color: var(--body); }
 
 /* ---------- Pitch and mod strips ---------- */
 
@@ -81,7 +88,10 @@
   left: calc(var(--x, 50%) - 14px);
   background: var(--pad-rubber); box-shadow: var(--key-shadow); pointer-events: none;
 }
+.ky-thumb.spring { transition: left .12s ease-out; } /* the PITCH thumb springs back to the centre */
+.ky-pitch { cursor: ew-resize; }
 .ky-mod .ky-thumb { --x: 34%; background: var(--switch-off); } /* placeholder: where the design shows it */
+@media (prefers-reduced-motion: reduce) { .ky-thumb.spring { transition: none; } }
 
 /* ---------- Keyboard ---------- */
 
