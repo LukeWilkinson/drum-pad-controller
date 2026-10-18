@@ -56,4 +56,5 @@ Read SPEC.md (milestones) and DESIGN.md (tokens, layouts) first. The design canv
   - **Step 5, Send MIDI clock: done (2026-10-18).** `src/midi/clock.ts` sends Song Position 0 + Start at transport start (after a count-in too), 24 clocks per beat (Tone `scheduleRepeat`, Web MIDI timestamps, ~25 ms ahead on cancelable timers) and Stop on stop; the SETUP switch is live. Checked by script with `?fakemidi` (Start sequence, 20.8 ms spacing at 120 BPM, Stop, mid-play on/off, count-in).
   - **SEQ header Play/Stop button: done (2026-10-18)**, commit abfbd25.
   - **Hardware test passed (2026-10-18):** Luke reported notes, channel, clock, learn, SETUP layout, permission prompt, no-devices state and the Play button all good. **M4 done**, merged into `main`.
-- **Next:** M5 Instruments (see SPEC.md). Start with plan mode.
+- **M5 Instruments: planned (2026-10-18)**, building on branch `feat/m5-instruments`. Luke's decisions, Claude's choices and the 7 steps are in HANDOFF.md ("M5"). Sampled instruments come from the CC0 Versilian libraries (VCSL, VSCO-2 CE), pinned by commit.
+- **Next:** M5 step 1, the KEYS tab with the synth presets.

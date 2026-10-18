@@ -173,7 +173,48 @@ Step 5 notes (2026-10-18):
 - Switching clock on while playing sends clocks only (no Start; the receiver is not told a song restarted). Off by default; the SETUP switch (`midi.setClockOut`) is disabled while MIDI is off.
 - Checked by script with `?fakemidi`: nothing sent with the switch off; F2 00 00, FA, then F8 spaced 20.8 ms at 120 BPM (52 messages in ~1.1 s); Stop sends CC 123 then FC and nothing after; mid-play enable = clocks only; mid-play disable = FC; REC count-in sends no clock until the bar ends, then Start at ~1.98 s. Not checked: real hardware, and tempo changes mid-play (Tone follows the BPM, but not measured).
 
-## Next step
 M4 is done: Luke's hardware test passed (2026-10-18) for notes, channel, clock, learn, the SETUP layout, the permission prompt, the "no devices" state and the SEQ header Play/Stop button (abfbd25). `feat/m4-midi` is merged into `main`.
 
-Next: M5 Instruments (keyboard/melodic mode, Tone.js synth presets, sampled instruments, scale snap). Start with plan mode.
+## M5 (Instruments): planned 2026-10-18, building on `feat/m5-instruments`
+
+### Decisions from Luke (2026-10-18)
+- **Recording:** keys notes record into LOOP 1–4 (REC/DUB, quantise, undo, autosave) and play back with the drums. No note editing in SEQ; the grid stays drums-only.
+- **Where it's played:** the KEYS tab only (no melodic pads mode), by touch, the computer keyboard and MIDI.
+- **Samples:** CC0 / public domain only. SAMPLED presets: **Grand Piano** (VCSL Kawai grand), **FM Piano** (VCSL TX81Z, in place of the design's Electric Piano), **Strings** (VSCO-2 CE violin, viola and cello sections), **Concert Harp** (VCSL, in place of Nylon Guitar). Both repos say CC0 (checked 2026-10-18). Pinned to VCSL c1ea7bcc and VSCO-2-CE 44030090. No CC0 nylon guitar or sampled Rhodes/Wurlitzer was found.
+- **Storage:** sparse samples (about one per 3 semitones, one velocity layer, trimmed, mono FLAC), all precached for offline use.
+- **Extras in M5:** HOLD, ARP and the pitch-bend strip. The MOD strip is drawn as a `data-todo` placeholder.
+- **ARP:** tap toggles it; holding ARP opens a dialog with mode (Up, Down, Up-Down, Random) and rate (1/8, 1/16, 1/32, 1/8T). It locks to the transport grid while playing.
+- **MIDI:** a new **Keys channel** setting (default 1). Keys notes go out on it, and incoming notes on that channel play the instrument; all other channels still play pads.
+- **PC keyboard on the KEYS tab:** A S D F G H J K L = white keys, W E T Y U O P = black keys, Z / X = octave down / up. T plays F# there (tap tempo stays on the BPM readout, and T on other tabs). Space, Shift+R, Ctrl+Z and M still work.
+- **Loop sound:** recorded notes play with the current KEYS preset (one instrument for the whole song).
+
+### Claude's choices (Luke can override)
+- **Two voice engines.** Synth presets use Tone.js instruments on `engine.ctx`, triggered at `ctx.currentTime` for live notes. Sampled presets use raw Web Audio voices like the drums (nearest root sample, `playbackRate` for pitch, `detune` for bend, a release fade), sharing the engine's buffer cache. Both go through a keys gain bus into the master.
+- **Synth presets** follow the design: Warm Pad (poly, slow attack), Saw Lead (mono, glide), Sub Bass (mono, sine + drive), Glass Pluck (poly FM, short). Mono presets use last-note priority.
+- **Scale snap** changes the note at input time, so what plays, records and goes out as MIDI is the snapped note. An out-of-scale key snaps to the nearest scale note; a tie goes down. It applies to MIDI input on the Keys channel too. Scales: Major, Minor, Harmonic minor, Dorian, Mixolydian, Pentatonic major, Pentatonic minor, Blues. Default key A, Minor, snap off.
+- **HOLD** latches notes until the key is tapped again or HOLD goes off; with ARP on it latches the arp's notes. MIDI CC 64 (sustain) on the Keys channel works like holding HOLD down.
+- **Pitch bend** is ±2 semitones, springs back on release, is live only (not recorded), and goes out as MIDI pitch bend.
+- **Recorded notes** are `{ tick, note, vel, len }` events next to the drum `{ tick, pad, vel }` events in the same loop. A note held past the loop end is cut at the loop length. Arp notes are recorded at their exact time, like Note Repeat.
+- **Scheduled synth notes** are handed to Tone on a timer just before their time (as `src/midi/out.ts` does), so Stop and cancel still work.
+- **Layouts:** the KEYS panel sits where the Kits/SEQ/SETUP panels sit. Phone portrait and landscape show 10 white keys (C to E, as in the design); tablet shows 15 (C to C, two octaves).
+- **Saved as one `keys` pref:** source, preset per source, octave, arp mode and rate, snap on/off, key, scale. HOLD and ARP on/off aren't restored at boot.
+- **MIDI Learn:** octave −/+, HOLD, ARP, snap on/off, SYNTH/SAMPLED and the preset buttons.
+- The LCD last-hit line shows e.g. `KEYS · C4 · VEL 100 · WARM PAD`.
+
+### Steps (Luke checks in after each; one commit per step)
+Suggested model: Opus, medium for steps 1 and 4; Opus, high for step 5; Sonnet, medium for steps 2, 3, 6 and 7.
+1. **KEYS tab with the synth presets.** `'keys'` view; `src/ui/keys.ts` + `src/styles/keys.css` from `Keys.dc.html` at all 3 sizes; `src/audio/keys.ts` (keys voice engine, 4 Tone presets, keys bus); `src/keys/keys.ts` (only code that changes `state.keys`, `keys` pref); `src/keys/notes.ts` (the one note-hit path); touch keyboard with multi-touch and slide; PC piano keys on the KEYS tab; octave C1–C7.
+2. **Sampled instruments.** `src/audio/instruments.json`; `scripts/fetch-instruments.mjs` (`npm run fetch-instruments`, pinned WAVs → ffmpeg → trimmed mono FLAC in `public/samples/instruments/<id>/`, about 3 MB each); sampled voices; precache; CREDITS.md.
+3. **Scale snap.** `src/keys/scales.ts` (pure); snap chip, dimmed out-of-scale keys, root dot; SETUP AUTO-TUNE section with the Scale snap card only (the vocal card is M7).
+4. **HOLD, ARP and pitch bend.** HOLD latch; pitch strip; `src/keys/arp.ts` (built like `src/seq/repeat.ts`); ARP options dialog.
+5. **Recording keys into loops.** Note events in `src/seq/pattern.ts`; `recordNoteOn` / `recordNoteOff`, playback, undo, cancel on stop and autosave in `src/seq/sequencer.ts`; old saves still load.
+6. **Keys MIDI.** `state.midi.keysChannel` + SETUP select; keys notes and pitch bend out; Keys-channel notes, pitch bend and CC 64 in; keys learn targets.
+7. **Docs and Luke's phone / hardware checklist.**
+
+### Checks
+- Claude, per step, by script in the browser pane (`dev-http`, `?fakemidi` for MIDI), plus layout at 390×844, 844×390 and 1280×800.
+- Claude can't hear the browser pane, so the sound of each preset, glide, release tails, bend and timing by ear are Luke's checks.
+- Luke, at the end: the phone test (touch keyboard, chords, slide, layout, offline with `npm run lan`) and loopMIDI (keys channel out, notes in, pitch bend, sustain).
+
+## Next step
+Step 1 of M5: the KEYS tab with the synth presets (Opus, medium).
