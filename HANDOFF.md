@@ -203,7 +203,7 @@ M4 is done: Luke's hardware test passed (2026-10-18) for notes, channel, clock, 
 
 ### Steps (Luke checks in after each; one commit per step)
 Suggested model: Opus, medium for steps 1 and 4; Opus, high for step 5; Sonnet, medium for steps 2, 3, 6 and 7.
-Commits: plan 9c5a10f, step 1 f434100, step 2 baff273, step 3 ddb6bb3, step 4 ad11ee6, step 5 80ecc8a.
+Commits: plan 9c5a10f, step 1 f434100, step 2 baff273, step 3 ddb6bb3, step 4 ad11ee6, step 5 80ecc8a, step 6 d263a79.
 1. **KEYS tab with the synth presets.** `'keys'` view; `src/ui/keys.ts` + `src/styles/keys.css` from `Keys.dc.html` at all 3 sizes; `src/audio/keys.ts` (keys voice engine, 4 Tone presets, keys bus); `src/keys/keys.ts` (only code that changes `state.keys`, `keys` pref); `src/keys/notes.ts` (the one note-hit path); touch keyboard with multi-touch and slide; PC piano keys on the KEYS tab; octave C1–C7.
 2. **Sampled instruments.** `src/audio/instruments.json`; `scripts/fetch-instruments.mjs` (`npm run fetch-instruments`, pinned WAVs → ffmpeg → trimmed mono FLAC in `public/samples/instruments/<id>/`, about 3 MB each); sampled voices; precache; CREDITS.md.
 3. **Scale snap.** `src/keys/scales.ts` (pure); snap chip, dimmed out-of-scale keys, root dot; SETUP AUTO-TUNE section with the Scale snap card only (the vocal card is M7).
@@ -277,7 +277,28 @@ Step 6 notes (2026-10-18):
 - Not checked: real devices (loopMIDI or a keyboard), the bend range on a real synth, and a damaged `keysChannel` pref (it uses the same validation as `channel`).
 - Known gaps: incoming pitch bend doesn't move the PITCH strip thumb; pressing a learned CC as sustain isn't a separate target (CC 64 is fixed to HOLD on the Keys channel unless mapped).
 
+## Luke's phone and hardware checklist for M5
+Run `npm run dev` (or `npm run lan` for the offline check) and open the **Network** address on the phone. Tap a pad first to start audio.
+1. KEYS on the phone:
+   - [ ] Open KEYS. Play with 2–3 fingers (chord). Slide across keys. Pressing lower on a key is louder.
+   - [ ] Each SYNTH preset: Warm Pad, Saw Lead (glide, one note at a time), Sub Bass, Glass Pluck. Do they sound right?
+   - [ ] SAMPLED: Grand Piano, FM Piano, Strings, Concert Harp. Is any much louder or quieter than the others (gains are guesses)? Do held strings keep going without a click?
+   - [ ] Octave −/+ and the layout in portrait and landscape (no clipped buttons).
+2. Extras:
+   - [ ] SNAP on (SETUP → Auto-tune sets key and scale): out-of-scale keys dim and play the nearest scale note.
+   - [ ] HOLD latches a chord; tap a key to drop it. ARP: tap to toggle, hold the button for mode and rate. Does the arp feel in time?
+   - [ ] PITCH strip bends ±2 semitones and springs back.
+3. Recording:
+   - [ ] REC or DUB while playing keys over a drum loop. The notes land on the grid and play back; undo removes the take.
+   - [ ] Stop ends any sounding loop note. Reload the page: the loop's notes are still there.
+4. Offline (`npm run lan`, install the app, switch to airplane mode):
+   - [ ] KEYS loads and the sampled instruments still play (first pick may take a moment on a phone).
+5. MIDI (loopMIDI or a keyboard):
+   - [ ] Keys channel in SETUP (default 1): KEYS notes and pitch bend arrive on it in a MIDI monitor.
+   - [ ] A keyboard on the Keys channel plays KEYS; the sustain pedal (CC 64) holds notes; its pitch bend bends them.
+   - [ ] A controller on channel 10 still plays pads on the same input.
+   - [ ] MIDI Learn on octave, HOLD, ARP, snap and the presets.
+6. Known gaps: incoming pitch bend doesn't move the PITCH thumb; MOD strip is a placeholder; memory use with all four sampled instruments loaded on a phone is untested.
+
 ## Next step
-Step 7 of M5: docs and Luke's phone / hardware checklist (Sonnet, medium). Starting points:
-- README / DESIGN docs for KEYS and the Keys channel, and a checklist in this file for Luke: phone (touch keyboard, chords, slide, layout, offline with `npm run lan`) and loopMIDI or a keyboard (Keys channel out and in, pitch bend, sustain, learn).
-- Ear checks Claude can't do: preset and sampled-instrument sounds and gains, glide, release tails, bend, ARP and loop-note timing.
+M5 step 7 is written up. After Luke's phone and hardware test passes: merge `feat/m5-instruments` into `main` (ask Luke first), then plan M6.
