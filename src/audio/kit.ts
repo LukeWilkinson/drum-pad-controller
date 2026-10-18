@@ -72,6 +72,8 @@ export interface UserKit {
 export const SOFT_LAYER_BELOW = 72;
 export const SAMPLES_ROOT = `${import.meta.env.BASE_URL}samples/`;
 export const SAMPLE_DIR = `${SAMPLES_ROOT}sonicpi/`;
+/** Sample file type. The artifact build (scripts/build-artifact.mjs) sets VITE_SAMPLE_EXT=wav, because artifacts can't serve FLAC. */
+export const SAMPLE_EXT: string = import.meta.env.VITE_SAMPLE_EXT || 'flac';
 
 export const GROUP_COLOUR: Record<PadGroup, string> = {
   kick: '#FF5A4E',

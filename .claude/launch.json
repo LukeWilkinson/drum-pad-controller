@@ -14,6 +14,13 @@
       "runtimeArgs": ["node_modules/vite/bin/vite.js", "--port", "5180"],
       "env": { "HTTP": "1" },
       "port": 5180
+    },
+    {
+      "name": "artifact-preview",
+      "runtimeExecutable": "C:\\Program Files\\nodejs\\node.exe",
+      "runtimeArgs": ["node_modules/vite/bin/vite.js", "preview", "--outDir", "dist-artifact", "--port", "4190"],
+      "env": { "HTTP": "1" },
+      "port": 4190
     }
   ]
 }

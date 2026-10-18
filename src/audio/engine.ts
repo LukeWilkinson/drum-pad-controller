@@ -8,6 +8,7 @@
 import {
   PADS_PER_BANK,
   SAMPLE_DIR,
+  SAMPLE_EXT,
   SAMPLES_ROOT,
   SOFT_LAYER_BELOW,
   sampleNamesOf,
@@ -257,7 +258,7 @@ export class AudioEngine {
 
   /** Drum samples are plain names in SAMPLE_DIR; a name with a folder ("instruments/grand/60") is under samples/. */
   private async fetchSample(name: string): Promise<void> {
-    const res = await fetch(`${name.includes('/') ? SAMPLES_ROOT : SAMPLE_DIR}${name}.flac`);
+    const res = await fetch(`${name.includes('/') ? SAMPLES_ROOT : SAMPLE_DIR}${name}.${SAMPLE_EXT}`);
     if (!res.ok) throw new Error(`Sample ${name}: HTTP ${res.status}`);
     this.buffers.set(name, await this.ctx.decodeAudioData(await res.arrayBuffer()));
   }

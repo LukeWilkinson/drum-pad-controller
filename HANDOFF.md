@@ -341,5 +341,12 @@ SPEC milestone 6: reverb, delay, filter, master volume, latency calibration, the
 - Claude, per step, by script in the browser pane (`dev-http`), plus layout at the 3 sizes.
 - Claude can't hear the browser pane: reverb / delay / filter sound, meters vs. what's heard, and calibration on a real phone are Luke's checks.
 
+## Artifact copy for the phone on any network (2026-10-18)
+- Private artifact (Luke only): https://claude.ai/artifact/MbnHic1eBBj259fj4y5bib, version 1 = `main` at M5.
+- Built by `npm run build:artifact` (`scripts/build-artifact.mjs`): relative paths, `VITE_SAMPLE_EXT=wav` (artifacts can't serve FLAC, so every sample is converted to WAV with ffmpeg, 32.6 MB), no service worker or manifest. Output is `dist-artifact/` (git-ignored): the page `drum-pads.html` plus `files.json`, the supporting files list for the Artifact tool's `files` (with `root: dist-artifact`).
+- To update it: run `npm run build:artifact`, then ask Claude to republish to that URL (Claude asks Luke first). The script hashes asset names, so use the new `files.json`.
+- In the artifact: no Web MIDI, no install, no offline mode; kits and loops saved there are separate from the installed app.
+- Checked by Claude in the browser pane from `dist-artifact` (`artifact-preview` in launch.json): kit loads from WAVs, a pad hit shows on the LCD. Not checked on the live artifact or on the phone.
+
 ## Next step
 M5 merged into `main` (2856f83, 2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 planning is paused (see "M6" above): resume in plan mode, ask Luke the 4 open questions, finalise the steps and get plan approval.
