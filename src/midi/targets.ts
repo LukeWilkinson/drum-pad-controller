@@ -9,6 +9,7 @@
 import type { AudioEngine } from '../audio/engine';
 import * as clock from '../audio/clock';
 import { BANK_NAMES, PADS_PER_BANK, PAD_COUNT, PARAM_RANGE, padLabel, type ParamKey } from '../audio/kit';
+import * as keys from '../keys/keys';
 import { saveMasterVolume, selectBank, setParam } from '../kitControl';
 import { toggleFullLevel } from '../pads/hits';
 import { SWING_MAX, SWING_MIN } from '../seq/pattern';
@@ -61,6 +62,13 @@ const FIXED: Record<string, Target> = {
   'full-level': { label: 'FULL LEVEL', press: toggleFullLevel },
   swing: { label: 'SWING', set: (v) => seq.setSwing(between(SWING_MIN, SWING_MAX, v)) },
   master: { label: 'MASTER', set: setMaster },
+  'oct-down': { label: 'KEYS OCTAVE −', press: () => keys.nudgeOctave(-1) },
+  'oct-up': { label: 'KEYS OCTAVE +', press: () => keys.nudgeOctave(1) },
+  hold: { label: 'KEYS HOLD', press: keys.toggleHold },
+  arp: { label: 'KEYS ARP', press: keys.toggleArp },
+  snap: { label: 'KEYS SNAP', press: keys.toggleSnap },
+  'src:synth': { label: 'KEYS SYNTH', press: () => keys.setSource('synth') },
+  'src:sampled': { label: 'KEYS SAMPLED', press: () => keys.setSource('sampled') },
 };
 
 /** The target for an id, or null if the id is unknown (e.g. from an older save). */
@@ -71,6 +79,7 @@ export function findTarget(id: string): Target | null {
   if (kind === 'pad' && Number.isInteger(n) && n >= 0 && n < PAD_COUNT) return { label: `PAD ${padLabel(n)}`, pad: n };
   if (kind === 'bank' && Number.isInteger(n) && n >= 0 && n < BANK_NAMES.length) return { label: `BANK ${BANK_NAMES[n]}`, press: () => selectBank(n) };
   if (kind === 'loop' && Number.isInteger(n) && n >= 0 && n < state.patterns.length) return { label: `LOOP ${n + 1}`, press: () => seq.selectPattern(n) };
+  if (kind === 'preset' && Number.isInteger(n) && n >= 0 && n < 4) return { label: `KEYS PRESET ${n + 1}`, press: () => keys.selectPreset(n) };
   if (kind === 'param' && arg in PARAM_RANGE) {
     const key = arg as ParamKey;
     const { min, max, step } = PARAM_RANGE[key];

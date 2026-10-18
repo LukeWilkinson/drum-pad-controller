@@ -26,6 +26,8 @@ const held = new Map<number, number>();
 const pressed = new Map<number, { note: number; count: number; unlatched: boolean }>();
 /** Notes HOLD keeps sounding after their keys came up. */
 const latched = new Set<number>();
+/** Whether each sounding note goes out as MIDI (false for notes that came in as MIDI). */
+const echoOf = new Map<number, boolean>();
 
 export function initNotes(i: KeysEngine): void {
   instrument = i;
@@ -45,7 +47,7 @@ export function initNotes(i: KeysEngine): void {
  * ends when both have let go. Snap is decided on the first press, so a release always ends the
  * note that press started. With HOLD on, tapping the key of a latched note ends it instead.
  */
-export function noteOn(key: number, velocity: number): void {
+export function noteOn(key: number, velocity: number, echo = true): void {
   if (key < 0 || key > 127) return;
   let p = pressed.get(key);
   if (!p) {
@@ -61,7 +63,7 @@ export function noteOn(key: number, velocity: number): void {
   }
   p.count++;
   if (p.unlatched) return;
-  start(p.note, velocity);
+  start(p.note, velocity, echo);
 }
 
 export function noteOff(key: number): void {
@@ -81,15 +83,16 @@ export function noteOff(key: number): void {
 }
 
 /** PITCH strip: −1 … 1 bends down or up by up to BEND_RANGE semitones; 0 is no bend. */
-export function bend(amount: number): void {
-  instrument.bend(Math.max(-1, Math.min(1, amount)) * BEND_RANGE);
+export function bend(amount: number, echo = true): void {
+  instrument.bend(Math.max(-1, Math.min(1, amount)) * BEND_RANGE, echo);
 }
 
-function start(note: number, velocity: number): void {
-  latched.delete(note); // held by a key again; latched again when it comes up
-  if (state.keys.arp) arp.add(note, velocity); // the arp records its own steps
+function start(note: number, velocity: number, echo: boolean): void {
+  latched.delete(note);
+  echoOf.set(note, echo); // held by a key again; latched again when it comes up
+  if (state.keys.arp) arp.add(note, velocity, echo); // the arp records its own steps
   else {
-    instrument.noteOn(note, velocity); // sound first
+    instrument.noteOn(note, velocity, echo); // sound first
     seq.recordNoteOn(note, velocity);
   }
   held.set(note, (held.get(note) ?? 0) + 1);
@@ -100,9 +103,11 @@ function start(note: number, velocity: number): void {
 }
 
 function end(note: number): void {
+  const echo = echoOf.get(note) ?? true;
+  echoOf.delete(note);
   if (state.keys.arp) arp.remove(note);
   else {
-    instrument.noteOff(note);
+    instrument.noteOff(note, echo);
     seq.recordNoteOff(note);
   }
   showKey(note, false);
@@ -124,4 +129,5 @@ function allOff(): void {
   held.clear();
   pressed.clear();
   latched.clear();
+  echoOf.clear();
 }

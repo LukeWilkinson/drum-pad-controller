@@ -55,22 +55,22 @@ export function buildKeysPanel(app: HTMLElement, opts: KeysPanelOptions): HTMLEl
     <header class="ky-head">
       <h1>KEYS</h1>
       <div class="ky-src" role="group" aria-label="Instrument type">
-        <button class="ky-seg" data-src="synth" aria-pressed="true">SYNTH</button>
-        <button class="ky-seg" data-src="sampled" aria-pressed="false">SAMPLED</button>
+        <button class="ky-seg" data-src="synth" data-learn="src:synth" aria-pressed="true">SYNTH</button>
+        <button class="ky-seg" data-src="sampled" data-learn="src:sampled" aria-pressed="false">SAMPLED</button>
       </div>
-      <button class="ky-snap" aria-pressed="false"><span class="ky-snap-dot"></span><span class="ky-snap-text"></span><span class="ky-snap-short"></span></button>
+      <button class="ky-snap" data-learn="snap" aria-pressed="false"><span class="ky-snap-dot"></span><span class="ky-snap-text"></span><span class="ky-snap-short"></span></button>
     </header>
     <div class="ky-presets" role="group" aria-label="Presets">
-      ${[0, 1, 2, 3].map((i) => `<button class="ky-preset" data-i="${i}" aria-pressed="false"><span class="ky-pname"></span><span class="ky-pmeta"></span></button>`).join('')}
+      ${[0, 1, 2, 3].map((i) => `<button class="ky-preset" data-i="${i}" data-learn="preset:${i}" aria-pressed="false"><span class="ky-pname"></span><span class="ky-pmeta"></span></button>`).join('')}
     </div>
     <div class="ky-oct">
       <span class="ky-label">OCTAVE</span>
-      <button class="ky-btn ky-oct-down" aria-label="Octave down">−</button>
+      <button class="ky-btn ky-oct-down" data-learn="oct-down" aria-label="Octave down">−</button>
       <span class="ky-oct-val"></span>
-      <button class="ky-btn ky-oct-up" aria-label="Octave up">+</button>
+      <button class="ky-btn ky-oct-up" data-learn="oct-up" aria-label="Octave up">+</button>
       <span class="ky-spacer"></span>
-      <button class="ky-toggle ky-hold" aria-pressed="false">HOLD</button>
-      <button class="ky-toggle ky-arp" aria-pressed="false" aria-haspopup="dialog" title="Tap: on / off. Hold: options">ARP<span class="ky-arp-info"></span></button>
+      <button class="ky-toggle ky-hold" data-learn="hold" aria-pressed="false">HOLD</button>
+      <button class="ky-toggle ky-arp" data-learn="arp" aria-pressed="false" aria-haspopup="dialog" title="Tap: on / off. Hold: options">ARP<span class="ky-arp-info"></span></button>
     </div>
     <div class="ky-strips">
       <div class="ky-strip ky-pitch" role="slider" aria-label="Pitch bend" aria-valuemin="-2" aria-valuemax="2" aria-valuenow="0">

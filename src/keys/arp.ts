@@ -23,7 +23,7 @@ const GATE = 0.8;
 let engine: AudioEngine;
 let instrument: KeysEngine;
 /** Notes in the arp, low to high, with the velocity each was played at. */
-const notes: { note: number; vel: number }[] = [];
+const notes: { note: number; vel: number; echo: boolean }[] = [];
 let timer = 0;
 /** Tick of the next step and the context time tick 0 maps to (as in repeat.ts). */
 let nextTick = 0;
@@ -44,11 +44,13 @@ export function initArp(e: AudioEngine, keysEngine: KeysEngine): void {
 }
 
 /** Adds a note (or updates its velocity). The first note starts the arp. */
-export function add(note: number, vel: number): void {
+export function add(note: number, vel: number, echo = true): void {
   const i = notes.findIndex((n) => n.note === note);
-  if (i >= 0) notes[i].vel = vel;
-  else {
-    notes.push({ note, vel });
+  if (i >= 0) {
+    notes[i].vel = vel;
+    notes[i].echo = echo;
+  } else {
+    notes.push({ note, vel, echo });
     notes.sort((a, b) => a.note - b.note);
   }
   if (!timer) start();
@@ -132,11 +134,11 @@ function schedule(): void {
 /** Plays the next step at context time `when`, and records it (REC/DUB) at that time as it sounds. */
 function play(when: number, stepLength: number): void {
   if (!notes.length) return;
-  const { note, vel } = notes[pick()];
+  const { note, vel, echo } = notes[pick()];
   const length = stepLength * GATE;
   pending.push({
     when,
-    cancel: instrument.playAt(note, vel, when, length),
+    cancel: instrument.playAt(note, vel, when, length, echo),
     recordTimer: window.setTimeout(() => seq.recordNote(note, vel, when, length), (when - engine.ctx.currentTime) * 1000),
   });
 }

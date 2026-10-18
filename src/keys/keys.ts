@@ -100,6 +100,11 @@ export function toggleHold(): void {
   set({ hold: !state.keys.hold });
 }
 
+/** HOLD on or off (a sustain pedal, MIDI CC 64). */
+export function setHold(hold: boolean): void {
+  if (hold !== state.keys.hold) set({ hold });
+}
+
 /** ARP on or off. Notes sounding are stopped either way (src/keys/notes.ts). */
 export function toggleArp(): void {
   set({ arp: !state.keys.arp });

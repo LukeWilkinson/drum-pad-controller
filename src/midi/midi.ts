@@ -16,6 +16,7 @@ interface Saved {
   output: string | null;
   input: string | null;
   channel: number;
+  keysChannel: number;
   localSound: boolean;
   clock: boolean;
   mappings: Mapping[];
@@ -47,8 +48,8 @@ function patch(p: Partial<MidiState>): void {
 
 function save(): void {
   if (!loaded) return;
-  const { output, input, channel, localSound, clock, mappings } = state.midi;
-  const saved: Saved = { enabled, output, input, channel, localSound, clock, mappings };
+  const { output, input, channel, keysChannel, localSound, clock, mappings } = state.midi;
+  const saved: Saved = { enabled, output, input, channel, keysChannel, localSound, clock, mappings };
   setPref(PREF, saved).catch(warn);
 }
 
@@ -67,6 +68,7 @@ export async function initMidi(): Promise<void> {
         autoIn = false;
       }
       if (Number.isInteger(saved.channel) && saved.channel! >= 1 && saved.channel! <= 16) p.channel = saved.channel;
+      if (Number.isInteger(saved.keysChannel) && saved.keysChannel! >= 1 && saved.keysChannel! <= 16) p.keysChannel = saved.keysChannel;
       if (typeof saved.localSound === 'boolean') p.localSound = saved.localSound;
       if (typeof saved.clock === 'boolean') p.clock = saved.clock;
       if (Array.isArray(saved.mappings)) p.mappings = saved.mappings.filter(isMapping);
@@ -170,6 +172,10 @@ export function setInput(name: string | null): void {
 
 export function setChannel(channel: number): void {
   if (Number.isInteger(channel) && channel >= 1 && channel <= 16) patch({ channel });
+}
+
+export function setKeysChannel(keysChannel: number): void {
+  if (Number.isInteger(keysChannel) && keysChannel >= 1 && keysChannel <= 16) patch({ keysChannel });
 }
 
 export function setLocalSound(localSound: boolean): void {

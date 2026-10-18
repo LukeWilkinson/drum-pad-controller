@@ -57,7 +57,7 @@ seq.attachKeys(instrument); // loops play their KEYS notes on it
 notes.initNotes(instrument);
 arp.initArp(engine, instrument);
 initHits(engine, ui, padEls);
-midiOut.initOut(engine);
+midiOut.initOut(engine, instrument);
 midiClock.initMidiClock(engine);
 midiIn.initIn(ui);
 initTargets(engine, ui);

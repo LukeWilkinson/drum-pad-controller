@@ -265,8 +265,23 @@ function glassPluck(): Built {
 
 const SYNTHS = [warmPad, sawLead, subBass, glassPluck];
 
+/**
+ * Told about every KEYS note so it can go out as MIDI (src/midi/out.ts). `at()` returns a cancel
+ * function like playAt() does. The hook hears notes even while the app's own sound is muted.
+ */
+export interface KeysHook {
+  now(note: number, velocity: number): void;
+  off(note: number): void;
+  at(note: number, velocity: number, when: number, length: number): () => void;
+  /** Pitch bend in semitones (±2). */
+  bend(semitones: number): void;
+  /** Every note off (KeysEngine.allOff). */
+  allOff(): void;
+}
+
 export class KeysEngine {
   private bus: GainNode;
+  private hook: KeysHook | null = null;
   /** Presets, built the first time each is picked and then kept (sampled buffers stay loaded). */
   private synths: (Built | undefined)[] = [];
   private sampled: (SampledVoice | undefined)[] = [];
@@ -310,18 +325,27 @@ export class KeysEngine {
     return Promise.resolve();
   }
 
-  /** Starts `note` (MIDI number) now at MIDI velocity 1–127. Silent while the app's sound is muted for MIDI. */
-  noteOn(note: number, velocity: number): void {
-    if (!this.engine.localSound) return;
-    this.voice?.noteOn(note, Math.pow(velocity / 127, 1.3), this.engine.ctx.currentTime);
+  setHook(hook: KeysHook): void {
+    this.hook = hook;
   }
 
-  noteOff(note: number): void {
+  /**
+   * Starts `note` (MIDI number) now at MIDI velocity 1–127. Silent while the app's sound is muted
+   * for MIDI. `echo` false keeps it from going out as MIDI (it came in as MIDI).
+   */
+  noteOn(note: number, velocity: number, echo = true): void {
+    if (this.engine.localSound) this.voice?.noteOn(note, Math.pow(velocity / 127, 1.3), this.engine.ctx.currentTime);
+    if (echo) this.hook?.now(note, velocity);
+  }
+
+  noteOff(note: number, echo = true): void {
     this.voice?.noteOff(note, this.engine.ctx.currentTime);
+    if (echo) this.hook?.off(note);
   }
 
   allOff(): void {
     this.voice?.allOff(this.engine.ctx.currentTime);
+    this.hook?.allOff();
   }
 
   /**
@@ -329,8 +353,10 @@ export class KeysEngine {
    * the voice just before its time, so the returned cancel function still works: before the note
    * starts it never sounds; while it sounds it ends now.
    */
-  playAt(note: number, velocity: number, when: number, length: number): () => void {
-    if (!this.engine.localSound) return () => {};
+  playAt(note: number, velocity: number, when: number, length: number, echo = true): () => void {
+    const sound = this.engine.localSound;
+    const cancelMidi = echo ? this.hook?.at(note, velocity, when, length) : undefined;
+    if (!sound && !cancelMidi) return () => {};
     const ctx = this.engine.ctx;
     const vel = Math.pow(velocity / 127, 1.3);
     let voice: Voice | null = null; // the preset playing when the note started
@@ -345,13 +371,16 @@ export class KeysEngine {
       if (done) return;
       clearTimeout(onTimer);
       clearTimeout(offTimer);
+      cancelMidi?.();
       voice?.noteOff(note, ctx.currentTime);
       finish();
     };
-    onTimer = this.after(when, () => {
-      voice = this.voice;
-      voice?.noteOn(note, vel, Math.max(when, ctx.currentTime));
-    });
+    if (sound) {
+      onTimer = this.after(when, () => {
+        voice = this.voice;
+        voice?.noteOn(note, vel, Math.max(when, ctx.currentTime));
+      });
+    }
     offTimer = this.after(when + length, () => {
       voice?.noteOff(note, Math.max(when + length, ctx.currentTime));
       finish();
@@ -366,9 +395,10 @@ export class KeysEngine {
   }
 
   /** Pitch bend in semitones (±2 from the PITCH strip). */
-  bend(semitones: number): void {
+  bend(semitones: number, echo = true): void {
     this.cents = semitones * 100;
     this.voice?.bend(this.cents, this.engine.ctx.currentTime);
+    if (echo) this.hook?.bend(semitones);
   }
 
   /** Runs `fn` HANDOVER seconds before context time `t` (at once if that has passed). Returns the timer. */
