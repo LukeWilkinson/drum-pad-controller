@@ -1,9 +1,11 @@
-// KEYS panel (Keys.dc.html): SYNTH / SAMPLED, four presets, octave, HOLD / ARP, the pitch and mod
-// strips, and the keyboard. Built once; render() updates it from the store. The keyboard has 15
-// white keys (two octaves, C to C); phones show the first 10 (C to E), as in the design.
+// KEYS panel (Keys.dc.html): the snap chip, SYNTH / SAMPLED, four presets, octave, HOLD / ARP, the
+// pitch and mod strips, and the keyboard. Built once; render() updates it from the store. The keyboard
+// has 15 white keys (two octaves, C to C); phones show the first 10 (C to E), as in the design.
+// A dot marks the key's root on every octave; with snap on, keys outside the scale are dimmed.
 // Controls marked data-todo are wired up in later M5 steps (or later milestones).
 
 import * as keys from '../keys/keys';
+import { inScale, scaleLabel } from '../keys/scales';
 import { PRESETS, cOf, noteName, type KeysSource } from '../keys/types';
 import { state, subscribe } from '../state';
 
@@ -27,7 +29,7 @@ export function buildKeysPanel(app: HTMLElement): HTMLElement {
     `<button class="kb-key kb-white${i >= NARROW_WHITES ? ' wide' : ''}" data-off="${off}" tabindex="-1"><span class="kb-root"></span><span class="kb-label"></span></button>`,
   ).join('');
   const blacks = BLACKS.map(([off, after]) =>
-    `<button class="kb-key kb-black${after + 1 >= NARROW_WHITES ? ' wide' : ''}" data-off="${off}" tabindex="-1" style="--p:${after + 1}"></button>`,
+    `<button class="kb-key kb-black${after + 1 >= NARROW_WHITES ? ' wide' : ''}" data-off="${off}" tabindex="-1" style="--p:${after + 1}"><span class="kb-root"></span></button>`,
   ).join('');
   panel.innerHTML = `
     <header class="ky-head">
@@ -36,7 +38,7 @@ export function buildKeysPanel(app: HTMLElement): HTMLElement {
         <button class="ky-seg" data-src="synth" aria-pressed="true">SYNTH</button>
         <button class="ky-seg" data-src="sampled" aria-pressed="false">SAMPLED</button>
       </div>
-      <button class="ky-snap" data-todo="M5" aria-pressed="false"><span class="ky-snap-dot"></span>SNAP OFF</button>
+      <button class="ky-snap" aria-pressed="false"><span class="ky-snap-dot"></span><span class="ky-snap-text"></span><span class="ky-snap-short"></span></button>
     </header>
     <div class="ky-presets" role="group" aria-label="Presets">
       ${[0, 1, 2, 3].map((i) => `<button class="ky-preset" data-i="${i}" aria-pressed="false"><span class="ky-pname"></span><span class="ky-pmeta"></span></button>`).join('')}
@@ -66,6 +68,11 @@ export function buildKeysPanel(app: HTMLElement): HTMLElement {
   const segs = [...panel.querySelectorAll<HTMLButtonElement>('.ky-seg')];
   const presets = [...panel.querySelectorAll<HTMLButtonElement>('.ky-preset')];
   const octVal = panel.querySelector<HTMLElement>('.ky-oct-val')!;
+  const snapBtn = panel.querySelector<HTMLButtonElement>('.ky-snap')!;
+  const snapText = panel.querySelector<HTMLElement>('.ky-snap-text')!;
+  const snapShort = panel.querySelector<HTMLElement>('.ky-snap-short')!;
+
+  snapBtn.addEventListener('click', keys.toggleSnap);
 
   for (const seg of segs) seg.addEventListener('click', () => keys.setSource(seg.dataset.src as KeysSource));
   presets.forEach((btn, i) => btn.addEventListener('click', () => keys.selectPreset(i)));
@@ -84,13 +91,21 @@ export function buildKeysPanel(app: HTMLElement): HTMLElement {
       presets[i].setAttribute('aria-pressed', String(current));
     });
     octVal.textContent = `C${k.octave}`;
+    snapBtn.setAttribute('aria-pressed', String(k.snap));
+    snapText.textContent = k.snap ? `SNAP · ${scaleLabel(k.key, k.scale)}` : 'SNAP OFF';
+    snapShort.textContent = k.snap ? scaleLabel(k.key, k.scale, true) : 'SNAP OFF';
+    snapBtn.setAttribute('aria-label', k.snap ? `Scale snap on, ${scaleLabel(k.key, k.scale).toLowerCase()}` : 'Scale snap off');
     const base = cOf(k.octave);
     for (const [off, el] of keyEls) {
-      const name = noteName(base + off);
-      el.setAttribute('aria-label', name);
+      const note = base + off;
+      const out = k.snap && !inScale(note, k.key, k.scale);
+      const name = noteName(note);
+      el.setAttribute('aria-label', out ? `${name}, snaps to the scale` : name);
       const label = el.querySelector('.kb-label');
       if (label) label.textContent = name;
-      el.classList.toggle('down', lit.has(base + off));
+      el.classList.toggle('down', lit.has(note));
+      el.classList.toggle('out', out);
+      el.classList.toggle('root', note % 12 === k.key);
     }
   }
 

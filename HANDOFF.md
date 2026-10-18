@@ -238,5 +238,14 @@ Step 2 notes (2026-10-18):
 - Checked by script: load progress readout, nearest-root choice and rates (61 → C4 sample × 1.0595, A0 → A#0 sample), release, all 4 instruments play, strings loop points and seam, quick switching (only the last pick reports), back to SYNTH keeps the synth choice, no console errors, build precache.
 - Not checked: the sound (Claude can't hear the pane), memory use on a phone with all four loaded (about 1 MB of decoded audio per file at 48 kHz, so ~80 MB with all four).
 
+Step 3 notes (2026-10-18):
+- `src/keys/scales.ts` (pure, imports nothing): `KEY_NAMES`, `SCALES` (Major, Minor, Harmonic minor, Dorian, Mixolydian, Pentatonic major, Pentatonic minor, Blues; each with a short chip name), `inScale()`, `snap()` (nearest scale note, a tie goes down) and `scaleLabel()`.
+- `state.keys` gains `snap` (default off), `key` (0–11, default 9 = A) and `scale` (default Minor), saved in the `keys` pref; `keys.toggleSnap()`, `setKey()`, `setScale()`.
+- Snap happens in `src/keys/notes.ts`: each pressed key remembers the note it started, so its release ends that note even if snap, the key or the scale changes while it is held. Two keys that snap to the same note hold it until both let go. The snapped note is what sounds, lights up and shows on the LCD. (Loops and MIDI input will go through the same path.)
+- KEYS panel: the snap chip toggles snap ("SNAP · A MINOR", green dot; phone landscape shows the short form "A MIN" so SYNTH / SAMPLED still fit). With snap on, keys outside the scale dim to 45%. A dot marks the root on every octave (black keys too), with snap on or off, as in the design.
+- SETUP: a new AUTO-TUNE section with only the Scale snap card (switch, KEY, SCALE). KEY and SCALE dim when snap is off but can still be changed. The vocal pitch card waits for M7.
+- Checked by script: `snap()` against a brute-force nearest-note search for all 8 scales × 12 keys × 128 notes (12,288 cases, 0 wrong); A minor C# → C (tie down); C#4 played by the W key sounds and lights C4 and the LCD says C4; holding C4 and C#4, switching snap off, then releasing them in turn ends the note on the last release; snap off plays C#4; the chip and SETUP stay in step both ways; C major dims 7 keys; reload keeps snap on, D, Dorian; chip widths at 390×844 (longest "SNAP · C# PENTATONIC MINOR" fits) and 844×390 (short form, 115px, buttons not clipped).
+- A console error seen once (`onSixteenth` before the clock existed) came from Vite hot reload mixing module versions; a clean reload had no errors and the transport and sequencer ran.
+
 ## Next step
-Step 3 of M5: scale snap (Sonnet, medium).
+Step 4 of M5: HOLD, ARP and pitch bend (Opus, medium).

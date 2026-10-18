@@ -1,7 +1,10 @@
-// SETUP panel (Settings.dc.html): for now the MIDI card only. Built once; render() updates it from
-// the store. Also drives the tablet header's MIDI chip. The MIDI code does the work (src/midi/midi.ts,
-// and src/midi/learn.ts for the MIDI LEARN button and the mappings list).
+// SETUP panel (Settings.dc.html): the MIDI card and the Scale snap card (AUTO-TUNE; the vocal card
+// is M7). Built once; render() updates it from the store. Also drives the tablet header's MIDI chip.
+// The MIDI code does the work (src/midi/midi.ts, and src/midi/learn.ts for the MIDI LEARN button and
+// the mappings list); src/keys/keys.ts owns the snap settings.
 
+import * as keys from '../keys/keys';
+import { KEY_NAMES, SCALES, SCALE_IDS, type ScaleId } from '../keys/scales';
 import { toggleLearn } from '../midi/learn';
 import * as midi from '../midi/midi';
 import { messageLabel, targetLabel } from '../midi/targets';
@@ -55,6 +58,19 @@ export function buildSetupPanel(app: HTMLElement, ui: ScreenRefs): void {
           <p class="su-hint">Notes 36–99 play the pads: A1–A16 are 36–51, then B, C and D. A learned note takes over from this. Output goes out on the channel above. Input is read on every channel.</p>
         </div>
       </div>
+    </section>
+    <section class="su-section" aria-labelledby="su-tune-h">
+      <h2 id="su-tune-h">AUTO-TUNE</h2>
+      <div class="su-card">
+        <div class="su-row">
+          <div class="su-title"><span class="su-name">Scale snap</span><span class="su-sub">Notes played on KEYS snap to the key and scale</span></div>
+          <button class="su-sw su-snap" role="switch" aria-checked="false" aria-label="Scale snap"></button>
+        </div>
+        <div class="su-pair">
+          <label>KEY<select class="su-key">${KEY_NAMES.map((n, i) => `<option value="${i}">${n}</option>`).join('')}</select></label>
+          <label>SCALE<select class="su-scale">${SCALE_IDS.map((id) => `<option value="${id}">${SCALES[id].name}</option>`).join('')}</select></label>
+        </div>
+      </div>
     </section>`;
   app.appendChild(panel);
 
@@ -69,6 +85,14 @@ export function buildSetupPanel(app: HTMLElement, ui: ScreenRefs): void {
   const clock = q<HTMLButtonElement>('.su-clock');
   const learnBtn = q<HTMLButtonElement>('.su-learn');
   const maps = q<HTMLUListElement>('.su-maps');
+  const snapSw = q<HTMLButtonElement>('.su-snap');
+  const snapPair = q<HTMLElement>('.su-pair');
+  const keySel = q<HTMLSelectElement>('.su-key');
+  const scaleSel = q<HTMLSelectElement>('.su-scale');
+
+  snapSw.addEventListener('click', keys.toggleSnap);
+  keySel.addEventListener('change', () => keys.setKey(Number(keySel.value)));
+  scaleSel.addEventListener('change', () => keys.setScale(scaleSel.value as ScaleId));
 
   power.addEventListener('click', () => {
     const { status } = state.midi;
@@ -125,10 +149,20 @@ export function buildSetupPanel(app: HTMLElement, ui: ScreenRefs): void {
     learnBtn.textContent = state.learn.on ? 'LISTENING… MOVE A HARDWARE CONTROL' : 'MIDI LEARN';
   };
 
+  const renderSnap = () => {
+    const k = state.keys;
+    setSwitch(snapSw, k.snap);
+    snapPair.classList.toggle('off', !k.snap);
+    keySel.value = String(k.key);
+    scaleSel.value = k.scale;
+  };
+
   render(state.midi);
   renderLearn();
+  renderSnap();
   subscribe((s, changed) => {
     if (changed.has('midi')) render(s.midi);
     if (changed.has('learn')) renderLearn();
+    if (changed.has('keys')) renderSnap();
   });
 }

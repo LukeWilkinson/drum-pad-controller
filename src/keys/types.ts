@@ -1,5 +1,7 @@
-// KEYS types, preset names and note helpers. This file imports nothing, so state.ts, the audio
-// code and the UI can all use it.
+// KEYS types, preset names and note helpers. This file imports only a type from scales.ts (which
+// imports nothing), so state.ts, the audio code and the UI can all use it.
+
+import type { ScaleId } from './scales';
 
 export type KeysSource = 'synth' | 'sampled';
 
@@ -32,12 +34,24 @@ export interface KeysState {
   preset: Record<KeysSource, number>;
   /** Octave of the keyboard's left-most C (C4 = middle C). */
   octave: number;
+  /** Scale snap: played notes move to the nearest note of the key and scale. */
+  snap: boolean;
+  /** Key of the scale, a pitch class 0–11 (C = 0). */
+  key: number;
+  scale: ScaleId;
 }
 
 export const OCTAVE_MIN = 1;
 export const OCTAVE_MAX = 7;
 
-export const DEFAULT_KEYS: KeysState = { source: 'synth', preset: { synth: 0, sampled: 0 }, octave: 4 };
+export const DEFAULT_KEYS: KeysState = {
+  source: 'synth',
+  preset: { synth: 0, sampled: 0 },
+  octave: 4,
+  snap: false,
+  key: 9, // A
+  scale: 'minor',
+};
 
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 

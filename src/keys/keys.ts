@@ -1,4 +1,4 @@
-// KEYS settings: SYNTH / SAMPLED, the preset and the octave. This is the only code that changes
+// KEYS settings: SYNTH / SAMPLED, the preset, the octave and scale snap. This is the only code that changes
 // state.keys and state.keysLoad (as kitControl.ts is for kits). It keeps the instrument on the
 // chosen preset and saves the settings as the 'keys' pref.
 
@@ -6,6 +6,7 @@ import type { AudioEngine } from '../audio/engine';
 import { KeysEngine } from '../audio/keys';
 import { state, update, type AppState } from '../state';
 import { getPref, setPref } from '../store/db';
+import { SCALE_IDS, type ScaleId } from './scales';
 import { OCTAVE_MAX, OCTAVE_MIN, PRESETS, type KeysSource, type KeysState } from './types';
 
 const PREF = 'keys';
@@ -71,6 +72,19 @@ export function nudgeOctave(delta: number): void {
   setOctave(state.keys.octave + delta);
 }
 
+export function toggleSnap(): void {
+  set({ snap: !state.keys.snap });
+}
+
+/** Key of the scale, 0–11 (C = 0). */
+export function setKey(key: number): void {
+  if (Number.isInteger(key) && key >= 0 && key < 12 && key !== state.keys.key) set({ key });
+}
+
+export function setScale(scale: ScaleId): void {
+  if (SCALE_IDS.includes(scale) && scale !== state.keys.scale) set({ scale });
+}
+
 /** Restores the saved settings. Missing or out-of-range values keep their defaults. */
 async function loadKeys(): Promise<void> {
   const saved = await getPref<Partial<KeysState>>(PREF).catch(warn);
@@ -84,5 +98,8 @@ async function loadKeys(): Promise<void> {
   }
   patch.preset = preset;
   if (Number.isInteger(saved.octave) && saved.octave! >= OCTAVE_MIN && saved.octave! <= OCTAVE_MAX) patch.octave = saved.octave;
+  if (typeof saved.snap === 'boolean') patch.snap = saved.snap;
+  if (Number.isInteger(saved.key) && saved.key! >= 0 && saved.key! < 12) patch.key = saved.key;
+  if (SCALE_IDS.includes(saved.scale as ScaleId)) patch.scale = saved.scale;
   set(patch, false);
 }
