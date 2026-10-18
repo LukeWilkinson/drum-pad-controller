@@ -1,11 +1,36 @@
-// KEYS sound: the instrument played from the KEYS tab (and later the computer keyboard, loops and MIDI).
+// KEYS sound: the instrument played from the KEYS tab, the computer keyboard (later loops and MIDI).
 // Synth presets are Tone.js instruments on the engine's AudioContext. Live notes are triggered at
-// ctx.currentTime, so Tone's look-ahead never delays them. Sampled presets (step 2) will be raw
-// Web Audio voices like the drums. Every preset plays into one keys bus, which feeds the master.
+// ctx.currentTime, so Tone's look-ahead never delays them. Sampled presets are raw Web Audio voices
+// like the drums: the nearest recorded note, re-pitched with playbackRate (samples from
+// src/audio/instruments.json, loaded into the engine's buffer cache when first picked).
+// Every preset plays into one keys bus, which feeds the master.
 
 import { Distortion, FMSynth, Filter, MonoSynth, PolySynth, Synth, type ToneAudioNode } from 'tone';
 import type { AudioEngine } from './engine';
+import data from './instruments.json';
 import type { KeysSource } from '../keys/types';
+
+/** A sampled instrument (src/audio/instruments.json). */
+export interface InstrumentDef {
+  id: string;
+  name: string;
+  /** Length of each file in seconds. */
+  seconds: number;
+  /** Fade-out after note-off, seconds. */
+  release: number;
+  /** Level in dB, to even out the instruments. */
+  gain: number;
+  /** Sustain loop [start, end] in seconds, for instruments that hold (strings). */
+  loop?: number[];
+  /** Recorded notes, low to high. */
+  samples: { note: number }[];
+}
+
+export const INSTRUMENTS = data.instruments as InstrumentDef[];
+
+/** The engine's sample name for a recorded note: samples/instruments/<id>/<note>.flac. */
+const sampleName = (inst: InstrumentDef, note: number) => `instruments/${inst.id}/${note}`;
+const LOOP_FADE = 0.3; // seconds of crossfade baked in before a loop's end
 
 /** One preset's note handling. Times are context seconds; velocity is 0–1. */
 interface Voice {
@@ -72,6 +97,95 @@ class MonoVoice implements Voice {
   }
 }
 
+/**
+ * Recorded notes. Each note plays the nearest recorded one, re-pitched; a note played again while
+ * it still sounds is faded out first. Without a loop a note dies away with its sample.
+ */
+class SampledVoice implements Voice {
+  private sounding = new Map<number, { src: AudioBufferSourceNode; gain: GainNode }>();
+  private level: number;
+  /** Buffers whose loop crossfade is already baked in. */
+  private looped = new WeakSet<AudioBuffer>();
+
+  constructor(
+    private ctx: AudioContext,
+    private out: AudioNode,
+    private inst: InstrumentDef,
+    private bufferOf: (name: string) => AudioBuffer | undefined,
+  ) {
+    this.level = Math.pow(10, inst.gain / 20);
+  }
+
+  noteOn(note: number, velocity: number, time: number): void {
+    this.noteOff(note, time);
+    const root = nearest(this.inst.samples, note);
+    const buffer = this.bufferOf(sampleName(this.inst, root));
+    if (!buffer) return; // still loading
+    const src = this.ctx.createBufferSource();
+    src.buffer = buffer;
+    src.playbackRate.value = Math.pow(2, (note - root) / 12);
+    const loop = this.inst.loop;
+    if (loop && buffer.duration > loop[1]) {
+      this.bakeLoop(buffer, loop[0], loop[1]);
+      src.loop = true;
+      src.loopStart = loop[0];
+      src.loopEnd = loop[1];
+    }
+    const gain = this.ctx.createGain();
+    gain.gain.value = velocity * this.level;
+    src.connect(gain).connect(this.out);
+    src.start(time);
+    const voice = { src, gain };
+    src.addEventListener('ended', () => {
+      if (this.sounding.get(note) === voice) this.sounding.delete(note);
+    });
+    this.sounding.set(note, voice);
+  }
+
+  noteOff(note: number, time: number): void {
+    const v = this.sounding.get(note);
+    if (!v) return;
+    this.sounding.delete(note);
+    const release = this.inst.release;
+    const g = v.gain.gain;
+    g.cancelScheduledValues(time);
+    g.setValueAtTime(g.value, time);
+    g.setTargetAtTime(0, time, release / 4); // about 98% faded after `release`
+    v.src.stop(time + release + 0.05);
+  }
+
+  allOff(time: number): void {
+    for (const note of [...this.sounding.keys()]) this.noteOff(note, time);
+  }
+
+  /**
+   * Blends the last LOOP_FADE seconds before the loop end into the audio just before the loop
+   * start (equal power), so the jump back to the start is seamless. Done once per buffer, in place.
+   */
+  private bakeLoop(buffer: AudioBuffer, start: number, end: number): void {
+    if (this.looped.has(buffer)) return;
+    this.looped.add(buffer);
+    const rate = buffer.sampleRate;
+    const n = Math.floor(LOOP_FADE * rate);
+    const s = Math.floor(start * rate);
+    const e = Math.floor(end * rate);
+    for (let c = 0; c < buffer.numberOfChannels; c++) {
+      const d = buffer.getChannelData(c);
+      for (let i = 0; i < n; i++) {
+        const t = i / n;
+        d[e - n + i] = d[e - n + i] * Math.cos(t * Math.PI / 2) + d[s - n + i] * Math.sin(t * Math.PI / 2);
+      }
+    }
+  }
+}
+
+/** The recorded note closest to `note` (the lower one on a tie). */
+function nearest(samples: { note: number }[], note: number): number {
+  let best = samples[0].note;
+  for (const s of samples) if (Math.abs(s.note - note) < Math.abs(best - note)) best = s.note;
+  return best;
+}
+
 // ---------- Synth presets (same order as PRESETS.synth in src/keys/types.ts) ----------
 
 function warmPad(): Built {
@@ -129,8 +243,9 @@ const SYNTHS = [warmPad, sawLead, subBass, glassPluck];
 
 export class KeysEngine {
   private bus: GainNode;
-  /** Synth presets, built the first time each is picked and then kept. */
+  /** Presets, built the first time each is picked and then kept (sampled buffers stay loaded). */
   private synths: (Built | undefined)[] = [];
+  private sampled: (SampledVoice | undefined)[] = [];
   private voice: Voice | null = null;
 
   constructor(private engine: AudioEngine) {
@@ -138,12 +253,21 @@ export class KeysEngine {
     this.bus.connect(engine.input);
   }
 
-  /** Switches preset. Notes still sounding on the old one are released. */
-  setPreset(source: KeysSource, index: number): void {
+  /**
+   * Switches preset. Notes still sounding on the old one are released. A sampled instrument plays
+   * as soon as it is picked; notes are silent until their samples have loaded (the promise).
+   */
+  setPreset(source: KeysSource, index: number, onProgress?: (done: number, total: number) => void): Promise<void> {
     this.voice?.allOff(this.engine.ctx.currentTime);
     if (source === 'sampled') {
-      this.voice = null; // sampled instruments arrive in M5 step 2
-      return;
+      const inst = INSTRUMENTS[index];
+      let voice = this.sampled[index];
+      if (!voice) {
+        voice = new SampledVoice(this.engine.ctx, this.bus, inst, (name) => this.engine.buffer(name));
+        this.sampled[index] = voice;
+      }
+      this.voice = voice;
+      return this.engine.loadSamples(inst.samples.map((s) => sampleName(inst, s.note)), onProgress);
     }
     let built = this.synths[index];
     if (!built) {
@@ -152,6 +276,7 @@ export class KeysEngine {
       this.synths[index] = built;
     }
     this.voice = built.voice;
+    return Promise.resolve();
   }
 
   /** Starts `note` (MIDI number) now at MIDI velocity 1–127. Silent while the app's sound is muted for MIDI. */

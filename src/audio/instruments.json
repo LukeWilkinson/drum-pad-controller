@@ -1,0 +1,472 @@
+{
+  "about": "Sampled KEYS instruments. Files are fetched and converted by scripts/fetch-instruments.mjs into public/samples/instruments/<id>/<note>.flac. Notes are MIDI numbers (C4 = 60), the pitch each file really plays (VCSL piano and VSCO strings are named an octave low). Order matches PRESETS.sampled in src/keys/types.ts.",
+  "licence": "CC0 1.0 (public domain dedication)",
+  "sources": {
+    "vcsl": {
+      "name": "Versilian Community Sample Library (VCSL)",
+      "repo": "sgossner/VCSL",
+      "commit": "c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e"
+    },
+    "vsco": {
+      "name": "Versilian Studios Chamber Orchestra 2 Community Edition (VSCO-2 CE)",
+      "repo": "sgossner/VSCO-2-CE",
+      "commit": "440300901dfe9275fd84e0b7763af1f8443ae62e"
+    }
+  },
+  "format": {
+    "rate": 32000,
+    "fadeOut": 0.3
+  },
+  "instruments": [
+    {
+      "id": "grand",
+      "name": "Grand Piano",
+      "seconds": 5,
+      "release": 0.3,
+      "gain": 4,
+      "samples": [
+        {
+          "note": 22,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_A#-1_v3_rr1_Player.wav"
+        },
+        {
+          "note": 27,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_D#0_v3_rr1_Player.wav"
+        },
+        {
+          "note": 30,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_F#0_v3_rr1_Player.wav"
+        },
+        {
+          "note": 33,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_A0_v3_rr1_Player.wav"
+        },
+        {
+          "note": 36,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_C1_v3_rr1_Player.wav"
+        },
+        {
+          "note": 39,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_D#1_v3_rr1_Player.wav"
+        },
+        {
+          "note": 42,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_F#1_v3_rr1_Player.wav"
+        },
+        {
+          "note": 45,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_A1_v3_rr1_Player.wav"
+        },
+        {
+          "note": 48,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_C2_v3_rr1_Player.wav"
+        },
+        {
+          "note": 52,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_E2_v3_rr1_Player.wav"
+        },
+        {
+          "note": 56,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_G#2_v3_rr1_Player.wav"
+        },
+        {
+          "note": 60,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_C3_v3_rr1_Player.wav"
+        },
+        {
+          "note": 64,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_E3_v3_rr1_Player.wav"
+        },
+        {
+          "note": 68,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_G#3_v3_rr1_Player.wav"
+        },
+        {
+          "note": 72,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_C4_v3_rr1_Player.wav"
+        },
+        {
+          "note": 76,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_E4_v3_rr1_Player.wav"
+        },
+        {
+          "note": 80,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_G#4_v3_rr1_Player.wav"
+        },
+        {
+          "note": 83,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_B4_v3_rr1_Player.wav"
+        },
+        {
+          "note": 87,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_D#5_v3_rr1_Player.wav"
+        },
+        {
+          "note": 90,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_F#5_v3_rr1_Player.wav"
+        },
+        {
+          "note": 93,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_A5_v3_rr1_Player.wav"
+        },
+        {
+          "note": 96,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_C6_v3_rr1_Player.wav"
+        },
+        {
+          "note": 99,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_D#6_v3_rr1_Player.wav"
+        },
+        {
+          "note": 102,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_F#6_v3_rr1_Player.wav"
+        },
+        {
+          "note": 105,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_A6_v3_rr1_Player.wav"
+        },
+        {
+          "note": 108,
+          "source": "vcsl",
+          "file": "Chordophones/Zithers/Grand Piano, Kawai/Sustains/GPiano_sus_C7_v3_rr1_Player.wav"
+        }
+      ]
+    },
+    {
+      "id": "fm",
+      "name": "FM Piano",
+      "seconds": 4,
+      "release": 0.25,
+      "gain": 3,
+      "samples": [
+        {
+          "note": 24,
+          "source": "vcsl",
+          "file": "Electrophones/TX81Z/FM Piano/FMPiano_C1_vl2.wav"
+        },
+        {
+          "note": 28,
+          "source": "vcsl",
+          "file": "Electrophones/TX81Z/FM Piano/FMPiano_E1_vl2.wav"
+        },
+        {
+          "note": 32,
+          "source": "vcsl",
+          "file": "Electrophones/TX81Z/FM Piano/FMPiano_G#1_vl2.wav"
+        },
+        {
+          "note": 36,
+          "source": "vcsl",
+          "file": "Electrophones/TX81Z/FM Piano/FMPiano_C2_vl2.wav"
+        },
+        {
+          "note": 40,
+          "source": "vcsl",
+          "file": "Electrophones/TX81Z/FM Piano/FMPiano_E2_vl2.wav"
+        },
+        {
+          "note": 44,
+          "source": "vcsl",
+          "file": "Electrophones/TX81Z/FM Piano/FMPiano_G#2_vl2.wav"
+        },
+        {
+          "note": 48,
+          "source": "vcsl",
+          "file": "Electrophones/TX81Z/FM Piano/FMPiano_C3_vl2.wav"
+        },
+        {
+          "note": 52,
+          "source": "vcsl",
+          "file": "Electrophones/TX81Z/FM Piano/FMPiano_E3_vl2.wav"
+        },
+        {
+          "note": 56,
+          "source": "vcsl",
+          "file": "Electrophones/TX81Z/FM Piano/FMPiano_G#3_vl2.wav"
+        },
+        {
+          "note": 60,
+          "source": "vcsl",
+          "file": "Electrophones/TX81Z/FM Piano/FMPiano_C4_vl2.wav"
+        },
+        {
+          "note": 64,
+          "source": "vcsl",
+          "file": "Electrophones/TX81Z/FM Piano/FMPiano_E4_vl2.wav"
+        },
+        {
+          "note": 68,
+          "source": "vcsl",
+          "file": "Electrophones/TX81Z/FM Piano/FMPiano_G#4_vl2.wav"
+        },
+        {
+          "note": 72,
+          "source": "vcsl",
+          "file": "Electrophones/TX81Z/FM Piano/FMPiano_C5_vl2.wav"
+        },
+        {
+          "note": 76,
+          "source": "vcsl",
+          "file": "Electrophones/TX81Z/FM Piano/FMPiano_E5_vl2.wav"
+        },
+        {
+          "note": 80,
+          "source": "vcsl",
+          "file": "Electrophones/TX81Z/FM Piano/FMPiano_G#5_vl2.wav"
+        },
+        {
+          "note": 84,
+          "source": "vcsl",
+          "file": "Electrophones/TX81Z/FM Piano/FMPiano_C6_vl2.wav"
+        },
+        {
+          "note": 88,
+          "source": "vcsl",
+          "file": "Electrophones/TX81Z/FM Piano/FMPiano_E6_vl2.wav"
+        },
+        {
+          "note": 92,
+          "source": "vcsl",
+          "file": "Electrophones/TX81Z/FM Piano/FMPiano_G#6_vl2.wav"
+        },
+        {
+          "note": 96,
+          "source": "vcsl",
+          "file": "Electrophones/TX81Z/FM Piano/FMPiano_C7_vl2.wav"
+        }
+      ]
+    },
+    {
+      "id": "strings",
+      "name": "Strings",
+      "seconds": 5,
+      "release": 0.4,
+      "gain": -6,
+      "loop": [
+        1.2,
+        4.6
+      ],
+      "samples": [
+        {
+          "note": 36,
+          "source": "vsco",
+          "file": "Strings/Cello Section/susvib/susvib_C1_v3_1.wav"
+        },
+        {
+          "note": 40,
+          "source": "vsco",
+          "file": "Strings/Cello Section/susvib/susvib_E1_v3_1.wav"
+        },
+        {
+          "note": 43,
+          "source": "vsco",
+          "file": "Strings/Cello Section/susvib/susvib_G1_v3_1.wav"
+        },
+        {
+          "note": 47,
+          "source": "vsco",
+          "file": "Strings/Cello Section/susvib/susvib_B1_v3_1.wav"
+        },
+        {
+          "note": 50,
+          "source": "vsco",
+          "file": "Strings/Cello Section/susvib/susvib_D2_v3_1.wav"
+        },
+        {
+          "note": 55,
+          "source": "vsco",
+          "file": "Strings/Viola Section/susvib/ViolaEns_susvib_G2_v2_1.wav"
+        },
+        {
+          "note": 59,
+          "source": "vsco",
+          "file": "Strings/Viola Section/susvib/ViolaEns_susvib_B2_v2_1.wav"
+        },
+        {
+          "note": 62,
+          "source": "vsco",
+          "file": "Strings/Viola Section/susvib/ViolaEns_susvib_D3_v2_1.wav"
+        },
+        {
+          "note": 66,
+          "source": "vsco",
+          "file": "Strings/Violin Section/susVib/VlnEns_susVib_F#3_v2.wav"
+        },
+        {
+          "note": 69,
+          "source": "vsco",
+          "file": "Strings/Violin Section/susVib/VlnEns_susVib_A3_v2.wav"
+        },
+        {
+          "note": 72,
+          "source": "vsco",
+          "file": "Strings/Violin Section/susVib/VlnEns_susVib_C4_v2.wav"
+        },
+        {
+          "note": 76,
+          "source": "vsco",
+          "file": "Strings/Violin Section/susVib/VlnEns_susVib_E4_v2.wav"
+        },
+        {
+          "note": 79,
+          "source": "vsco",
+          "file": "Strings/Violin Section/susVib/VlnEns_susVib_G4_v2.wav"
+        },
+        {
+          "note": 83,
+          "source": "vsco",
+          "file": "Strings/Violin Section/susVib/VlnEns_susVib_B4_v2.wav"
+        },
+        {
+          "note": 86,
+          "source": "vsco",
+          "file": "Strings/Violin Section/susVib/VlnEns_susVib_D5_v2.wav"
+        }
+      ]
+    },
+    {
+      "id": "harp",
+      "name": "Concert Harp",
+      "seconds": 4,
+      "release": 0.5,
+      "gain": 9,
+      "samples": [
+        {
+          "note": 28,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_E1_f1.wav"
+        },
+        {
+          "note": 31,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_G1_mp1.wav"
+        },
+        {
+          "note": 35,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_B1_mf1.wav"
+        },
+        {
+          "note": 38,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_D2_mf1.wav"
+        },
+        {
+          "note": 41,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_F2_mf1.wav"
+        },
+        {
+          "note": 45,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_A2_mf1.wav"
+        },
+        {
+          "note": 48,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_C3_mf3.wav"
+        },
+        {
+          "note": 52,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_E3_mf1.wav"
+        },
+        {
+          "note": 55,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_G3_mf1.wav"
+        },
+        {
+          "note": 59,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_B3_mf1.wav"
+        },
+        {
+          "note": 62,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_D4_mf1.wav"
+        },
+        {
+          "note": 65,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_F4_mf1.wav"
+        },
+        {
+          "note": 69,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_A4_mf1.wav"
+        },
+        {
+          "note": 72,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_C5_mf1.wav"
+        },
+        {
+          "note": 76,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_E5_mf1.wav"
+        },
+        {
+          "note": 79,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_G5_mf1.wav"
+        },
+        {
+          "note": 83,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_B5_mf1.wav"
+        },
+        {
+          "note": 86,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_D6_mf1.wav"
+        },
+        {
+          "note": 89,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_F6_mf1.wav"
+        },
+        {
+          "note": 93,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_A6_mf1.wav"
+        },
+        {
+          "note": 98,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_D7_f1.wav"
+        },
+        {
+          "note": 101,
+          "source": "vcsl",
+          "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_F7_f1.wav"
+        }
+      ]
+    }
+  ]
+}

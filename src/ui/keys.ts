@@ -75,10 +75,13 @@ export function buildKeysPanel(app: HTMLElement): HTMLElement {
   function render(): void {
     const k = state.keys;
     for (const seg of segs) seg.setAttribute('aria-pressed', String(seg.dataset.src === k.source));
+    const load = state.keysLoad;
     PRESETS[k.source].forEach((p, i) => {
+      const current = i === k.preset[k.source];
+      const loading = current && load ? (load.failed ? "Couldn't load samples" : `Loading ${load.done}/${load.total}`) : '';
       presets[i].querySelector('.ky-pname')!.textContent = p.name;
-      presets[i].querySelector('.ky-pmeta')!.textContent = p.meta;
-      presets[i].setAttribute('aria-pressed', String(i === k.preset[k.source]));
+      presets[i].querySelector('.ky-pmeta')!.textContent = loading || p.meta;
+      presets[i].setAttribute('aria-pressed', String(current));
     });
     octVal.textContent = `C${k.octave}`;
     const base = cOf(k.octave);
@@ -92,7 +95,7 @@ export function buildKeysPanel(app: HTMLElement): HTMLElement {
   }
 
   render();
-  subscribe((_s, changed) => changed.has('keys') && render());
+  subscribe((_s, changed) => (changed.has('keys') || changed.has('keysLoad')) && render());
   return board;
 }
 

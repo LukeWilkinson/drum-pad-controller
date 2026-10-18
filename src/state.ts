@@ -48,6 +48,8 @@ export interface AppState {
   learn: LearnState;
   /** KEYS instrument settings (changed only by src/keys/keys.ts). */
   keys: KeysState;
+  /** Samples of the sampled instrument just picked: loading progress, or null when ready (src/keys/keys.ts). */
+  keysLoad: { done: number; total: number; failed: boolean } | null;
 }
 
 /** 'count' = count-in bar before recording starts. */
@@ -88,6 +90,7 @@ export const state: AppState = {
   },
   learn: { on: false, armed: null, last: null },
   keys: { ...DEFAULT_KEYS, preset: { ...DEFAULT_KEYS.preset } },
+  keysLoad: null,
 };
 
 const listeners = new Set<Listener>();

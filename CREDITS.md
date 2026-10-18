@@ -160,6 +160,25 @@ Files used, per built-in kit (all in `public/samples/sonicpi/`; the list comes f
 
 CC0 does not require attribution. The credit is kept here anyway, as thanks and so the source can be traced.
 
+## KEYS sampled instruments: Versilian Studios (CC0)
+
+- Sources: [Versilian Community Sample Library (VCSL)](https://github.com/sgossner/VCSL) and [Versilian Studios Chamber Orchestra 2 Community Edition (VSCO-2 CE)](https://github.com/sgossner/VSCO-2-CE).
+- Pinned commits: VCSL `c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e`, VSCO-2 CE `440300901dfe9275fd84e0b7763af1f8443ae62e`. Download and convert them with `npm run fetch-instruments` (see `scripts/fetch-instruments.mjs`; needs ffmpeg).
+- Licence: **CC0 1.0 (public domain)**. The VCSL README says "This collection is under a Creative Commons 0 license"; the VSCO-2-CE repo's LICENSE file is CC0-1.0.
+- Checked: 2026-10-18.
+- Changes: each file is mixed to mono, resampled to 32 kHz, cut to a few seconds after any leading silence, and faded out. The VCSL piano and VSCO string files are named an octave below the pitch they play; `src/audio/instruments.json` stores the real pitch.
+
+Files used (in `public/samples/instruments/<id>/<note>.flac`; the full list of source paths is in `src/audio/instruments.json`):
+
+| Preset | Source folder | Layer | Recorded notes |
+|---|---|---|---|
+| Grand Piano | Chordophones/Zithers/Grand Piano, Kawai/Sustains | v3 (medium) | 26: A#0, D#1, F#1, A1, C2, D#2, F#2, A2, C3, E3, G#3, C4, E4, G#4, C5, E5, G#5, B5, D#6, F#6, A6, C7, D#7, F#7, A7, C8 |
+| FM Piano | Electrophones/TX81Z/FM Piano | vl2 (medium) | 19: C1, E1, G#1, C2, E2, G#2, C3, E3, G#3, C4, E4, G#4, C5, E5, G#5, C6, E6, G#6, C7 |
+| Strings | Strings/Cello Section/susvib<br>Strings/Viola Section/susvib<br>Strings/Violin Section/susVib | cello v3, viola and violin v2 | 15: C2, E2, G2, B2, D3, G3, B3, D4, F#4, A4, C5, E5, G5, B5, D6 |
+| Concert Harp | Chordophones/Composite Chordophones/Concert Harp | mf (mp, f or p where no mf) | 22: E1, G1, B1, D2, F2, A2, C3, E3, G3, B3, D4, F4, A4, C5, E5, G5, B5, D6, F6, A6, D7, F7 |
+
+CC0 does not require attribution. The credit is kept here anyway, as thanks and so the source can be traced.
+
 ## Fonts
 
 - Archivo Narrow and JetBrains Mono, loaded from Google Fonts. Both are under the SIL Open Font License 1.1.

@@ -226,5 +226,17 @@ Step 1 notes (2026-10-18):
 - Checked by script at 390×844: C-E-G chord with 3 pointers (3 voices), slide C4 → D4 → C#4, release, LCD `KEYS · G4 · VEL 110 · WARM PAD`; Saw Lead last-note priority (C, E, G held → release G → E sounds); same note pressed twice ends on the second release; 10-note Warm Pad cluster; octave Z/X and −/+ (clamped C1–C7, labels follow); T = F#4 with tap tempo and DUB untouched; M still toggles the click; A plays a pad again on the PADS tab; `keys` pref round trip (SAMPLED, Strings, C2, synth choice kept) and a damaged pref → defaults. Layout measured at 844×390 (head, presets, octave and strips rows 44px, keyboard 158px) and 1280×800 (15 white keys C4–C6, rails kept).
 - Not checked: the sound of the presets (Claude can't hear the pane), real multi-touch on a phone.
 
+Step 2 notes (2026-10-18):
+- `src/audio/instruments.json`: the 4 instruments (Grand Piano 26 notes A#0–C8, FM Piano 19 C1–C7, Strings 15 C2–D6 from cello → viola → violin sections, Concert Harp 22 E1–F7), each file's source path, its real MIDI note, length, release, gain and (strings) a sustain loop. Picked by a one-off script: about one note every 3 semitones (4 on FM Piano, which only has C / E / G#), medium velocity layer.
+- **Octave naming:** measured by pitch detection. The VCSL Kawai piano and the VSCO strings are named an octave below what they play ("C4" plays C5); FM Piano and harp are named correctly. The JSON stores the real pitch. Mid-range roots measured within 15 cents.
+- `scripts/fetch-instruments.mjs` (`npm run fetch-instruments`, needs ffmpeg): downloads each pinned WAV (about 175 MB in all, streamed, not kept) and converts it to mono 32 kHz 16-bit FLAC: leading silence removed, cut to 4–5 s, 0.3 s fade-out. Result: 82 files, 8.0 MB (piano 2.07, FM 1.79, strings 2.95, harp 1.17 MB), in `public/samples/instruments/<id>/<note>.flac`, committed like the drum samples.
+- Sampled voices (`SampledVoice` in `src/audio/keys.ts`): the nearest recorded note, re-pitched by `playbackRate`; note-off fades over the instrument's release. Strings loop 1.2–4.6 s; the loop seam gets a 0.3 s equal-power crossfade baked into the buffer when first played, so held notes don't click or die out. Piano, FM and harp notes die away after 4–5 s even when held (a choice to keep the files small).
+- Gains even out the instruments by their measured loudness: piano +4 dB, FM +3, strings −6, harp +9. These are guesses for Luke's ear check.
+- An instrument's samples load when it is first picked (from the precache, ~50 ms locally). The picked preset's button shows "Loading n/26" meanwhile (`state.keysLoad`); if loading fails it shows "Couldn't load samples". Only the latest pick reports. All 82 files are precached (build: 203 entries, 13.0 MB).
+- The engine's sample names can now have a folder: `instruments/grand/60` loads from `samples/`, plain names still from `samples/sonicpi/` (`SAMPLES_ROOT` in `kit.ts`). `engine.buffer(name)` gives the keys engine the decoded buffers.
+- CREDITS.md has a new section for the instruments.
+- Checked by script: load progress readout, nearest-root choice and rates (61 → C4 sample × 1.0595, A0 → A#0 sample), release, all 4 instruments play, strings loop points and seam, quick switching (only the last pick reports), back to SYNTH keeps the synth choice, no console errors, build precache.
+- Not checked: the sound (Claude can't hear the pane), memory use on a phone with all four loaded (about 1 MB of decoded audio per file at 48 kHz, so ~80 MB with all four).
+
 ## Next step
-Step 2 of M5: sampled instruments (Sonnet, medium).
+Step 3 of M5: scale snap (Sonnet, medium).

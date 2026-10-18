@@ -8,6 +8,7 @@
 import {
   PADS_PER_BANK,
   SAMPLE_DIR,
+  SAMPLES_ROOT,
   SOFT_LAYER_BELOW,
   sampleNamesOf,
   type ActiveKit,
@@ -121,6 +122,11 @@ export class AudioEngine {
   /** Length in seconds of a loaded sample, or undefined if it isn't loaded yet. */
   sampleDuration(name: string): number | undefined {
     return this.buffers.get(name)?.duration;
+  }
+
+  /** A loaded sample's buffer (the KEYS sampled instruments play these), or undefined. */
+  buffer(name: string): AudioBuffer | undefined {
+    return this.buffers.get(name);
   }
 
   setMasterVolume(v: number): void {
@@ -249,8 +255,9 @@ export class AudioEngine {
     return { src, gain, when: now };
   }
 
+  /** Drum samples are plain names in SAMPLE_DIR; a name with a folder ("instruments/grand/60") is under samples/. */
   private async fetchSample(name: string): Promise<void> {
-    const res = await fetch(`${SAMPLE_DIR}${name}.flac`);
+    const res = await fetch(`${name.includes('/') ? SAMPLES_ROOT : SAMPLE_DIR}${name}.flac`);
     if (!res.ok) throw new Error(`Sample ${name}: HTTP ${res.status}`);
     this.buffers.set(name, await this.ctx.decodeAudioData(await res.arrayBuffer()));
   }

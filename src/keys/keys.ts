@@ -1,10 +1,10 @@
 // KEYS settings: SYNTH / SAMPLED, the preset and the octave. This is the only code that changes
-// state.keys (as kitControl.ts is for kits). It keeps the instrument on the chosen preset and
-// saves the settings as the 'keys' pref.
+// state.keys and state.keysLoad (as kitControl.ts is for kits). It keeps the instrument on the
+// chosen preset and saves the settings as the 'keys' pref.
 
 import type { AudioEngine } from '../audio/engine';
 import { KeysEngine } from '../audio/keys';
-import { state, update } from '../state';
+import { state, update, type AppState } from '../state';
 import { getPref, setPref } from '../store/db';
 import { OCTAVE_MAX, OCTAVE_MIN, PRESETS, type KeysSource, type KeysState } from './types';
 
@@ -18,7 +18,7 @@ const warn = (err: unknown) => console.warn('[store]', err);
 /** Builds the instrument on the default preset, then restores the saved settings. */
 export function initKeys(engine: AudioEngine): KeysEngine {
   instrument = new KeysEngine(engine);
-  instrument.setPreset(state.keys.source, state.keys.preset[state.keys.source]);
+  usePreset(state.keys.source, state.keys.preset[state.keys.source]);
   void loadKeys();
   return instrument;
 }
@@ -28,9 +28,27 @@ function set(patch: Partial<KeysState>, save = true): void {
   const keys = { ...before, ...patch };
   const from = before.preset[before.source];
   const to = keys.preset[keys.source];
-  if (keys.source !== before.source || to !== from) instrument.setPreset(keys.source, to);
+  if (keys.source !== before.source || to !== from) usePreset(keys.source, to);
   update({ keys });
   if (save) setPref(PREF, keys).catch(warn);
+}
+
+/** Counts picks, so a slow load doesn't report over the instrument picked after it. */
+let pick = 0;
+
+/** Switches the instrument. A sampled one shows its loading progress (state.keysLoad) until ready. */
+function usePreset(source: KeysSource, index: number): void {
+  const mine = ++pick;
+  const report = (load: AppState['keysLoad']) => {
+    if (mine === pick && JSON.stringify(load) !== JSON.stringify(state.keysLoad)) update({ keysLoad: load });
+  };
+  instrument
+    .setPreset(source, index, (done, total) => report(done < total ? { done, total, failed: false } : null))
+    .then(() => report(null))
+    .catch((err: unknown) => {
+      console.warn('[keys] samples', err);
+      report({ done: 0, total: 0, failed: true });
+    });
 }
 
 export function setSource(source: KeysSource): void {
