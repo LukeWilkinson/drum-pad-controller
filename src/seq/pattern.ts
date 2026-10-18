@@ -1,5 +1,5 @@
 // Pattern data and pure timing helpers (no audio, no DOM).
-// A pattern is a loop of 1–8 bars holding pad hits at tick positions, 96 ticks per beat.
+// A pattern is a loop of 1–8 bars holding pad hits and KEYS notes at tick positions, 96 ticks per beat.
 // Pads are numbered bank × 16 + screen index (0–63), so banks need no data change.
 
 export const BEATS_PER_BAR = 4;
@@ -27,24 +27,38 @@ export interface SeqEvent {
   vel: number;
 }
 
+/** A KEYS note recorded into a loop. */
+export interface NoteEvent {
+  /** Position in the pattern, like SeqEvent.tick. */
+  tick: number;
+  /** MIDI note number (C4 = 60). */
+  note: number;
+  /** MIDI velocity 1–127. */
+  vel: number;
+  /** Length in ticks; 0 while the note is still held during recording. */
+  len: number;
+}
+
 export interface Pattern {
   bars: Bars;
   /** Sorted by tick. Events past the current length are kept, so lengthening a loop brings them back. */
   events: SeqEvent[];
+  /** KEYS notes, sorted by tick and kept past the length like `events`. */
+  notes: NoteEvent[];
 }
 
 export function emptyPattern(bars: Bars = 2): Pattern {
-  return { bars, events: [] };
+  return { bars, events: [], notes: [] };
 }
 
 export function lengthTicks(p: Pattern): number {
   return p.bars * BAR_TICKS;
 }
 
-/** True when the pattern has at least one hit inside its current length. */
+/** True when the pattern has at least one hit or note inside its current length. */
 export function hasHits(p: Pattern): boolean {
   const end = lengthTicks(p);
-  return p.events.some((e) => e.tick < end);
+  return p.events.some((e) => e.tick < end) || p.notes.some((n) => n.tick < end);
 }
 
 /** Wraps any tick into 0 … length − 1. */
@@ -68,12 +82,12 @@ export function swingTicks(tick: number, swing: number): number {
 }
 
 /** Inserts keeping the list sorted by tick. */
-export function insertEvent(events: SeqEvent[], ev: SeqEvent): void {
+export function insertEvent<T extends { tick: number }>(events: T[], ev: T): void {
   let i = events.length;
   while (i > 0 && events[i - 1].tick > ev.tick) i--;
   events.splice(i, 0, ev);
 }
 
 export function clonePattern(p: Pattern): Pattern {
-  return { bars: p.bars, events: p.events.map((e) => ({ ...e })) };
+  return { bars: p.bars, events: p.events.map((e) => ({ ...e })), notes: p.notes.map((n) => ({ ...n })) };
 }

@@ -14,8 +14,10 @@ export interface MidiState {
   /** The chosen device names (null = None). The device may be unplugged: it is then not in the lists. */
   output: string | null;
   input: string | null;
-  /** Output channel, 1–16. Input is read on all channels. */
+  /** Pad output channel, 1–16. Pad notes come in on every channel except the Keys channel. */
   channel: number;
+  /** KEYS channel, 1–16: keys notes and pitch bend go out on it, and notes, pitch bend and CC 64 on it play KEYS. */
+  keysChannel: number;
   /** False mutes the app's own sound, so a DAW can play the sounds from the MIDI notes. */
   localSound: boolean;
   /** Send MIDI clock (step 5). */
@@ -41,6 +43,7 @@ export interface LearnState {
 }
 
 export const DEFAULT_CHANNEL = 10; // General MIDI drums
+export const DEFAULT_KEYS_CHANNEL = 1;
 
 /** The part of MIDIAccess the app uses. The dev-only fake (fake.ts) implements the same shape. */
 export interface PortLike {

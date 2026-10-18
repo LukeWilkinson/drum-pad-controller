@@ -1,4 +1,4 @@
-/* SETUP panel (Settings.dc.html): the MIDI card for now. Loaded after app.css, kits.css and seq.css.
+/* SETUP panel (Settings.dc.html): the MIDI and Scale snap cards. Loaded after app.css, kits.css and seq.css.
    .app[data-view="setup"] hides the pad grid and shows the panel, placed like the Kits panel:
    - phone portrait: the panel takes everything above the tab bar (controls hidden)
    - phone landscape and tablet: the panel takes the pad grid's place; the rails stay */
@@ -91,6 +91,15 @@
 .su-map span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .su-map-x { flex: none; width: 44px; height: 44px; background: none; color: var(--text-muted); font-size: 18px; }
 .su-map-x:hover { color: var(--text-strong); }
+
+/* Scale snap card (AUTO-TUNE): title + switch, then KEY and SCALE side by side. */
+.su-title { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.su-name { font-size: 16px; font-weight: 700; color: var(--text-strong); }
+.su-sub { font-size: 12px; color: var(--text-muted); }
+.su-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.su-pair.off { opacity: .45; }
+.su-pair label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--text-muted); }
+.su-pair select { width: 100%; max-width: none; }
 
 /* Tablet header chip: a green dot when an output device is connected. */
 .midi-chip[data-on="true"] .midi-dot { background: var(--play); }

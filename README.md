@@ -41,6 +41,7 @@ Open `https://192.168.x.x:4173` on the phone, then use Chrome menu → **Install
 | `npm run build` | Type-check and build to `dist/` |
 | `npm run lan` | Build, then serve `dist/` over HTTPS on the network (PWA works here) |
 | `npm run fetch-samples` | Download the CC0 drum samples (skips files already present) |
+| `npm run fetch-instruments` | Download and convert the CC0 KEYS instrument samples (needs ffmpeg; skips files already present) |
 | `npm run make-icons` | Regenerate PWA icons from `public/icons/icon.svg` |
 
 Set `HTTP=1` to turn off HTTPS. This is only for desktop checks; phones need HTTPS.
@@ -58,3 +59,12 @@ Set `HTTP=1` to turn off HTTPS. This is only for desktop checks; phones need HTT
 - **SAVE** stores the kit under **My kits**. It stays in this browser (IndexedDB) and the last kit reloads on startup.
 - On a tablet, the right-hand knobs edit the selected pad too: drag up or down, or double-tap to reset.
 - To add a kit, edit `src/audio/kits.json`, then run `npm run fetch-samples`.
+
+## Keys
+
+- Open **KEYS** for a keyboard. **SYNTH** has Warm Pad, Saw Lead, Sub Bass and Glass Pluck. **SAMPLED** has Grand Piano, FM Piano, Strings and Concert Harp (CC0 recordings, see CREDITS.md).
+- Touch: slide across keys to play each one; press lower on a key to play harder. Octave −/+ covers C1–C7.
+- Computer keyboard on the KEYS tab: `A S D F G H J K L ;` are the white keys, `W E T Y U O P` the black keys, `Z` / `X` the octave. Space, Shift+R, Ctrl+Z and M still work.
+- **SNAP** keeps notes in a key and scale (set in SETUP → Auto-tune). **HOLD** latches notes. **ARP** toggles the arpeggiator; hold it for mode and rate. **PITCH** bends ±2 semitones.
+- Notes record into LOOP 1–4 with REC / DUB, beside the drums, and play back with the current KEYS sound.
+- MIDI: SETUP has a **Keys channel** (default 1). Keys notes and pitch bend go out on it; notes, pitch bend and sustain (CC 64) coming in on it play KEYS. Other channels still play pads.

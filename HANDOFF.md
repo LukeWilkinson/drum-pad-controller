@@ -173,7 +173,132 @@ Step 5 notes (2026-10-18):
 - Switching clock on while playing sends clocks only (no Start; the receiver is not told a song restarted). Off by default; the SETUP switch (`midi.setClockOut`) is disabled while MIDI is off.
 - Checked by script with `?fakemidi`: nothing sent with the switch off; F2 00 00, FA, then F8 spaced 20.8 ms at 120 BPM (52 messages in ~1.1 s); Stop sends CC 123 then FC and nothing after; mid-play enable = clocks only; mid-play disable = FC; REC count-in sends no clock until the bar ends, then Start at ~1.98 s. Not checked: real hardware, and tempo changes mid-play (Tone follows the BPM, but not measured).
 
-## Next step
 M4 is done: Luke's hardware test passed (2026-10-18) for notes, channel, clock, learn, the SETUP layout, the permission prompt, the "no devices" state and the SEQ header Play/Stop button (abfbd25). `feat/m4-midi` is merged into `main`.
 
-Next: M5 Instruments (keyboard/melodic mode, Tone.js synth presets, sampled instruments, scale snap). Start with plan mode.
+## M5 (Instruments): planned 2026-10-18, building on `feat/m5-instruments`
+
+### Decisions from Luke (2026-10-18)
+- **Recording:** keys notes record into LOOP 1–4 (REC/DUB, quantise, undo, autosave) and play back with the drums. No note editing in SEQ; the grid stays drums-only.
+- **Where it's played:** the KEYS tab only (no melodic pads mode), by touch, the computer keyboard and MIDI.
+- **Samples:** CC0 / public domain only. SAMPLED presets: **Grand Piano** (VCSL Kawai grand), **FM Piano** (VCSL TX81Z, in place of the design's Electric Piano), **Strings** (VSCO-2 CE violin, viola and cello sections), **Concert Harp** (VCSL, in place of Nylon Guitar). Both repos say CC0 (checked 2026-10-18). Pinned to VCSL c1ea7bcc and VSCO-2-CE 44030090. No CC0 nylon guitar or sampled Rhodes/Wurlitzer was found.
+- **Storage:** sparse samples (about one per 3 semitones, one velocity layer, trimmed, mono FLAC), all precached for offline use.
+- **Extras in M5:** HOLD, ARP and the pitch-bend strip. The MOD strip is drawn as a `data-todo` placeholder.
+- **ARP:** tap toggles it; holding ARP opens a dialog with mode (Up, Down, Up-Down, Random) and rate (1/8, 1/16, 1/32, 1/8T). It locks to the transport grid while playing.
+- **MIDI:** a new **Keys channel** setting (default 1). Keys notes go out on it, and incoming notes on that channel play the instrument; all other channels still play pads.
+- **PC keyboard on the KEYS tab:** A S D F G H J K L = white keys, W E T Y U O P = black keys, Z / X = octave down / up. T plays F# there (tap tempo stays on the BPM readout, and T on other tabs). Space, Shift+R, Ctrl+Z and M still work.
+- **Loop sound:** recorded notes play with the current KEYS preset (one instrument for the whole song).
+
+### Claude's choices (Luke can override)
+- **Two voice engines.** Synth presets use Tone.js instruments on `engine.ctx`, triggered at `ctx.currentTime` for live notes. Sampled presets use raw Web Audio voices like the drums (nearest root sample, `playbackRate` for pitch, `detune` for bend, a release fade), sharing the engine's buffer cache. Both go through a keys gain bus into the master.
+- **Synth presets** follow the design: Warm Pad (poly, slow attack), Saw Lead (mono, glide), Sub Bass (mono, sine + drive), Glass Pluck (poly FM, short). Mono presets use last-note priority.
+- **Scale snap** changes the note at input time, so what plays, records and goes out as MIDI is the snapped note. An out-of-scale key snaps to the nearest scale note; a tie goes down. It applies to MIDI input on the Keys channel too. Scales: Major, Minor, Harmonic minor, Dorian, Mixolydian, Pentatonic major, Pentatonic minor, Blues. Default key A, Minor, snap off.
+- **HOLD** latches notes until the key is tapped again or HOLD goes off; with ARP on it latches the arp's notes. MIDI CC 64 (sustain) on the Keys channel works like holding HOLD down.
+- **Pitch bend** is ±2 semitones, springs back on release, is live only (not recorded), and goes out as MIDI pitch bend.
+- **Recorded notes** are `{ tick, note, vel, len }` events next to the drum `{ tick, pad, vel }` events in the same loop. A note held past the loop end is cut at the loop length. Arp notes are recorded at their exact time, like Note Repeat.
+- **Scheduled synth notes** are handed to Tone on a timer just before their time (as `src/midi/out.ts` does), so Stop and cancel still work.
+- **Layouts:** the KEYS panel sits where the Kits/SEQ/SETUP panels sit. Phone portrait and landscape show 10 white keys (C to E, as in the design); tablet shows 15 (C to C, two octaves).
+- **Saved as one `keys` pref:** source, preset per source, octave, arp mode and rate, snap on/off, key, scale. HOLD and ARP on/off aren't restored at boot.
+- **MIDI Learn:** octave −/+, HOLD, ARP, snap on/off, SYNTH/SAMPLED and the preset buttons.
+- The LCD last-hit line shows e.g. `KEYS · C4 · VEL 100 · WARM PAD`.
+
+### Steps (Luke checks in after each; one commit per step)
+Suggested model: Opus, medium for steps 1 and 4; Opus, high for step 5; Sonnet, medium for steps 2, 3, 6 and 7.
+Commits: plan 9c5a10f, step 1 f434100, step 2 baff273, step 3 ddb6bb3, step 4 ad11ee6, step 5 80ecc8a, step 6 d263a79, step 7 75c446e.
+1. **KEYS tab with the synth presets.** `'keys'` view; `src/ui/keys.ts` + `src/styles/keys.css` from `Keys.dc.html` at all 3 sizes; `src/audio/keys.ts` (keys voice engine, 4 Tone presets, keys bus); `src/keys/keys.ts` (only code that changes `state.keys`, `keys` pref); `src/keys/notes.ts` (the one note-hit path); touch keyboard with multi-touch and slide; PC piano keys on the KEYS tab; octave C1–C7.
+2. **Sampled instruments.** `src/audio/instruments.json`; `scripts/fetch-instruments.mjs` (`npm run fetch-instruments`, pinned WAVs → ffmpeg → trimmed mono FLAC in `public/samples/instruments/<id>/`, about 3 MB each); sampled voices; precache; CREDITS.md.
+3. **Scale snap.** `src/keys/scales.ts` (pure); snap chip, dimmed out-of-scale keys, root dot; SETUP AUTO-TUNE section with the Scale snap card only (the vocal card is M7).
+4. **HOLD, ARP and pitch bend.** HOLD latch; pitch strip; `src/keys/arp.ts` (built like `src/seq/repeat.ts`); ARP options dialog.
+5. **Recording keys into loops.** Note events in `src/seq/pattern.ts`; `recordNoteOn` / `recordNoteOff`, playback, undo, cancel on stop and autosave in `src/seq/sequencer.ts`; old saves still load.
+6. **Keys MIDI.** `state.midi.keysChannel` + SETUP select; keys notes and pitch bend out; Keys-channel notes, pitch bend and CC 64 in; keys learn targets.
+7. **Docs and Luke's phone / hardware checklist.**
+
+### Checks
+- Claude, per step, by script in the browser pane (`dev-http`, `?fakemidi` for MIDI), plus layout at 390×844, 844×390 and 1280×800.
+- Claude can't hear the browser pane, so the sound of each preset, glide, release tails, bend and timing by ear are Luke's checks.
+- Luke, at the end: the phone test (touch keyboard, chords, slide, layout, offline with `npm run lan`) and loopMIDI (keys channel out, notes in, pitch bend, sustain).
+
+Step 1 notes (2026-10-18):
+- New files: `src/keys/types.ts` (KeysState, PRESETS, `noteName`, `cOf`; imports nothing), `src/audio/keys.ts` (`KeysEngine`: Tone presets, PolyVoice / MonoVoice, keys bus into `engine.input`), `src/keys/keys.ts` (only code that changes `state.keys`; `keys` pref), `src/keys/notes.ts` (the one note path: sound, then lit key and LCD; counts presses per note so a note ends when the last finger/key lets go), `src/keys/input.ts` (pointer + PC keys), `src/ui/keys.ts` + `src/styles/keys.css` (the panel).
+- Touch: the board captures each pointer, so sliding plays every key reached and a finger leaving the keyboard stops its note. Pressing lower on a key plays it harder (v = 40 + 87 × y/height), like the front of a real key.
+- PC keys on the KEYS tab only: A S D F G H J K L ; = white, W E T Y U O P = black, Z / X = octave. The pad keys and the O / T shortcuts are off on that tab; Space, Shift+R, Ctrl+Z and M still work.
+- The 4 synth presets sound only in the app for now; SAMPLED presets can be picked but are silent until step 2. Snap chip, HOLD, ARP and PITCH are `data-todo="M5"` (steps 3–4); MOD is `data-todo="LATER"`.
+- Fixed while checking: Tone throws if a mono synth is restarted at the same audio time (two keys in one event), so a mono voice keeps its attacks at least 1 ms apart.
+- The SYNTH / SAMPLED buttons are 38px tall inside a 44px strip, as in the design (under the 44px rule).
+- Checked by script at 390×844: C-E-G chord with 3 pointers (3 voices), slide C4 → D4 → C#4, release, LCD `KEYS · G4 · VEL 110 · WARM PAD`; Saw Lead last-note priority (C, E, G held → release G → E sounds); same note pressed twice ends on the second release; 10-note Warm Pad cluster; octave Z/X and −/+ (clamped C1–C7, labels follow); T = F#4 with tap tempo and DUB untouched; M still toggles the click; A plays a pad again on the PADS tab; `keys` pref round trip (SAMPLED, Strings, C2, synth choice kept) and a damaged pref → defaults. Layout measured at 844×390 (head, presets, octave and strips rows 44px, keyboard 158px) and 1280×800 (15 white keys C4–C6, rails kept).
+- Not checked: the sound of the presets (Claude can't hear the pane), real multi-touch on a phone.
+
+Step 2 notes (2026-10-18):
+- `src/audio/instruments.json`: the 4 instruments (Grand Piano 26 notes A#0–C8, FM Piano 19 C1–C7, Strings 15 C2–D6 from cello → viola → violin sections, Concert Harp 22 E1–F7), each file's source path, its real MIDI note, length, release, gain and (strings) a sustain loop. Picked by a one-off script: about one note every 3 semitones (4 on FM Piano, which only has C / E / G#), medium velocity layer.
+- **Octave naming:** measured by pitch detection. The VCSL Kawai piano and the VSCO strings are named an octave below what they play ("C4" plays C5); FM Piano and harp are named correctly. The JSON stores the real pitch. Mid-range roots measured within 15 cents.
+- `scripts/fetch-instruments.mjs` (`npm run fetch-instruments`, needs ffmpeg): downloads each pinned WAV (about 175 MB in all, streamed, not kept) and converts it to mono 32 kHz 16-bit FLAC: leading silence removed, cut to 4–5 s, 0.3 s fade-out. Result: 82 files, 8.0 MB (piano 2.07, FM 1.79, strings 2.95, harp 1.17 MB), in `public/samples/instruments/<id>/<note>.flac`, committed like the drum samples.
+- Sampled voices (`SampledVoice` in `src/audio/keys.ts`): the nearest recorded note, re-pitched by `playbackRate`; note-off fades over the instrument's release. Strings loop 1.2–4.6 s; the loop seam gets a 0.3 s equal-power crossfade baked into the buffer when first played, so held notes don't click or die out. Piano, FM and harp notes die away after 4–5 s even when held (a choice to keep the files small).
+- Gains even out the instruments by their measured loudness: piano +4 dB, FM +3, strings −6, harp +9. These are guesses for Luke's ear check.
+- An instrument's samples load when it is first picked (from the precache, ~50 ms locally). The picked preset's button shows "Loading n/26" meanwhile (`state.keysLoad`); if loading fails it shows "Couldn't load samples". Only the latest pick reports. All 82 files are precached (build: 203 entries, 13.0 MB).
+- The engine's sample names can now have a folder: `instruments/grand/60` loads from `samples/`, plain names still from `samples/sonicpi/` (`SAMPLES_ROOT` in `kit.ts`). `engine.buffer(name)` gives the keys engine the decoded buffers.
+- CREDITS.md has a new section for the instruments.
+- Checked by script: load progress readout, nearest-root choice and rates (61 → C4 sample × 1.0595, A0 → A#0 sample), release, all 4 instruments play, strings loop points and seam, quick switching (only the last pick reports), back to SYNTH keeps the synth choice, no console errors, build precache.
+- Not checked: the sound (Claude can't hear the pane), memory use on a phone with all four loaded (about 1 MB of decoded audio per file at 48 kHz, so ~80 MB with all four).
+
+Step 3 notes (2026-10-18):
+- `src/keys/scales.ts` (pure, imports nothing): `KEY_NAMES`, `SCALES` (Major, Minor, Harmonic minor, Dorian, Mixolydian, Pentatonic major, Pentatonic minor, Blues; each with a short chip name), `inScale()`, `snap()` (nearest scale note, a tie goes down) and `scaleLabel()`.
+- `state.keys` gains `snap` (default off), `key` (0–11, default 9 = A) and `scale` (default Minor), saved in the `keys` pref; `keys.toggleSnap()`, `setKey()`, `setScale()`.
+- Snap happens in `src/keys/notes.ts`: each pressed key remembers the note it started, so its release ends that note even if snap, the key or the scale changes while it is held. Two keys that snap to the same note hold it until both let go. The snapped note is what sounds, lights up and shows on the LCD. (Loops and MIDI input will go through the same path.)
+- KEYS panel: the snap chip toggles snap ("SNAP · A MINOR", green dot; phone landscape shows the short form "A MIN" so SYNTH / SAMPLED still fit). With snap on, keys outside the scale dim to 45%. A dot marks the root on every octave (black keys too), with snap on or off, as in the design.
+- SETUP: a new AUTO-TUNE section with only the Scale snap card (switch, KEY, SCALE). KEY and SCALE dim when snap is off but can still be changed. The vocal pitch card waits for M7.
+- Checked by script: `snap()` against a brute-force nearest-note search for all 8 scales × 12 keys × 128 notes (12,288 cases, 0 wrong); A minor C# → C (tie down); C#4 played by the W key sounds and lights C4 and the LCD says C4; holding C4 and C#4, switching snap off, then releasing them in turn ends the note on the last release; snap off plays C#4; the chip and SETUP stay in step both ways; C major dims 7 keys; reload keeps snap on, D, Dorian; chip widths at 390×844 (longest "SNAP · C# PENTATONIC MINOR" fits) and 844×390 (short form, 115px, buttons not clipped).
+- A console error seen once (`onSixteenth` before the clock existed) came from Vite hot reload mixing module versions; a clean reload had no errors and the transport and sequencer ran.
+
+Step 4 notes (2026-10-18):
+- **Scheduled notes:** `KeysEngine.playAt(note, vel, when, length)` hands the note to the voice 30 ms before its time (and its note-off 30 ms before that), so the returned cancel works: a note not yet started never sounds; one sounding ends now. `cancelScheduled()` cancels them all. The arp uses it now; loops will in step 5.
+- **HOLD** (`state.keys.hold`): a note keeps sounding after its key comes up. Tapping that key again ends it. HOLD off ends the held notes, but a key still down keeps its note. Lit keys show what HOLD keeps.
+- **ARP** (`src/keys/arp.ts`, built like Note Repeat): held (or HOLD-kept) notes play one at a time with an 80% gate. The first note sounds at once; stopped, the grid starts there; playing, steps land on the transport grid, with swing at 1/16 (as Note Repeat swings, stopped too). Each step goes on from the last note played: UP = next higher (wrap to the lowest), DOWN = next lower, UP-DOWN bounces, RANDOM never repeats a note; so notes joining or leaving mid-run fit in. A rate change or transport start/stop re-locks the grid from the next step. ARP on/off stops everything sounding (a note can't carry over between the two ways of playing).
+- **ARP button:** tap toggles; holding 0.5 s (or a right-click) opens the options dialog (MODE: UP, DOWN, UP-DOWN, RANDOM; RATE: 1/8, 1/16, 1/32, 1/8T; applied as tapped). When on, the button shows the mode and rate ("ARP ↑ 1/16"). Mode and rate are saved; HOLD and ARP on/off are not (they start off).
+- **PITCH strip:** drag sideways for ±2 semitones (`notes.bend()` → `KeysEngine.bend()`); the thumb follows the finger and springs back on release. Bend moves every sounding note: Tone `detune` on synths (15 ms ramp on mono), `detune` on each sampled voice; new notes start at the current bend, and a preset change keeps it.
+- The MOD strip is still a placeholder (`data-todo="LATER"`). `grep -r data-todo src` now lists only that and the MIX/FX bits.
+- Checked by script: HOLD latch / tap-to-end / HOLD off with a key down; arp at 120 BPM: 1/16 = 0.125 s, 1/8T = 0.167 s, 1/32 = 0.063 s, 1/8 = 0.25 s, gate 0.1 s at 1/16; UP 60 64 67…, DOWN 60 67 64 60…, UP-DOWN 60 64 67 71 67 64 60…, RANDOM never repeats; a note joining mid-run; release stops it; ARP + HOLD (latched chord keeps going, tapping E drops it, HOLD off stops it); playing with swing 66% → 0.165 / 0.085 s; ARP off stops all; bend ±200 cents on poly, mono and sampled, spring back to 0, a new note starts bent; dialog via right-click and a 0.6 s press (the click after it doesn't toggle), a short tap toggles; the octave row fits at 390 and 844 wide with "ARP ↑↓ 1/8T". No console errors.
+- Not checked: how bend, glide and the arp sound (Claude can't hear the pane), and real long-press / drag on a phone.
+
+Step 5 notes (2026-10-18):
+- **Luke's decisions in planning:** REC clears only what gets played (the take's first pad hit clears the old drums, its first keys note the old notes, so recording keys over a drum loop keeps the drums; the take is one undo step). Notes are a separate `notes` list on each loop, beside `events`, so the SEQ grid, `toggleStep` and drum playback didn't change. Loop playback doesn't light the KEYS keys (the pads don't light on playback either).
+- `src/seq/pattern.ts`: `NoteEvent { tick, note, vel, len }` (len in ticks; 0 while still held), `Pattern.notes`; `hasHits()`, `emptyPattern()`, `clonePattern()` cover notes; `insertEvent()` is generic.
+- `src/seq/sequencer.ts`: the shared `place()` (count-in rule, quantise, the take's undo snapshot); `recordNoteOn` / `recordNoteOff` (from `notes.ts` `start()` / `end()`, ARP off), `recordNote` (a whole arp step), `endNotes()` (when recording ends, at Stop and on `notes.allOff()`). The length is the time held, from the press (not the quantised start), at least 1 tick and at most loop length − 1 tick. `attachKeys(instrument)` from `main.ts`; `scheduleStep()` plays notes through `KeysEngine.playAt()` and Stop cancels them (sounding loop notes end at once; live keys don't). `clearPattern()` clears both parts. `cleanPattern()` cleans notes; saves without `notes` load with none; a note still held when saved is dropped.
+- With REC lazy, the old part keeps playing in a REC take until the first hit or note of that kind. An empty REC take leaves the loop as it was. Pressing DUB during REC (or REC during DUB) clears nothing more. After an undo mid-take, later hits add to the restored loop (they don't clear it again).
+- `src/keys/arp.ts`: each step is recorded at its scheduled time on a timer, like Note Repeat; a cancelled step isn't recorded.
+- Checked by script in the browser pane: C4 held 0.5 s in DUB → tick 168 (on the 1/16 grid), len 96, played on the next pass 0.5 s long and not twice on the first; quantise OFF keeps the raw tick, 1/16 snaps the start and keeps the length; a note held past the loop end → 383 ticks (1-bar loop); REC over drums + notes: REC pressed changes nothing, a keys take replaces only the notes, one undo brings the old notes back, a drum take replaces only the drums, an empty take changes nothing; HOLD records the latched note until it is tapped off; snap A minor: the C#4 key records C4; ARP UP 1/16 in DUB → steps 24 ticks apart, len 19 (80% gate); Stop cancels the loop note and leaves a held live key alone; a keys-only loop shows "1 · 1 BAR" on its slot; autosave round trip (a held note's len 0 dropped); a damaged save (bad tick, note, vel, len, null, a string, `notes: 'broken'`, a loop without `notes`) loads with only the good note. `npm run build` clean, no console errors after a clean server restart (errors seen before it came from Vite hot reload mixing old and new modules).
+- Not checked: how loop notes sound and their timing by ear (Claude can't hear the pane).
+
+Step 6 notes (2026-10-18):
+- **Keys channel:** `state.midi.keysChannel` (default 1, saved in the `midi` pref, checked like `channel`), `midi.setKeysChannel()`, and a "Keys channel" select in SETUP (the old Channel select is now "Pads channel"). The hint text explains the split.
+- **Out:** `KeysEngine` has a `KeysHook` (`now`, `off`, `at`, `bend`, `allOff`) like the drums' `HitHook`; `midi/out.ts` registers it (`initOut(engine, instrument)`). Live notes send at once with a note-off on release; scheduled ones (ARP steps, loop notes) send a timestamped note-on and note-off from the audio clock and are cancelled with the engine's own cancel. The hook hears notes even when "Play sounds in app" is off. Pitch bend goes out as 14-bit 0xE0 (±2 semitones = full range). Changing the Keys channel or output ends the keys notes on the old one (off + CC 123).
+- **Echo:** `notes.noteOn(key, vel, echo = true)`, `notes.bend(amount, echo = true)`, `arp.add(note, vel, echo)` and `KeysEngine.noteOn/noteOff/playAt/bend` take `echo`. Notes from MIDI input pass `false`, so a port used both ways can't feed back (the ARP steps made from them aren't sent either). Loop playback of recorded notes still goes out.
+- **In:** `midi/in.ts`: a learned mapping still wins on any channel. Otherwise on the Keys channel, notes play KEYS, pitch bend (0xE0) bends it, and CC 64 sets HOLD on at 64 and above (`keys.setHold()`). Every other channel keeps playing pads, so a drum controller on channel 10 and a keyboard on channel 1 can share one input. Held KEYS notes are released on an input change, status loss or Keys-channel change.
+- **Learn:** `data-learn` on octave −/+, HOLD, ARP, snap chip, SYNTH / SAMPLED and the 4 presets; targets `oct-down`, `oct-up`, `hold`, `arp`, `snap`, `src:synth`, `src:sampled`, `preset:0–3` in `midi/targets.ts`. The ARP long-press dialog isn't learnable (a tap is).
+- Checked by script with `?fakemidi` (after restarting `dev-http`; hot reload had left stale modules): C4 out as 0x90 on channel 1 and off 0x80; bend +2/0/−2 → 16383 / 8192 / 1; channel 5 moves later notes and ends the held one on the old channel; local sound off still sends; ARP at 120 BPM: on/off 125 ms apart with a 100 ms gate; ARP from MIDI sends nothing; loop notes sent 250 ms apart with the right lengths and Stop ends the sounding one on channel 1; input on channel 1 plays KEYS (LCD "KEYS · G4 · VEL 100"), channel 10 note 36 plays pad A01, nothing echoed out; bend in on channel 1 only (channel 2 ignored); CC 64 127/0 → HOLD on/off; learn for all 8 new targets (arm, learn, trigger); reload keeps keysChannel 5; invalid values rejected. SETUP layout at 390×844, 844×390 and 1280×800 (select 44px tall, no overflow). `tsc` and `npm run build` clean; no new console errors.
+- Not checked: real devices (loopMIDI or a keyboard), the bend range on a real synth, and a damaged `keysChannel` pref (it uses the same validation as `channel`).
+- Known gaps: incoming pitch bend doesn't move the PITCH strip thumb; pressing a learned CC as sustain isn't a separate target (CC 64 is fixed to HOLD on the Keys channel unless mapped).
+
+## Luke's phone and hardware checklist for M5
+Run `npm run dev` (or `npm run lan` for the offline check) and open the **Network** address on the phone. Tap a pad first to start audio.
+1. KEYS on the phone:
+   - [ ] Open KEYS. Play with 2–3 fingers (chord). Slide across keys. Pressing lower on a key is louder.
+   - [ ] Each SYNTH preset: Warm Pad, Saw Lead (glide, one note at a time), Sub Bass, Glass Pluck. Do they sound right?
+   - [ ] SAMPLED: Grand Piano, FM Piano, Strings, Concert Harp. Is any much louder or quieter than the others (gains are guesses)? Do held strings keep going without a click?
+   - [ ] Octave −/+ and the layout in portrait and landscape (no clipped buttons).
+2. Extras:
+   - [ ] SNAP on (SETUP → Auto-tune sets key and scale): out-of-scale keys dim and play the nearest scale note.
+   - [ ] HOLD latches a chord; tap a key to drop it. ARP: tap to toggle, hold the button for mode and rate. Does the arp feel in time?
+   - [ ] PITCH strip bends ±2 semitones and springs back.
+3. Recording:
+   - [ ] REC or DUB while playing keys over a drum loop. The notes land on the grid and play back; undo removes the take.
+   - [ ] Stop ends any sounding loop note. Reload the page: the loop's notes are still there.
+4. Offline (`npm run lan`, install the app, switch to airplane mode):
+   - [ ] KEYS loads and the sampled instruments still play (first pick may take a moment on a phone).
+5. MIDI (loopMIDI or a keyboard):
+   - [ ] Keys channel in SETUP (default 1): KEYS notes and pitch bend arrive on it in a MIDI monitor.
+   - [ ] A keyboard on the Keys channel plays KEYS; the sustain pedal (CC 64) holds notes; its pitch bend bends them.
+   - [ ] A controller on channel 10 still plays pads on the same input.
+   - [ ] MIDI Learn on octave, HOLD, ARP, snap and the presets.
+6. Known gaps: incoming pitch bend doesn't move the PITCH thumb; MOD strip is a placeholder; memory use with all four sampled instruments loaded on a phone is untested.
+
+## Next step
+M5 step 7 is written up. Luke's phone test (checklist sections 1–4) passed on 2026-10-18. Section 5 (MIDI hardware) is not run yet. Next: merge `feat/m5-instruments` into `main` (ask Luke first), then plan M6.

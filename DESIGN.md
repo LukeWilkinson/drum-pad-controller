@@ -124,6 +124,7 @@ Keep the pad screen uncluttered. Everything else lives behind the tabs.
   - pitch-bend and mod strips
   - keyboard from C to E (10 white keys); the root note is marked
   - when scale snap is on, out-of-scale keys are dimmed and a snap chip shows the key and scale in the header
+  - built: tablet shows 15 white keys (C to C); PC keys `A S D F G H J K L ;` / `W E T Y U O P`, `Z` / `X` octave; MOD strip is still a placeholder
 - **Mix/FX:**
   - five channels plus master, each with a fader, meter, dB readout and mute button
   - Reverb, Delay and Filter cards, each with an on/off switch and three 270° arc knobs

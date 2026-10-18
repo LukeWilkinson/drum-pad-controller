@@ -21,9 +21,14 @@ export function initHits(e: AudioEngine, refs: ScreenRefs, els: HTMLElement[]): 
   padEls = els;
 }
 
-/** True once any pad has been hit (the LCD hint then stays out of the way). */
+/** True once any pad or key has been played (the LCD hint then stays out of the way). */
 export function hasHit(): boolean {
   return anyHit;
+}
+
+/** A KEYS note was played (src/keys/notes.ts): the LCD now shows it, not the hint. */
+export function markPlayed(): void {
+  anyHit = true;
 }
 
 export function setLast(text: string, inline = text): void {

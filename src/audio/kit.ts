@@ -70,7 +70,8 @@ export interface UserKit {
 }
 
 export const SOFT_LAYER_BELOW = 72;
-export const SAMPLE_DIR = `${import.meta.env.BASE_URL}samples/sonicpi/`;
+export const SAMPLES_ROOT = `${import.meta.env.BASE_URL}samples/`;
+export const SAMPLE_DIR = `${SAMPLES_ROOT}sonicpi/`;
 
 export const GROUP_COLOUR: Record<PadGroup, string> = {
   kick: '#FF5A4E',
