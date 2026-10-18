@@ -2,12 +2,14 @@
 // in the ARP mode's order. Built like Note Repeat (src/seq/repeat.ts): the first note sounds at
 // once; then, while playing, steps land on the transport's grid (with swing at 1/16); stopped, the
 // grid starts at the first note. A small look-ahead timer schedules each step with
-// KeysEngine.playAt(), so stopping cancels any step not yet heard.
+// KeysEngine.playAt(), so stopping cancels any step not yet heard. With REC or DUB on, each step is
+// recorded into the loop at the moment it sounds.
 
 import * as clock from '../audio/clock';
 import type { AudioEngine } from '../audio/engine';
 import type { KeysEngine } from '../audio/keys';
 import { swingTicks } from '../seq/pattern';
+import * as seq from '../seq/sequencer';
 import { state, subscribe } from '../state';
 import { ARP_RATES } from './types';
 
@@ -30,7 +32,7 @@ let grid = 24;
 /** The note played last (each step goes on from it), and UP-DOWN's direction. */
 let lastNote = -1;
 let dir = 1;
-const pending: { when: number; cancel: () => void }[] = [];
+const pending: { when: number; cancel: () => void; recordTimer: number }[] = [];
 
 export function initArp(e: AudioEngine, keysEngine: KeysEngine): void {
   engine = e;
@@ -105,7 +107,11 @@ function stop(keepSounding = false): void {
   clearInterval(timer);
   timer = 0;
   const now = engine.ctx.currentTime;
-  for (const p of pending) if (!keepSounding || p.when > now) p.cancel();
+  for (const p of pending) {
+    if (keepSounding && p.when <= now) continue;
+    p.cancel();
+    clearTimeout(p.recordTimer); // a step never heard isn't recorded
+  }
   pending.length = 0;
 }
 
@@ -123,10 +129,16 @@ function schedule(): void {
   }
 }
 
+/** Plays the next step at context time `when`, and records it (REC/DUB) at that time as it sounds. */
 function play(when: number, stepLength: number): void {
   if (!notes.length) return;
-  const n = notes[pick()];
-  pending.push({ when, cancel: instrument.playAt(n.note, n.vel, when, stepLength * GATE) });
+  const { note, vel } = notes[pick()];
+  const length = stepLength * GATE;
+  pending.push({
+    when,
+    cancel: instrument.playAt(note, vel, when, length),
+    recordTimer: window.setTimeout(() => seq.recordNote(note, vel, when, length), (when - engine.ctx.currentTime) * 1000),
+  });
 }
 
 /**

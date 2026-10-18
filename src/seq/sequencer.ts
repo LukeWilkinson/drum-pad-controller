@@ -1,4 +1,4 @@
-// Sequencer: plays the current loop on the clock and records pad hits into it.
+// Sequencer: plays the current loop on the clock and records pad hits and KEYS notes into it.
 // This is the only code that changes patterns, the recording mode, quantise and swing
 // (like kitControl.ts is for kits), so undo history never misses a change.
 //
@@ -8,6 +8,7 @@
 import * as clock from '../audio/clock';
 import type { AudioEngine } from '../audio/engine';
 import { PAD_COUNT } from '../audio/kit';
+import type { KeysEngine } from '../audio/keys';
 import { state, subscribe, update, type Change, type RecMode } from '../state';
 import { getPref, setPref } from '../store/db';
 import {
@@ -27,6 +28,7 @@ import {
   swingTicks,
   wrap,
   type Bars,
+  type NoteEvent,
   type Pattern,
   type Quant,
   type SeqEvent,
@@ -38,22 +40,29 @@ const STEPS_PER_BAR = BEATS_PER_BAR * 4;
 const COUNT_IN_LEAD = 0.05; // seconds between pressing REC and the first count-in click
 
 let engine: AudioEngine;
+/** Plays recorded KEYS notes; set by attachKeys() once the keys engine exists. */
+let instrument: KeysEngine | undefined;
 /** 16th count (since the transport started) at which the current loop's bar 1 began. */
 let startStep = 0;
 /** Undo snapshots across all loops, oldest first: the loop's index and its contents before the change. */
 const history: { index: number; pattern: Pattern }[] = [];
-/** True until the first hit of a DUB take, which is when that take's undo snapshot is taken. */
+/** True until the first hit or note of a take, which is when that take's undo snapshot is taken. */
 let takeOpen = false;
+/** REC replaces only what is played: the take's first hit clears the old drums, its first note the old notes. */
+let clearDrums = false;
+let clearNotes = false;
 /**
- * Hits recorded this pass, with the transport tick they were played at. The scheduler skips them
- * until the loop comes round, so a hit quantised forward isn't heard twice (live, then sequenced).
+ * Hits and notes recorded this pass, with the transport tick they were played at. The scheduler skips
+ * them until the loop comes round, so one quantised forward isn't heard twice (live, then sequenced).
  */
-const fresh = new WeakMap<SeqEvent, number>();
+const fresh = new WeakMap<SeqEvent | NoteEvent, number>();
+/** Notes being recorded (still held), by note number: the event, its loop and the context time its tick maps to. */
+const open = new Map<number, { ev: NoteEvent; p: Pattern; start: number }>();
+/** Loop notes handed to the keys engine, so Stop can end them. */
+let loopNotes: { until: number; cancel: () => void }[] = [];
 /** Context time the transport starts at after a count-in. */
 let countEndsAt = 0;
 let countTimer = 0;
-/** What the count-in turns into when it ends. */
-let pendingMode: 'rec' | 'dub' = 'rec';
 
 export function initSequencer(e: AudioEngine): void {
   engine = e;
@@ -63,10 +72,18 @@ export function initSequencer(e: AudioEngine): void {
     // Stopped: recording ends, a queued loop takes over, and the next start begins at bar 1.
     clearTimeout(countTimer);
     startStep = 0;
+    for (const n of loopNotes) n.cancel(); // loop notes still sounding end now
+    loopNotes = [];
     const patch: Partial<typeof state> = {};
     if (s.recMode !== 'off') patch.recMode = 'off';
     if (s.queued !== null) Object.assign(patch, { pattern: s.queued, queued: null });
     if (Object.keys(patch).length) update(patch);
+  });
+  subscribe((s, changed) => {
+    if (!changed.has('recMode') || s.recMode !== 'off') return;
+    // Recording ended: notes still held are recorded up to now.
+    endNotes();
+    clearDrums = clearNotes = false;
   });
   subscribe((_, changed) => {
     if (songLoaded && SONG_FIELDS.some((f) => changed.has(f))) saveSoon();
@@ -74,6 +91,11 @@ export function initSequencer(e: AudioEngine): void {
   // A phone may close the app without warning once it is hidden, so a pending save goes now.
   document.addEventListener('visibilitychange', () => document.hidden && flushSave());
   window.addEventListener('pagehide', flushSave);
+}
+
+/** Recorded KEYS notes play on `keysEngine` (with the current KEYS preset). */
+export function attachKeys(keysEngine: KeysEngine): void {
+  instrument = keysEngine;
 }
 
 function current(): Pattern {
@@ -100,6 +122,19 @@ function scheduleStep(time: number, step: number): void {
     if (playedAt !== undefined && absTick - playedAt < len / 2) continue;
     engine.playAt(ev.pad, ev.vel, time + (ev.tick - from + swingTicks(ev.tick, state.swing)) * spt);
   }
+  if (!instrument) return;
+  const now = engine.ctx.currentTime;
+  loopNotes = loopNotes.filter((n) => n.until > now);
+  for (const n of p.notes) {
+    if (n.tick < from) continue;
+    if (n.tick >= to) break;
+    if (!n.len) continue; // still being recorded
+    const playedAt = fresh.get(n);
+    if (playedAt !== undefined && absTick - playedAt < len / 2) continue;
+    const when = time + (n.tick - from + swingTicks(n.tick, state.swing)) * spt;
+    const length = Math.min(n.len, len) * spt;
+    loopNotes.push({ until: when + length, cancel: instrument.playAt(n.note, n.vel, when, length) });
+  }
 }
 
 /** Where the listener is in the current loop: tick and 0–1 progress. Null when stopped. */
@@ -113,8 +148,9 @@ export function playhead(): { tick: number; progress: number } | null {
 // ---------- Recording ----------
 
 /**
- * REC: records over the current loop (its old hits are cleared, as one undo step). Again: stop
- * recording. Pressed during DUB: carries on as REC without clearing.
+ * REC: records over the current loop. The take's first pad hit clears the old drums and its first
+ * KEYS note the old notes, so recording one part keeps the other; the take is one undo step.
+ * Again: stop recording. Pressed during DUB: carries on as REC without clearing.
  */
 export function toggleRec(): void {
   if (state.recMode === 'rec' || state.recMode === 'count') stopRecording();
@@ -129,20 +165,16 @@ export function toggleDub(): void {
   else if (state.recMode === 'off') beginTake('dub');
 }
 
-/** REC ↔ DUB while recording: keeps the hits so far; what comes next is its own undo step. */
+/** REC ↔ DUB while recording: keeps the hits so far (nothing more is cleared); what comes next is its own undo step. */
 function switchTake(mode: 'rec' | 'dub'): void {
   takeOpen = true;
+  clearDrums = clearNotes = false;
   update({ recMode: mode });
 }
 
 function beginTake(mode: 'rec' | 'dub'): void {
-  const p = current();
-  if (mode === 'rec' && p.events.length) {
-    pushHistory();
-    p.events = [];
-    update({}, 'patterns');
-  }
-  takeOpen = mode === 'dub';
+  takeOpen = true;
+  clearDrums = clearNotes = mode === 'rec';
 
   if (state.playing) return update({ recMode: mode });
   if (!state.countIn) {
@@ -160,7 +192,6 @@ function beginTake(mode: 'rec' | 'dub'): void {
     () => state.recMode === 'count' && update({ recMode: mode }),
     (countEndsAt - engine.ctx.currentTime) * 1000,
   );
-  pendingMode = mode;
 }
 
 function stopRecording(): void {
@@ -177,11 +208,80 @@ function stopRecording(): void {
  * note repeats pass the exact time they were scheduled for.
  */
 export function recordHit(pad: number, vel: number, heard = clock.heardTime()): void {
-  if (state.recMode === 'off') return;
+  const at = place(heard);
+  if (!at) return;
+  if (clearDrums) {
+    at.p.events = [];
+    clearDrums = false;
+  }
+  const ev: SeqEvent = { tick: at.tick, pad, vel };
+  insertEvent(at.p.events, ev);
+  fresh.set(ev, at.abs);
+  update({}, 'patterns');
+}
+
+/**
+ * A KEYS note started (the note as it sounds, after scale snap). Recorded when REC or DUB is on; its
+ * length is set by recordNoteOff(). The same note already being recorded ends first.
+ */
+export function recordNoteOn(note: number, vel: number, heard = clock.heardTime()): void {
+  recordNoteOff(note, heard);
+  const at = place(heard);
+  if (!at) return;
+  const ev = addNote(at, note, vel, 0);
+  // Its length counts from the moment its tick stands for (the downbeat, if played during the count-in).
+  open.set(note, { ev, p: at.p, start: state.recMode === 'count' ? countEndsAt : heard });
+}
+
+/** A KEYS note ended: its length is the time it was held, cut just short of the loop length. */
+export function recordNoteOff(note: number, heard = clock.heardTime()): void {
+  const o = open.get(note);
+  if (!o) return;
+  open.delete(note);
+  o.ev.len = noteLength(o.p, heard - o.start);
+  update({}, 'patterns');
+}
+
+/** A whole KEYS note at once (ARP steps): `seconds` long, heard at context time `when`. */
+export function recordNote(note: number, vel: number, when: number, seconds: number): void {
+  const at = place(when);
+  if (at) addNote(at, note, vel, noteLength(at.p, seconds));
+}
+
+/** Ends every note still being recorded, as if its key came up now. */
+export function endNotes(): void {
+  const now = clock.heardTime();
+  for (const note of [...open.keys()]) recordNoteOff(note, now);
+}
+
+function addNote(at: { p: Pattern; abs: number; tick: number }, note: number, vel: number, len: number): NoteEvent {
+  if (clearNotes) {
+    at.p.notes = [];
+    clearNotes = false;
+  }
+  const ev: NoteEvent = { tick: at.tick, note, vel, len };
+  insertEvent(at.p.notes, ev);
+  fresh.set(ev, at.abs);
+  update({}, 'patterns');
+  return ev;
+}
+
+/** `seconds` in ticks at the current tempo: at least 1, and at most one tick short of the loop. */
+function noteLength(p: Pattern, seconds: number): number {
+  return Math.max(1, Math.min(lengthTicks(p) - 1, Math.round(seconds / clock.secondsPerTick())));
+}
+
+/**
+ * Where something heard at context time `heard` goes in the current loop: its transport tick and
+ * its (quantised) tick in the loop. Null when not recording, or too early in the count-in.
+ * The first one of a take takes that take's undo snapshot.
+ */
+function place(heard: number): { p: Pattern; abs: number; tick: number } | null {
+  if (state.recMode === 'off') return null;
   let abs: number;
   if (state.recMode === 'count') {
     // A hit just before the downbeat (within half a beat) belongs on beat 1; earlier ones are ignored.
-    if (heard < countEndsAt - (60 / state.bpm) / 2) return;
+    if (heard < countEndsAt - (60 / state.bpm) / 2) return null;
     abs = 0;
   } else {
     abs = clock.ticksAt(heard);
@@ -194,10 +294,7 @@ export function recordHit(pad: number, vel: number, heard = clock.heardTime()): 
     pushHistory();
     takeOpen = false;
   }
-  const ev: SeqEvent = { tick, pad, vel };
-  insertEvent(p.events, ev);
-  fresh.set(ev, abs);
-  update({}, 'patterns');
+  return { p, abs, tick };
 }
 
 // ---------- Editing ----------
@@ -211,9 +308,11 @@ function pushHistory(index = state.pattern): void {
 export function undo(): boolean {
   const last = history.pop();
   if (!last) return false;
+  // A note still being recorded when the snapshot was taken has no length; it is dropped.
+  last.pattern.notes = last.pattern.notes.filter((n) => n.len > 0);
   state.patterns[last.index] = last.pattern;
   // A take still running starts a fresh undo step with its next hit.
-  takeOpen = state.recMode === 'rec' || state.recMode === 'dub' || (state.recMode === 'count' && pendingMode === 'dub');
+  takeOpen = state.recMode !== 'off';
   update({}, 'patterns');
   return true;
 }
@@ -224,9 +323,10 @@ export function canUndo(): boolean {
 
 export function clearPattern(index = state.pattern): void {
   const p = state.patterns[index];
-  if (!p.events.length) return;
+  if (!p.events.length && !p.notes.length) return;
   pushHistory(index);
   p.events = [];
+  p.notes = [];
   update({}, 'patterns');
 }
 
@@ -354,7 +454,17 @@ function cleanPattern(raw: unknown): Pattern {
     if (!Number.isInteger(vel) || vel! < 1 || vel! > 127) continue;
     insertEvent(events, { tick: tick!, pad: pad!, vel: vel! });
   }
-  return { bars, events };
+  // Saves from before KEYS recording have no notes.
+  const notes: NoteEvent[] = [];
+  for (const n of (Array.isArray(r!.notes) ? r!.notes : []) as Partial<NoteEvent>[]) {
+    const { tick, note, vel, len } = n ?? {};
+    if (!Number.isInteger(tick) || tick! < 0 || tick! >= maxTick) continue;
+    if (!Number.isInteger(note) || note! < 0 || note! > 127) continue;
+    if (!Number.isInteger(vel) || vel! < 1 || vel! > 127) continue;
+    if (!Number.isInteger(len) || len! < 1 || len! > maxTick) continue; // 0: still held when saved
+    insertEvent(notes, { tick: tick!, note: note!, vel: vel!, len: len! });
+  }
+  return { bars, events, notes };
 }
 
 /** LCD label for the recording / transport state. */

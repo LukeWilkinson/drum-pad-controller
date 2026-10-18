@@ -53,6 +53,7 @@ buildSeqPanel(ui.app, engine);
 buildSetupPanel(ui.app, ui);
 const keysBoard = buildKeysPanel(ui.app, { onBend: notes.bend });
 const instrument = keys.initKeys(engine); // after initClock: Tone runs on the engine's context
+seq.attachKeys(instrument); // loops play their KEYS notes on it
 notes.initNotes(instrument);
 arp.initArp(engine, instrument);
 initHits(engine, ui, padEls);

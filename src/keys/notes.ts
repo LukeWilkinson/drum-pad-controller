@@ -1,6 +1,7 @@
 // A KEYS note, whatever its source: the on-screen keyboard and the computer keyboard
-// (src/keys/input.ts) now; loops and MIDI input later in M5. Sound first, then the key and the LCD.
-// Notes are MIDI numbers (C4 = 60).
+// (src/keys/input.ts) now; MIDI input later in M5. Sound first, then the key and the LCD.
+// Notes are MIDI numbers (C4 = 60). With REC or DUB on, each note is recorded into the loop as it
+// sounds (src/seq/sequencer.ts), from start() to end(); with ARP on, the arp records its steps instead.
 // - Scale snap: a pressed key plays the nearest note of the scale (src/keys/scales.ts); that note is
 //   what sounds, lights and shows on the LCD.
 // - HOLD: a note keeps sounding after its key comes up ("latched") until its key is tapped again or
@@ -9,6 +10,7 @@
 
 import type { KeysEngine } from '../audio/keys';
 import * as hits from '../pads/hits';
+import * as seq from '../seq/sequencer';
 import { state, subscribe } from '../state';
 import { showKey } from '../ui/keys';
 import * as arp from './arp';
@@ -85,8 +87,11 @@ export function bend(amount: number): void {
 
 function start(note: number, velocity: number): void {
   latched.delete(note); // held by a key again; latched again when it comes up
-  if (state.keys.arp) arp.add(note, velocity);
-  else instrument.noteOn(note, velocity); // sound first
+  if (state.keys.arp) arp.add(note, velocity); // the arp records its own steps
+  else {
+    instrument.noteOn(note, velocity); // sound first
+    seq.recordNoteOn(note, velocity);
+  }
   held.set(note, (held.get(note) ?? 0) + 1);
   showKey(note, true);
   const name = noteName(note);
@@ -96,7 +101,10 @@ function start(note: number, velocity: number): void {
 
 function end(note: number): void {
   if (state.keys.arp) arp.remove(note);
-  else instrument.noteOff(note);
+  else {
+    instrument.noteOff(note);
+    seq.recordNoteOff(note);
+  }
   showKey(note, false);
 }
 
@@ -111,6 +119,7 @@ function allOff(): void {
   arp.clear();
   instrument.cancelScheduled();
   instrument.allOff();
+  seq.endNotes();
   for (const note of new Set([...held.keys(), ...latched])) showKey(note, false);
   held.clear();
   pressed.clear();
