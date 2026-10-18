@@ -131,7 +131,7 @@ Commits: step 1 dbcad22, step 2 4adf35c, step 3 0f005a8, step 4 588ef6e, step 5 
 ### Steps (Luke checks in after each; one commit per step)
 Suggested model: Sonnet, medium for steps 1, 2, 3, 5; Opus, medium for step 4.
 1. **MIDI core and the SETUP tab: done (2026-10-18).** `src/midi/midi.ts` (access, devices, hot-plug, `midi` pref, store field), `src/midi/fake.ts` (dev-only fake MIDI via `?fakemidi`, logs sends, injects input), `'setup'` view, `src/ui/setup.ts` + `src/styles/setup.css` (MIDI card from Settings.dc.html), SETUP tab, tablet gear and MIDI chip.
-2. **MIDI output:** `src/midi/out.ts`; an `onHit` hook in `engine.ts` so `play()`/`playAt()` send MIDI (covers live, repeat and sequencer); `echo` flag; `localSound` flag; note-off on release; All Notes Off on stop.
+2. **MIDI output: done (2026-10-18).** `src/midi/out.ts`; an `onHit` hook in `engine.ts` so `play()`/`playAt()` send MIDI (covers live, repeat and sequencer); `echo` flag; `localSound` flag; note-off on release; All Notes Off on stop.
 3. **MIDI input → pads:** move pad hit/release out of `main.ts` into `src/pads/hits.ts` (shared by touch, keys and MIDI); `src/midi/in.ts` (chromatic 36–99 or learned map, note-off releases, all channels, activity blink).
 4. **MIDI Learn:** `src/midi/targets.ts` (pads; Play, REC, DUB, Undo, metronome, tap, banks, Note Repeat, Full Level, loop slots; BPM, swing, master, selected pad volume/pitch/pan/decay), `data-learn` attributes, learn mode across tabs with a capture-phase listener, mappings list with ×. Full Level moves into the store.
 5. **Send MIDI clock:** `src/midi/clock.ts`: Song Position 0 + Start at transport start (after count-in too), 24 clocks per beat via Tone `scheduleRepeat`, Stop on stop.
@@ -147,5 +147,10 @@ Step 1 notes (2026-10-18):
 - `?fakemidi` (dev only, not in the production build): fake devices "Fake MIDI Out", "Fake MIDI Out 2", "Fake MIDI In". `__fakeMidi.log` lists sent messages, `.inject(name, bytes)`, `.plug(name)`, `.unplug(name)`, `.clearLog()`.
 - `midi.outputPort()` and `midi.onMidiMessage(fn)` are ready for steps 2 and 3.
 
+Step 2 notes (2026-10-18):
+- `src/midi/notes.ts`: `noteOfPad()` / `padOfNote()` (36–99; step 3 uses `padOfNote`). `src/midi/out.ts` hooks into the engine (`engine.setHitHook`), so every `play()` / `playAt()` goes out, including auditions and step taps (those send a 60 ms note). A pad held on the pad screen calls `midiOut.hold()` and ends with `midiOut.release()`.
+- `engine.play(…, echo)` / `playAt(…, echo)`: `echo = false` keeps a hit from going out (for MIDI-input hits in step 3). `engine.localSound = false` mutes the app's sound; main.ts only mutes while an output device is connected, so the app can't go silent by accident.
+- Scheduled notes are sent ~25 ms ahead with a timestamp from `getOutputTimestamp()`; the note-off follows 60 ms later, or goes just before a retrigger of the same note. Transport stop, output change, channel change and MIDI off send note-offs and CC 123 on the old output/channel.
+
 ## Next step
-M4 step 2 (MIDI output) on `feat/m4-midi`.
+M4 step 3 (MIDI input → pads) on `feat/m4-midi`.

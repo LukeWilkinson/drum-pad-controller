@@ -9,6 +9,7 @@ import * as clock from './audio/clock';
 import * as seq from './seq/sequencer';
 import * as repeat from './seq/repeat';
 import * as midi from './midi/midi';
+import * as midiOut from './midi/out';
 import { PADS_PER_BANK, padLabel } from './audio/kit';
 import { KITS, factoryKit } from './audio/kits';
 import * as kitControl from './kitControl';
@@ -38,6 +39,7 @@ applyKit(padEls, KITS[0].pads); // colours straight away; replaced if a differen
 buildKitsPanel(ui.app, engine);
 buildSeqPanel(ui.app, engine);
 buildSetupPanel(ui.app, ui);
+midiOut.initOut(engine);
 void midi.initMidi(); // the saved MIDI settings; reconnects if MIDI was on last time
 initViews(ui);
 initRail(ui.app.querySelector('.rail-right')!, engine);
@@ -85,6 +87,7 @@ attachPadInput(
       const index = state.bank * PADS_PER_BANK + screenIndex;
       heldPad[screenIndex] = index; // a bank switch mid-hold still releases the right pad
       engine.play(index, velocity); // audio first
+      midiOut.hold(index);
       seq.recordHit(index, velocity);
       repeat.press(index, velocity);
       showHit(padEls[screenIndex], velocity);
@@ -95,6 +98,7 @@ attachPadInput(
     },
     onRelease(screenIndex) {
       repeat.release(heldPad[screenIndex]);
+      midiOut.release(heldPad[screenIndex]);
       showRelease(padEls[screenIndex]);
     },
     onMove(screenIndex, velocity) {
@@ -105,6 +109,14 @@ attachPadInput(
   },
   () => fullLevel,
 );
+
+// With "Play sounds in app" off the app is silent, so only mute while an output device is connected.
+subscribe((s, changed) => {
+  if (!changed.has('midi')) return;
+  const m = s.midi;
+  const connected = m.status === 'ready' && m.output !== null && m.outputs.includes(m.output);
+  engine.localSound = m.localSound || !connected;
+});
 
 ui.noteRepeat.addEventListener('click', repeat.toggleNoteRepeat);
 subscribe((s, changed) => {
