@@ -1,0 +1,9 @@
+# Netlify builds and hosts the app from the private GitHub repo on every push to main.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "24"
+  # No self-signed certificate plugin; not needed for a build.
+  HTTP = "1"
