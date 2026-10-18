@@ -2,11 +2,13 @@ import './styles/tokens.css';
 import './styles/app.css';
 import './styles/kits.css';
 import './styles/seq.css';
+import './styles/setup.css';
 import { registerSW } from 'virtual:pwa-register';
 import { AudioEngine } from './audio/engine';
 import * as clock from './audio/clock';
 import * as seq from './seq/sequencer';
 import * as repeat from './seq/repeat';
+import * as midi from './midi/midi';
 import { PADS_PER_BANK, padLabel } from './audio/kit';
 import { KITS, factoryKit } from './audio/kits';
 import * as kitControl from './kitControl';
@@ -17,6 +19,7 @@ import { applyKit, buildPads, showHit, showRelease } from './ui/pads';
 import { buildKitsPanel } from './ui/kits';
 import { buildScreen } from './ui/screen';
 import { buildSeqPanel } from './ui/seq';
+import { buildSetupPanel } from './ui/setup';
 import { initRail } from './ui/rail';
 import { initTransport } from './ui/transport';
 import { initViews } from './ui/views';
@@ -34,6 +37,8 @@ initTransport(ui);
 applyKit(padEls, KITS[0].pads); // colours straight away; replaced if a different kit is restored
 buildKitsPanel(ui.app, engine);
 buildSeqPanel(ui.app, engine);
+buildSetupPanel(ui.app, ui);
+void midi.initMidi(); // the saved MIDI settings; reconnects if MIDI was on last time
 initViews(ui);
 initRail(ui.app.querySelector('.rail-right')!, engine);
 
@@ -136,4 +141,4 @@ bootKits(engine, (done, total) => setLast(`LOADING KIT ${done}/${total}`, `LOADI
 registerSW({ immediate: true });
 
 // Dev-only handle for checking the engine and store from the browser console.
-if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, seq, repeat, state, KITS, factoryKit, ...kitControl } });
+if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, seq, repeat, midi, state, KITS, factoryKit, ...kitControl } });

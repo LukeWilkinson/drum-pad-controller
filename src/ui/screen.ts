@@ -21,7 +21,7 @@ const TABS: [cls: string, icon: string, short: string, long: string, todo: strin
   ['seq', ICON.seq, 'SEQ', 'SEQUENCER', ''],
   ['keys', ICON.keys, 'KEYS', 'KEYS', 'M5'],
   ['mix', ICON.mix, 'MIX/FX', 'MIX / FX', 'M6'],
-  ['setup', ICON.setup, 'SETUP', 'SETUP', 'M4'],
+  ['setup', ICON.setup, 'SETUP', 'SETUP', ''],
 ];
 
 // Selected-pad knobs on the tablet right rail. The first four are live (src/ui/rail.ts sets
@@ -78,6 +78,10 @@ export interface ScreenRefs {
   lcdBar: HTMLElement;
   selName: HTMLElement;
   master: HTMLInputElement;
+  /** Tablet header: MIDI status chip and the gear. Both open the SETUP panel. */
+  midiChip: HTMLButtonElement;
+  midiText: HTMLElement;
+  gear: HTMLButtonElement;
 }
 
 export function buildScreen(root: HTMLElement): ScreenRefs {
@@ -136,8 +140,8 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
     </nav>
 
     <div class="status">
-      <span class="midi-chip"><span class="midi-dot"></span>MIDI OFF</span>
-      <button class="icon-btn" aria-label="Settings" data-todo="M4">${ICON.setup}</button>
+      <button class="midi-chip" aria-label="MIDI settings"><span class="midi-dot"></span><span class="midi-text">MIDI OFF</span></button>
+      <button class="icon-btn" aria-label="Setup">${ICON.setup}</button>
     </div>
 
     <aside class="rail-right" aria-label="Selected pad">
@@ -179,5 +183,8 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
     lcdBar: q('.lcd-bar'),
     selName: q('.sel-name'),
     master: q('.master input'),
+    midiChip: q('.midi-chip'),
+    midiText: q('.midi-text'),
+    gear: q('.icon-btn'),
   };
 }

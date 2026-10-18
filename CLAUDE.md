@@ -21,7 +21,7 @@ Read SPEC.md (milestones) and DESIGN.md (tokens, layouts) first. The design canv
 - `src/seq/sequencer.ts`: the only code that changes loops, `recMode`, quantise and swing. It schedules each 16th, records hits (`recordHit`), handles REC/DUB/count-in, keeps one shared undo stack (50 steps) and queues loop switches to the next bar line.
 - `src/seq/repeat.ts`: Note Repeat. Held pads retrigger at the quantise rate through its own 50 ms look-ahead timer and `engine.playAt()`, which returns a cancel function so a release cuts repeats not yet heard. Repeats are recorded at their exact scheduled time (`recordHit(pad, vel, time)`).
 - `src/ui/transport.ts`: Play/Stop, REC, DUB, Undo, metronome, BPM −/+ (hold to repeat), tap tempo, the LCD status line (rAF while playing), and the shortcuts: Space, Shift+R (plain R is a pad), O, Ctrl+Z, M, T. `src/ui/loops.ts`: loop slots (tap to select or queue, hold to clear).
-- `src/ui/screen.ts`: builds the whole DOM once. `src/ui/pads.ts` handles the pad visuals (class + `--v` CSS var only).
+- `src/midi/`: `midi.ts` (Web MIDI access, devices, settings), `types.ts`, dev-only `fake.ts`. `src/ui/setup.ts`: SETUP panel. `src/ui/screen.ts`: builds the whole DOM once. `src/ui/pads.ts` handles the pad visuals (class + `--v` CSS var only).
 - `src/styles/app.css`: one DOM, three layouts by media query (portrait default; landscape `max-height: 540px`; tablet `min-width: 1024px and min-height: 600px`).
 - Placeholder controls carry `data-todo="M2"` etc. To find what's left: `grep -r data-todo src`.
 
@@ -47,4 +47,7 @@ Read SPEC.md (milestones) and DESIGN.md (tokens, layouts) first. The design canv
   - **Step 5, Note Repeat: done (2026-10-17).** Checked by script: stopped = 0.125 s from the press at 1/16 120 BPM; playing = on the transport grid with swing (66% → off-beats +7.7 ticks); release cancels pending repeats; finger slide changes velocity (111 → 56); DUB records repeats on the 1/8 grid.
   - **Step 6, autosave: done (2026-10-17).** `sequencer.ts` saves the song (loops, current loop, bpm, click, quant, swing, countIn, noteRepeat) as the `song` pref, 500 ms after the last change and at once when the page is hidden. `seq.loadSong()` restores it at boot and drops bad values. Undo history isn't saved. Checked by script: reload round trip, save on hide, damaged save.
   - **Browser pane quirk:** when the pane isn't showing, `requestAnimationFrame` and `<dialog>` close events stall. Front the tab (`tabs_select` + a screenshot) before testing dialogs or the LCD.
-- **Next:** merge `feat/m3-sequencer` into `main` (if not done yet), then M4 MIDI (SPEC.md milestone 4) in plan mode in a fresh chat, on a new branch `feat/m4-midi`.
+  - Merged into `main` (125ea1d).
+- **M4 MIDI: planned (2026-10-17)**, building on branch `feat/m4-midi`. Luke's decisions, Claude's choices and the 5 steps are in HANDOFF.md ("M4").
+  - **Step 1, MIDI core and the SETUP tab: done (2026-10-18).** `src/midi/midi.ts` is the only code that changes `state.midi` (access, devices by name, hot-plug, `midi` pref); `src/ui/setup.ts` + `src/styles/setup.css` are the SETUP panel; the tablet gear and MIDI chip open it. Dev only: `?fakemidi` swaps in `src/midi/fake.ts` (`window.__fakeMidi`: log, inject, plug, unplug). Checked by script: enable, device lists, auto-pick, channel/output/local choices, unplug and replug (output and input), reload round trip, disable. Layout checked at 3 sizes (landscape by measurement only; the screenshot timed out).
+- **Next:** M4 step 2, MIDI output.

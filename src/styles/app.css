@@ -339,7 +339,11 @@ svg { display: block; }
   .midi-chip {
     height: 44px; padding: 0 14px; border-radius: 8px; background: var(--drawer);
     display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 12px;
+    color: var(--text); max-width: 260px;
   }
+  .midi-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .icon-btn { color: var(--text); }
+  .icon-btn[aria-pressed="true"] { color: var(--amber); }
   .midi-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--switch-off); }
   .icon-btn { width: 44px; height: 44px; border-radius: 8px; background: var(--drawer); display: grid; place-items: center; }
 

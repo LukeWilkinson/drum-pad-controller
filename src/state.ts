@@ -3,9 +3,10 @@
 // (pad settings, swapped samples) are announced with the extra change names 'params' and 'pads'.
 
 import type { ActiveKit, UserKit } from './audio/kit';
+import { DEFAULT_CHANNEL, type MidiState } from './midi/types';
 import { PATTERN_COUNT, emptyPattern, type Pattern, type Quant } from './seq/pattern';
 
-export type View = 'pads' | 'kits' | 'seq';
+export type View = 'pads' | 'kits' | 'seq' | 'setup';
 
 export interface AppState {
   /** The kit playing now (null until the first kit has loaded). */
@@ -38,6 +39,8 @@ export interface AppState {
   countIn: boolean;
   /** Held pads retrigger at the quantise rate (src/seq/repeat.ts). */
   noteRepeat: boolean;
+  /** MIDI devices and settings (changed only by src/midi/midi.ts). */
+  midi: MidiState;
 }
 
 /** 'count' = count-in bar before recording starts. */
@@ -64,6 +67,16 @@ export const state: AppState = {
   swing: 50,
   countIn: true,
   noteRepeat: false,
+  midi: {
+    status: 'off',
+    outputs: [],
+    inputs: [],
+    output: null,
+    input: null,
+    channel: DEFAULT_CHANNEL,
+    localSound: true,
+    clock: false,
+  },
 };
 
 const listeners = new Set<Listener>();
