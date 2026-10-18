@@ -23,6 +23,9 @@ const STEPS_PER_BAR = BAR_TICKS / STEP_TICKS;
 const SWING_DRAG_PX = 150; // drag distance for the whole swing range
 const CHEVRON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
 
+const PLAY_ICON = '<svg class="i-play" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor"/></svg>';
+const STOP_ICON = '<svg class="i-stop" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1" fill="currentColor"/></svg>';
+
 const CONTROLS: Change[] = ['patterns', 'pattern', 'queued', 'recMode', 'countIn', 'click', 'quant', 'swing', 'playing', 'bank'];
 const GRID: Change[] = ['patterns', 'pattern', 'kit', 'pads', 'bank'];
 
@@ -34,6 +37,7 @@ export function buildSeqPanel(app: HTMLElement, engine: AudioEngine): void {
     <header class="sq-head">
       <h1>SEQUENCER</h1>
       <div class="sq-head-btns">
+        <button class="sq-btn sq-play" data-learn="play" aria-label="Play" aria-pressed="false">${PLAY_ICON}${STOP_ICON}</button>
         <button class="sq-btn sq-rows"></button>
         <button class="sq-btn sq-loop"><span class="sq-loop-name"></span>${CHEVRON}</button>
       </div>
@@ -74,6 +78,7 @@ export function buildSeqPanel(app: HTMLElement, engine: AudioEngine): void {
   app.appendChild(panel);
 
   const $ = <T extends Element>(sel: string) => panel.querySelector(sel) as T;
+  $('.sq-play').addEventListener('click', clock.togglePlay);
   const $$ = <T extends Element>(sel: string) => [...panel.querySelectorAll<T>(sel)];
   const rows = $$<HTMLElement>('.sq-row');
   const lenBtns = $$<HTMLButtonElement>('[data-bars]');
@@ -183,6 +188,8 @@ export function buildSeqPanel(app: HTMLElement, engine: AudioEngine): void {
     $('.sq-rows').textContent = `PADS ${BANK_NAMES[state.bank]} ${rowPage === 0 ? '1–8' : '9–16'}`;
     $('.sq-rows').setAttribute('aria-label', `Showing pads ${rowPage === 0 ? '1 to 8' : '9 to 16'} of bank ${BANK_NAMES[state.bank]}. Next pads`);
     for (const b of lenBtns) b.setAttribute('aria-pressed', String(Number(b.dataset.bars) === n));
+    $('.sq-play').setAttribute('aria-pressed', String(state.playing));
+    $('.sq-play').setAttribute('aria-label', state.playing ? 'Stop' : 'Play');
     $('.sq-rec').setAttribute('aria-pressed', String(state.recMode === 'rec' || state.recMode === 'count'));
     $('.sq-rec').classList.toggle('counting', state.recMode === 'count');
     $('.sq-dub').setAttribute('aria-pressed', String(state.recMode === 'dub'));
