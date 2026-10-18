@@ -203,7 +203,7 @@ M4 is done: Luke's hardware test passed (2026-10-18) for notes, channel, clock, 
 
 ### Steps (Luke checks in after each; one commit per step)
 Suggested model: Opus, medium for steps 1 and 4; Opus, high for step 5; Sonnet, medium for steps 2, 3, 6 and 7.
-Commits: plan 9c5a10f, step 1 f434100, step 2 baff273, step 3 ddb6bb3, step 4 ad11ee6, step 5 80ecc8a, step 6 d263a79.
+Commits: plan 9c5a10f, step 1 f434100, step 2 baff273, step 3 ddb6bb3, step 4 ad11ee6, step 5 80ecc8a, step 6 d263a79, step 7 75c446e.
 1. **KEYS tab with the synth presets.** `'keys'` view; `src/ui/keys.ts` + `src/styles/keys.css` from `Keys.dc.html` at all 3 sizes; `src/audio/keys.ts` (keys voice engine, 4 Tone presets, keys bus); `src/keys/keys.ts` (only code that changes `state.keys`, `keys` pref); `src/keys/notes.ts` (the one note-hit path); touch keyboard with multi-touch and slide; PC piano keys on the KEYS tab; octave C1–C7.
 2. **Sampled instruments.** `src/audio/instruments.json`; `scripts/fetch-instruments.mjs` (`npm run fetch-instruments`, pinned WAVs → ffmpeg → trimmed mono FLAC in `public/samples/instruments/<id>/`, about 3 MB each); sampled voices; precache; CREDITS.md.
 3. **Scale snap.** `src/keys/scales.ts` (pure); snap chip, dimmed out-of-scale keys, root dot; SETUP AUTO-TUNE section with the Scale snap card only (the vocal card is M7).
