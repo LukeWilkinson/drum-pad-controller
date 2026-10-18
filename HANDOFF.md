@@ -134,7 +134,7 @@ Suggested model: Sonnet, medium for steps 1, 2, 3, 5; Opus, medium for step 4.
 2. **MIDI output: done (2026-10-18).** `src/midi/out.ts`; an `onHit` hook in `engine.ts` so `play()`/`playAt()` send MIDI (covers live, repeat and sequencer); `echo` flag; `localSound` flag; note-off on release; All Notes Off on stop.
 3. **MIDI input → pads: done (2026-10-18).** move pad hit/release out of `main.ts` into `src/pads/hits.ts` (shared by touch, keys and MIDI); `src/midi/in.ts` (chromatic 36–99 or learned map, note-off releases, all channels, activity blink).
 4. **MIDI Learn: done (2026-10-18).** `src/midi/targets.ts` (pads; Play, REC, DUB, Undo, metronome, tap, banks, Note Repeat, Full Level, loop slots; BPM, swing, master, selected pad volume/pitch/pan/decay), `data-learn` attributes, learn mode across tabs with a capture-phase listener, mappings list with ×. Full Level moves into the store.
-5. **Send MIDI clock:** `src/midi/clock.ts`: Song Position 0 + Start at transport start (after count-in too), 24 clocks per beat via Tone `scheduleRepeat`, Stop on stop.
+5. **Send MIDI clock: done (2026-10-18).** `src/midi/clock.ts`: Song Position 0 + Start at transport start (after count-in too), 24 clocks per beat via Tone `scheduleRepeat`, Stop on stop.
 
 ### Checks
 - Claude, per step, by script in the browser pane with `?fakemidi` (no real MIDI there).
@@ -168,5 +168,10 @@ Step 4 notes (2026-10-18):
 - Checked by script with `?fakemidi`: learning pads, buttons and knobs across PADS, SEQ and KITS; a tapped control doesn't act while learning; mapped note plays its pad and unmapped note 36 still plays A1; swing 50/75 at CC 0/127; PLAY only on a rising CC; BPM 40/240 from CC and tap tempo from a note; Full Level, bank, loop, master, pad volume; relearn replaces; × removes; reload keeps mappings; MIDI off ends learn. Layout at 390×844, 844×390 and 1280×800.
 - Not checked here: real hardware (Luke's loopMIDI test at the end of M4), and real touch on a range slider while learning (the scripts used synthetic events).
 
+Step 5 notes (2026-10-18):
+- `src/midi/clock.ts` (`initMidiClock`, called in main.ts): a Tone `scheduleRepeat` every `PPQ/24` ticks. At transport tick 0 it sends Song Position 0 (F2 00 00) then Start (FA); every callback sends a clock (F8). Clocks use `out.timestampOf()` (now exported) and go to the browser ~25 ms ahead on cancelable timers. Stop (FC) is sent, and pending clocks dropped, when the transport stops, the switch goes off or MIDI goes off (only if clocks were running).
+- Switching clock on while playing sends clocks only (no Start; the receiver is not told a song restarted). Off by default; the SETUP switch (`midi.setClockOut`) is disabled while MIDI is off.
+- Checked by script with `?fakemidi`: nothing sent with the switch off; F2 00 00, FA, then F8 spaced 20.8 ms at 120 BPM (52 messages in ~1.1 s); Stop sends CC 123 then FC and nothing after; mid-play enable = clocks only; mid-play disable = FC; REC count-in sends no clock until the bar ends, then Start at ~1.98 s. Not checked: real hardware, and tempo changes mid-play (Tone follows the BPM, but not measured).
+
 ## Next step
-M4 step 5 (Send MIDI clock) on `feat/m4-midi`. Suggested: Sonnet, medium.
+M4 is built. Luke's end-of-milestone test: loopMIDI + a MIDI monitor in Chrome/Edge on the PC (notes, channel, clock, learn; a DAW if available), and on the phone the SETUP layout, permission prompt and "no devices" state. Then merge `feat/m4-midi` into `main`.

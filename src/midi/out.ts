@@ -147,7 +147,7 @@ function sendOff(note: number): void {
 }
 
 /** Context time → the Web MIDI timestamp (performance.now() scale) at which it is heard. */
-function timestampOf(when: number): number {
+export function timestampOf(when: number): number {
   const t = engine.ctx.getOutputTimestamp();
   if (t.contextTime && t.performanceTime) return t.performanceTime + (when - t.contextTime) * 1000;
   return performance.now() + (when - engine.ctx.currentTime) * 1000;

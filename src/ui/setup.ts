@@ -48,7 +48,7 @@ export function buildSetupPanel(app: HTMLElement, ui: ScreenRefs): void {
             <select class="su-chan">${Array.from({ length: 16 }, (_, i) => `<option value="${i + 1}">${channelLabel(i + 1)}</option>`).join('')}</select>
           </label>
           <div class="su-row">Play sounds in app<button class="su-sw su-local" role="switch" aria-checked="true" aria-label="Play sounds in app"></button></div>
-          <div class="su-row">Send MIDI clock<button class="su-sw su-clock" role="switch" aria-checked="false" aria-label="Send MIDI clock" disabled data-todo="M4"></button></div>
+          <div class="su-row">Send MIDI clock<button class="su-sw su-clock" role="switch" aria-checked="false" aria-label="Send MIDI clock"></button></div>
           <button class="su-learn" aria-pressed="false">MIDI LEARN</button>
           <p class="su-hint">Tap MIDI Learn, touch a pad, knob or button in the app, then move a control on your hardware.</p>
           <ul class="su-maps" aria-label="MIDI mappings"></ul>
@@ -79,6 +79,7 @@ export function buildSetupPanel(app: HTMLElement, ui: ScreenRefs): void {
   inp.addEventListener('change', () => midi.setInput(inp.value || null));
   chan.addEventListener('change', () => midi.setChannel(Number(chan.value)));
   local.addEventListener('click', () => midi.setLocalSound(!state.midi.localSound));
+  clock.addEventListener('click', () => midi.setClockOut(!state.midi.clock));
   learnBtn.addEventListener('click', toggleLearn);
   maps.addEventListener('click', (e) => {
     const x = (e.target as Element).closest<HTMLElement>('.su-map-x');
@@ -94,7 +95,7 @@ export function buildSetupPanel(app: HTMLElement, ui: ScreenRefs): void {
     msg.hidden = !MESSAGES[m.status];
     msg.textContent = MESSAGES[m.status] ?? '';
     devices.classList.toggle('off', !ready);
-    for (const el of [out, inp, chan, local, learnBtn]) el.toggleAttribute('disabled', !ready);
+    for (const el of [out, inp, chan, local, clock, learnBtn]) el.toggleAttribute('disabled', !ready);
 
     // Rebuild the lists only when they changed, so an open dropdown isn't disturbed.
     const outHtml = deviceOptions(m.outputs, m.output);
