@@ -203,6 +203,7 @@ M4 is done: Luke's hardware test passed (2026-10-18) for notes, channel, clock, 
 
 ### Steps (Luke checks in after each; one commit per step)
 Suggested model: Opus, medium for steps 1 and 4; Opus, high for step 5; Sonnet, medium for steps 2, 3, 6 and 7.
+Commits: plan 9c5a10f, step 1 f434100, step 2 baff273, step 3 ddb6bb3, step 4 ad11ee6.
 1. **KEYS tab with the synth presets.** `'keys'` view; `src/ui/keys.ts` + `src/styles/keys.css` from `Keys.dc.html` at all 3 sizes; `src/audio/keys.ts` (keys voice engine, 4 Tone presets, keys bus); `src/keys/keys.ts` (only code that changes `state.keys`, `keys` pref); `src/keys/notes.ts` (the one note-hit path); touch keyboard with multi-touch and slide; PC piano keys on the KEYS tab; octave C1–C7.
 2. **Sampled instruments.** `src/audio/instruments.json`; `scripts/fetch-instruments.mjs` (`npm run fetch-instruments`, pinned WAVs → ffmpeg → trimmed mono FLAC in `public/samples/instruments/<id>/`, about 3 MB each); sampled voices; precache; CREDITS.md.
 3. **Scale snap.** `src/keys/scales.ts` (pure); snap chip, dimmed out-of-scale keys, root dot; SETUP AUTO-TUNE section with the Scale snap card only (the vocal card is M7).
@@ -258,4 +259,8 @@ Step 4 notes (2026-10-18):
 - Not checked: how bend, glide and the arp sound (Claude can't hear the pane), and real long-press / drag on a phone.
 
 ## Next step
-Step 5 of M5: recording keys into loops (Opus, high).
+Step 5 of M5: recording keys into loops (Opus, high). Starting points:
+- Record from `src/keys/notes.ts`: `start()` is where a note begins and `end()` / the HOLD latch is where it stops; arp steps are played in `src/keys/arp.ts` `play()` (record those at their scheduled time, like `src/seq/repeat.ts` does with `seq.recordHit(pad, vel, when)`).
+- Loop events today are `{ tick, pad, vel }` (`src/seq/pattern.ts`); add note events `{ tick, note, vel, len }` with a type guard, so the SEQ grid (`src/ui/seq.ts`), `toggleStep`, `scheduleStep` and `cleanPattern()` in `src/seq/sequencer.ts` handle both. Old saved songs must still load.
+- Play recorded notes with `instrument.playAt(note, vel, when, lengthSeconds)` (`src/audio/keys.ts`; cancelable) from `scheduleStep()`, and cancel them on stop with `instrument.cancelScheduled()` (`clock.stop()` only calls `engine.cancelScheduled()` today).
+- Decided: one instrument for the whole song (the current KEYS preset plays every loop's notes); a note held past the loop end is cut at the loop length; quantise moves the start, the length comes from the release; undo and autosave as for drums; the SEQ grid stays drums-only.
