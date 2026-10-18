@@ -82,3 +82,6 @@
 
 /* Tablet header chip: a green dot when an output device is connected. */
 .midi-chip[data-on="true"] .midi-dot { background: var(--play); }
+
+/* Blinks on incoming MIDI (the chip is shown on the tablet header). */
+.midi-chip.active .midi-dot { background: var(--amber); }

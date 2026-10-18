@@ -132,7 +132,7 @@ Commits: step 1 dbcad22, step 2 4adf35c, step 3 0f005a8, step 4 588ef6e, step 5 
 Suggested model: Sonnet, medium for steps 1, 2, 3, 5; Opus, medium for step 4.
 1. **MIDI core and the SETUP tab: done (2026-10-18).** `src/midi/midi.ts` (access, devices, hot-plug, `midi` pref, store field), `src/midi/fake.ts` (dev-only fake MIDI via `?fakemidi`, logs sends, injects input), `'setup'` view, `src/ui/setup.ts` + `src/styles/setup.css` (MIDI card from Settings.dc.html), SETUP tab, tablet gear and MIDI chip.
 2. **MIDI output: done (2026-10-18).** `src/midi/out.ts`; an `onHit` hook in `engine.ts` so `play()`/`playAt()` send MIDI (covers live, repeat and sequencer); `echo` flag; `localSound` flag; note-off on release; All Notes Off on stop.
-3. **MIDI input → pads:** move pad hit/release out of `main.ts` into `src/pads/hits.ts` (shared by touch, keys and MIDI); `src/midi/in.ts` (chromatic 36–99 or learned map, note-off releases, all channels, activity blink).
+3. **MIDI input → pads: done (2026-10-18).** move pad hit/release out of `main.ts` into `src/pads/hits.ts` (shared by touch, keys and MIDI); `src/midi/in.ts` (chromatic 36–99 or learned map, note-off releases, all channels, activity blink).
 4. **MIDI Learn:** `src/midi/targets.ts` (pads; Play, REC, DUB, Undo, metronome, tap, banks, Note Repeat, Full Level, loop slots; BPM, swing, master, selected pad volume/pitch/pan/decay), `data-learn` attributes, learn mode across tabs with a capture-phase listener, mappings list with ×. Full Level moves into the store.
 5. **Send MIDI clock:** `src/midi/clock.ts`: Song Position 0 + Start at transport start (after count-in too), 24 clocks per beat via Tone `scheduleRepeat`, Stop on stop.
 
@@ -152,5 +152,10 @@ Step 2 notes (2026-10-18):
 - `engine.play(…, echo)` / `playAt(…, echo)`: `echo = false` keeps a hit from going out (for MIDI-input hits in step 3). `engine.localSound = false` mutes the app's sound; main.ts only mutes while an output device is connected, so the app can't go silent by accident.
 - Scheduled notes are sent ~25 ms ahead with a timestamp from `getOutputTimestamp()`; the note-off follows 60 ms later, or goes just before a retrigger of the same note. Transport stop, output change, channel change and MIDI off send note-offs and CC 123 on the old output/channel.
 
+Step 3 notes (2026-10-18):
+- `src/pads/hits.ts` is the one pad-hit path (`hit`, `release`, `move`, `setLast`, `padTitle`): touch and keys call it from `main.ts`, MIDI input from `src/midi/in.ts`. `fromMidi` hits skip MIDI output, including their Note Repeat repeats (`repeat.press(pad, vel, echo)`).
+- Notes 36–99 play pads A1–D16 on every channel; note-on vel 0 counts as note-off. Other messages (CC etc.) are ignored until step 4. The pad is shown hit only if its bank is on screen; the LCD and selected pad follow. Held pads are released when the input changes or MIDI goes off. The tablet MIDI chip dot blinks amber on any incoming message.
+- Full Level applies to touch only; MIDI velocity is used as sent.
+
 ## Next step
-M4 step 3 (MIDI input → pads) on `feat/m4-midi`.
+M4 step 4 (MIDI Learn) on `feat/m4-midi`. Suggested: Opus, medium.

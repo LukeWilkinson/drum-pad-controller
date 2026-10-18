@@ -24,6 +24,8 @@ interface Pending {
 interface Held {
   pad: number;
   vel: number;
+  /** False for pads played from MIDI input: their repeats are not sent back out. */
+  echo: boolean;
   /** Grid step in ticks. */
   grid: number;
   /** Tick of the next repeat, and the context time that tick 0 maps to. */
@@ -46,7 +48,7 @@ export function toggleNoteRepeat(): void {
 }
 
 /** A pad went down (after its live hit). Starts repeating if Note Repeat is on. */
-export function press(pad: number, vel: number): void {
+export function press(pad: number, vel: number, echo = true): void {
   if (!state.noteRepeat) return;
   release(pad);
   const now = engine.ctx.currentTime;
@@ -57,9 +59,9 @@ export function press(pad: number, vel: number): void {
     const tickNow = clock.ticksAt(now);
     let next = Math.ceil(tickNow / grid) * grid;
     if (next - tickNow < grid * MIN_GAP) next += grid;
-    h = { pad, vel, grid, nextTick: next, zeroTime: now - tickNow * spt, pending: [] };
+    h = { pad, vel, echo, grid, nextTick: next, zeroTime: now - tickNow * spt, pending: [] };
   } else {
-    h = { pad, vel, grid, nextTick: grid, zeroTime: now, pending: [] };
+    h = { pad, vel, echo, grid, nextTick: grid, zeroTime: now, pending: [] };
   }
   held.set(pad, h);
   schedule();
@@ -98,12 +100,12 @@ function schedule(): void {
     for (;;) {
       const when = h.zeroTime + (h.nextTick + swingTicks(h.nextTick, state.swing)) * spt;
       if (when >= now + LOOK_AHEAD) break;
-      const { pad, vel } = h;
+      const { pad, vel, echo } = h;
       h.nextTick += h.grid;
       if (when < now) continue; // the tab was busy and this one is already late: skip it
       h.pending.push({
         when,
-        cancel: engine.playAt(pad, vel, when),
+        cancel: engine.playAt(pad, vel, when, echo),
         recordTimer: window.setTimeout(() => seq.recordHit(pad, vel, when), (when - now) * 1000),
       });
     }

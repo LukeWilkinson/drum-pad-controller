@@ -10,13 +10,16 @@ import * as seq from './seq/sequencer';
 import * as repeat from './seq/repeat';
 import * as midi from './midi/midi';
 import * as midiOut from './midi/out';
-import { PADS_PER_BANK, padLabel } from './audio/kit';
+import * as midiIn from './midi/in';
+import * as hits from './pads/hits';
+import { initHits } from './pads/hits';
+import { PADS_PER_BANK } from './audio/kit';
 import { KITS, factoryKit } from './audio/kits';
 import * as kitControl from './kitControl';
 import { bootKits, kitLabel, saveMasterVolume } from './kitControl';
 import { attachPadInput } from './pads/input';
-import { state, subscribe, update } from './state';
-import { applyKit, buildPads, showHit, showRelease } from './ui/pads';
+import { state, subscribe } from './state';
+import { applyKit, buildPads } from './ui/pads';
 import { buildKitsPanel } from './ui/kits';
 import { buildScreen } from './ui/screen';
 import { buildSeqPanel } from './ui/seq';
@@ -39,7 +42,9 @@ applyKit(padEls, KITS[0].pads); // colours straight away; replaced if a differen
 buildKitsPanel(ui.app, engine);
 buildSeqPanel(ui.app, engine);
 buildSetupPanel(ui.app, ui);
+initHits(engine, ui, padEls);
 midiOut.initOut(engine);
+midiIn.initIn(ui);
 void midi.initMidi(); // the saved MIDI settings; reconnects if MIDI was on last time
 initViews(ui);
 initRail(ui.app.querySelector('.rail-right')!, engine);
@@ -48,33 +53,22 @@ let fullLevel = false;
 /** Pad index each screen pad was pressed as (bank × 16 + screen index). */
 const heldPad: number[] = [];
 let kitReady = false;
-let hasHit = false;
-
-function setLast(text: string, inline = text): void {
-  ui.lastLine.textContent = text;
-  ui.lastInline.textContent = inline;
-}
-
-function padTitle(index: number): string {
-  const name = state.kit?.pads[index].name ?? '';
-  return `PAD ${padLabel(index)} · ${name.toUpperCase()}`;
-}
 
 subscribe((s, changed) => {
   if (changed.has('kit') || changed.has('edited')) ui.kitName.textContent = kitLabel(s.kit, s.edited);
   if (s.kit && (changed.has('kit') || changed.has('pads') || changed.has('bank'))) applyKit(padEls, s.kit.pads, s.bank);
-  if (changed.has('kit') || changed.has('pads') || changed.has('selectedPad')) ui.selName.textContent = padTitle(s.selectedPad);
+  if (changed.has('kit') || changed.has('pads') || changed.has('selectedPad')) ui.selName.textContent = hits.padTitle(s.selectedPad);
   if (changed.has('bank')) ui.banks.forEach((b, i) => b.setAttribute('aria-pressed', String(i === s.bank)));
 });
 
 ui.banks.forEach((b, i) => b.addEventListener('click', () => kitControl.selectBank(i)));
 
-setLast('LOADING KIT…', 'LOADING…');
+hits.setLast('LOADING KIT…', 'LOADING…');
 
 // Mobile browsers only start audio after a user gesture. Any tap or key unlocks it.
 const unlock = () => {
   engine.unlock().then(() => {
-    if (kitReady && !hasHit) setLast(HINT, 'READY');
+    if (kitReady && !hits.hasHit()) hits.setLast(HINT, 'READY');
   });
 };
 window.addEventListener('pointerdown', unlock, { capture: true });
@@ -86,25 +80,13 @@ attachPadInput(
     onHit(screenIndex, velocity) {
       const index = state.bank * PADS_PER_BANK + screenIndex;
       heldPad[screenIndex] = index; // a bank switch mid-hold still releases the right pad
-      engine.play(index, velocity); // audio first
-      midiOut.hold(index);
-      seq.recordHit(index, velocity);
-      repeat.press(index, velocity);
-      showHit(padEls[screenIndex], velocity);
-      hasHit = true;
-      const name = state.kit?.pads[index].name.toUpperCase() ?? '';
-      setLast(`${padTitle(index)} · VEL ${velocity}`, `${name} · VEL ${velocity}`);
-      update({ selectedPad: index });
+      hits.hit(index, velocity);
     },
     onRelease(screenIndex) {
-      repeat.release(heldPad[screenIndex]);
-      midiOut.release(heldPad[screenIndex]);
-      showRelease(padEls[screenIndex]);
+      hits.release(heldPad[screenIndex]);
     },
     onMove(screenIndex, velocity) {
-      if (!state.noteRepeat) return;
-      repeat.move(heldPad[screenIndex], velocity);
-      showHit(padEls[screenIndex], velocity); // the fill follows the finger
+      hits.move(heldPad[screenIndex], velocity);
     },
   },
   () => fullLevel,
@@ -135,19 +117,19 @@ ui.master.addEventListener('change', () => saveMasterVolume(Number(ui.master.val
 document.addEventListener('dblclick', (e) => e.preventDefault());
 document.addEventListener('touchmove', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 
-bootKits(engine, (done, total) => setLast(`LOADING KIT ${done}/${total}`, `LOADING ${done}/${total}`))
+bootKits(engine, (done, total) => hits.setLast(`LOADING KIT ${done}/${total}`, `LOADING ${done}/${total}`))
   .then((master) => {
     if (master !== undefined) {
       ui.master.value = String(Math.round(master * 100));
       engine.setMasterVolume(master);
     }
     kitReady = true;
-    if (engine.running) setLast(HINT, 'READY');
-    else setLast('TAP A PAD TO START AUDIO', 'TAP TO START');
+    if (engine.running) hits.setLast(HINT, 'READY');
+    else hits.setLast('TAP A PAD TO START AUDIO', 'TAP TO START');
   })
   .catch((err: unknown) => {
     console.error(err);
-    setLast('KIT FAILED TO LOAD — SEE CONSOLE', 'KIT ERROR');
+    hits.setLast('KIT FAILED TO LOAD — SEE CONSOLE', 'KIT ERROR');
   });
 
 registerSW({ immediate: true });
