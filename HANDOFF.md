@@ -1,7 +1,7 @@
 # Handoff
 
 ## Where things stand (2026-10-17)
-Milestone 1 (Pads) and Milestone 2 (Kits and presets) passed Luke's phone test (2026-10-17). Milestone 3 (Sequencer and looping) passed Luke's phone test (2026-10-17) and was merged into `main` (125ea1d). Milestone 4 (MIDI) is planned (see "M4" at the end) and being built on `feat/m4-midi`.
+Milestone 1 (Pads) and Milestone 2 (Kits and presets) passed Luke's phone test (2026-10-17). Milestone 3 (Sequencer and looping) passed Luke's phone test (2026-10-17) and was merged into `main` (125ea1d). Milestone 4 (MIDI) passed Luke's hardware test (2026-10-18) and was merged into `main` (see "M4" at the end).
 
 ### M1 (Pads)
 - 4×4 grid in all three layouts, multi-touch, position velocity, keyboard and Full Level.
@@ -174,4 +174,6 @@ Step 5 notes (2026-10-18):
 - Checked by script with `?fakemidi`: nothing sent with the switch off; F2 00 00, FA, then F8 spaced 20.8 ms at 120 BPM (52 messages in ~1.1 s); Stop sends CC 123 then FC and nothing after; mid-play enable = clocks only; mid-play disable = FC; REC count-in sends no clock until the bar ends, then Start at ~1.98 s. Not checked: real hardware, and tempo changes mid-play (Tone follows the BPM, but not measured).
 
 ## Next step
-M4 is built. Luke's end-of-milestone test: loopMIDI + a MIDI monitor in Chrome/Edge on the PC (notes, channel, clock, learn; a DAW if available), and on the phone the SETUP layout, permission prompt and "no devices" state. Then merge `feat/m4-midi` into `main`.
+M4 is done: Luke's hardware test passed (2026-10-18) for notes, channel, clock, learn, the SETUP layout, the permission prompt, the "no devices" state and the SEQ header Play/Stop button (abfbd25). `feat/m4-midi` is merged into `main`.
+
+Next: M5 Instruments (keyboard/melodic mode, Tone.js synth presets, sampled instruments, scale snap). Start with plan mode.
