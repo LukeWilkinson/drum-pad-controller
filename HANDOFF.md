@@ -301,4 +301,4 @@ Run `npm run dev` (or `npm run lan` for the offline check) and open the **Networ
 6. Known gaps: incoming pitch bend doesn't move the PITCH thumb; MOD strip is a placeholder; memory use with all four sampled instruments loaded on a phone is untested.
 
 ## Next step
-M5 step 7 is written up. Luke's phone test (checklist sections 1–4) passed on 2026-10-18. Section 5 (MIDI hardware) is not run yet. Next: merge `feat/m5-instruments` into `main` (ask Luke first), then plan M6.
+M5 step 7 is written up. Luke's phone test (checklist sections 1–4) passed on 2026-10-18. Section 5 (MIDI hardware) is not run yet. M5 merged into `main` (2856f83, 2026-10-18). Next: plan M6.

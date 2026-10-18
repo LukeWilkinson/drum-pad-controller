@@ -67,4 +67,5 @@ Read SPEC.md (milestones) and DESIGN.md (tokens, layouts) first. The design canv
   - **Step 6, Keys MIDI: done (2026-10-18).** `state.midi.keysChannel` (default 1) + SETUP select; `KeysEngine` `KeysHook` → `midi/out.ts` (notes, scheduled ARP/loop notes, pitch bend out); `in.ts` plays KEYS from notes, pitch bend and CC 64 on the Keys channel (other channels still play pads); `echo` flag keeps MIDI-in from going back out; 8 new learn targets. Checked by script with `?fakemidi` and layout at 3 sizes. Notes in HANDOFF.md.
   - **Step 7, docs and checklist: done (2026-10-18).** README Keys section and `fetch-instruments` row, DESIGN Keys notes, and Luke's M5 phone / hardware checklist in HANDOFF.md. Not run on any device.
   - **Phone test passed (2026-10-18):** Luke reported checklist sections 1–4 (KEYS, extras, recording, offline) all fine on the real phone. Section 5 (MIDI hardware: loopMIDI or a keyboard) is not run yet.
-- **Next:** Merge `feat/m5-instruments` into `main` (ask Luke first), then plan M6. Run M5 checklist section 5 whenever MIDI hardware is handy.
+  - **M5 merged into `main` (2856f83, 2026-10-18).**
+- **Next:** Plan M6 (read SPEC.md). Run M5 checklist section 5 (MIDI hardware) whenever MIDI hardware is handy.
