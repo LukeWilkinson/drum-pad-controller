@@ -347,6 +347,7 @@ SPEC milestone 6: reverb, delay, filter, master volume, latency calibration, the
 - Install on the phone: open the link in Chrome → ⋮ → Install app. Offline after the first load; updates arrive the next time the app opens online.
 - Checked by Claude: page, `sw.js` (precaches all 188 FLAC samples), manifest and samples return 200; in the browser pane the kit loads and the service worker installs with scope `/drum-pad-controller/`. Not checked on the phone yet.
 - Pushing from Claude's shell works now that Luke signed in to Git once (Git Credential Manager).
+- **History rewritten (2026-10-18):** Luke's home LAN address was replaced with `192.168.x.x` in every old commit (git filter-branch on all local branches, then a force-push of `main`). Every commit hash changed, so the hashes quoted in these notes and CLAUDE.md are the old ones; match commits by their message instead. A backup bundle of the old history was made in Claude's session scratchpad, which is temporary.
 
 ## Artifact copy for the phone on any network (2026-10-18)
 - Private artifact (Luke only): https://claude.ai/artifact/MbnHic1eBBj259fj4y5bib, version 1 = `main` at M5.
