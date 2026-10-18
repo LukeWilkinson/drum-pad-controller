@@ -133,7 +133,7 @@ Suggested model: Sonnet, medium for steps 1, 2, 3, 5; Opus, medium for step 4.
 1. **MIDI core and the SETUP tab: done (2026-10-18).** `src/midi/midi.ts` (access, devices, hot-plug, `midi` pref, store field), `src/midi/fake.ts` (dev-only fake MIDI via `?fakemidi`, logs sends, injects input), `'setup'` view, `src/ui/setup.ts` + `src/styles/setup.css` (MIDI card from Settings.dc.html), SETUP tab, tablet gear and MIDI chip.
 2. **MIDI output: done (2026-10-18).** `src/midi/out.ts`; an `onHit` hook in `engine.ts` so `play()`/`playAt()` send MIDI (covers live, repeat and sequencer); `echo` flag; `localSound` flag; note-off on release; All Notes Off on stop.
 3. **MIDI input → pads: done (2026-10-18).** move pad hit/release out of `main.ts` into `src/pads/hits.ts` (shared by touch, keys and MIDI); `src/midi/in.ts` (chromatic 36–99 or learned map, note-off releases, all channels, activity blink).
-4. **MIDI Learn:** `src/midi/targets.ts` (pads; Play, REC, DUB, Undo, metronome, tap, banks, Note Repeat, Full Level, loop slots; BPM, swing, master, selected pad volume/pitch/pan/decay), `data-learn` attributes, learn mode across tabs with a capture-phase listener, mappings list with ×. Full Level moves into the store.
+4. **MIDI Learn: done (2026-10-18).** `src/midi/targets.ts` (pads; Play, REC, DUB, Undo, metronome, tap, banks, Note Repeat, Full Level, loop slots; BPM, swing, master, selected pad volume/pitch/pan/decay), `data-learn` attributes, learn mode across tabs with a capture-phase listener, mappings list with ×. Full Level moves into the store.
 5. **Send MIDI clock:** `src/midi/clock.ts`: Song Position 0 + Start at transport start (after count-in too), 24 clocks per beat via Tone `scheduleRepeat`, Stop on stop.
 
 ### Checks
@@ -157,5 +157,16 @@ Step 3 notes (2026-10-18):
 - Notes 36–99 play pads A1–D16 on every channel; note-on vel 0 counts as note-off. Other messages (CC etc.) are ignored until step 4. The pad is shown hit only if its bank is on screen; the LCD and selected pad follow. Held pads are released when the input changes or MIDI goes off. The tablet MIDI chip dot blinks amber on any incoming message.
 - Full Level applies to touch only; MIDI velocity is used as sent.
 
+Step 4 notes (2026-10-18):
+- Luke's choices: learn mode stays on until DONE; an amber bar with DONE shows on every screen; knob CCs are absolute (0–127 → the full range).
+- `src/midi/targets.ts`: target ids saved in the pref (`pad:0–63`, `play`, `rec`, `dub`, `undo`, `metro`, `tap`, `bpm-down`, `bpm-up`, `bank:0–3`, `loop:0–3`, `note-repeat`, `full-level`, `swing`, `master`, `param:volumeDb|pitch|pan|decay`). Each acts through the code that owns the control. Notes press; a CC sets a knob, or presses a button when it rises past 64. `tap` (the BPM readout) is tap tempo from a note and BPM 40–240 from a CC. A CC on a pad hits it (value = velocity) and releases below 64. Param knobs act on the selected pad.
+- `data-learn` is on: transport keys, BPM −/readout/+, loop slots, banks, Note Repeat, Full Level, tablet rail knobs and master, SEQ REC/OVERDUB/CLICK/swing, Kits panel sliders, and the pads (`data-learn="pad"` + `data-screen`; a tapped pad is learned as that exact pad of the bank on screen).
+- `src/midi/learn.ts` (only code that changes `state.learn`): a window capture-phase listener stops taps while learning, so the control doesn't act; tapping a `data-learn` control arms it (solid outline; others dashed). Tabs, the learn bar, SETUP, the tablet header and dialogs still work. The next note-on or CC from the input (`in.ts` calls `capture()`) becomes a mapping; the same message learned again replaces the old one. MIDI going off ends learn mode.
+- Mappings are `state.midi.mappings` (saved in the `midi` pref; bad entries dropped on load). `in.ts` checks a mapping first; unmapped notes still use the chromatic map, unmapped CCs are ignored. SETUP lists them ("CC 21 → SWING") with a × each.
+- The learn bar sits at the bottom of the screen and the layout shrinks to make room (`--learn-h` in app.css), so it covers nothing.
+- Full Level is now `state.fullLevel` (`hits.toggleFullLevel()`), so MIDI can toggle it. Still not saved.
+- Checked by script with `?fakemidi`: learning pads, buttons and knobs across PADS, SEQ and KITS; a tapped control doesn't act while learning; mapped note plays its pad and unmapped note 36 still plays A1; swing 50/75 at CC 0/127; PLAY only on a rising CC; BPM 40/240 from CC and tap tempo from a note; Full Level, bank, loop, master, pad volume; relearn replaces; × removes; reload keeps mappings; MIDI off ends learn. Layout at 390×844, 844×390 and 1280×800.
+- Not checked here: real hardware (Luke's loopMIDI test at the end of M4), and real touch on a range slider while learning (the scripts used synthetic events).
+
 ## Next step
-M4 step 4 (MIDI Learn) on `feat/m4-midi`. Suggested: Opus, medium.
+M4 step 5 (Send MIDI clock) on `feat/m4-midi`. Suggested: Sonnet, medium.

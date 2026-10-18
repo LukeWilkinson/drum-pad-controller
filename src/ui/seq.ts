@@ -45,17 +45,17 @@ export function buildSeqPanel(app: HTMLElement, engine: AudioEngine): void {
       </div>
     </div>
     <div class="sq-toggles">
-      <button class="sq-rec" aria-pressed="false"><span class="sq-dot" aria-hidden="true"></span>REC</button>
-      <button class="sq-dub" aria-pressed="false">OVERDUB</button>
+      <button class="sq-rec" data-learn="rec" aria-pressed="false"><span class="sq-dot" aria-hidden="true"></span>REC</button>
+      <button class="sq-dub" data-learn="dub" aria-pressed="false">OVERDUB</button>
       <button class="sq-count" aria-pressed="false">COUNT-IN</button>
-      <button class="sq-click" aria-pressed="false">CLICK</button>
+      <button class="sq-click" data-learn="metro" aria-pressed="false">CLICK</button>
     </div>
     <div class="sq-qrow">
       <span class="sq-label">QNT</span>
       <div class="sq-quant" role="group" aria-label="Quantise">
         ${QUANTS.map((q) => `<button data-q="${q}" aria-pressed="false">${q}</button>`).join('')}
       </div>
-      <div class="sq-swing" role="slider" tabindex="0" aria-label="Swing" aria-valuemin="${SWING_MIN}" aria-valuemax="${SWING_MAX}">
+      <div class="sq-swing" data-learn="swing" role="slider" tabindex="0" aria-label="Swing" aria-valuemin="${SWING_MIN}" aria-valuemax="${SWING_MAX}">
         <span class="sq-swing-label">SWING</span><span class="sq-swing-val"></span>
       </div>
     </div>

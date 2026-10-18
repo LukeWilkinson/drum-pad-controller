@@ -20,6 +20,24 @@ export interface MidiState {
   localSound: boolean;
   /** Send MIDI clock (step 5). */
   clock: boolean;
+  /** Learned controls (MIDI Learn), oldest first. A message appears at most once. */
+  mappings: Mapping[];
+}
+
+/** One learned control: a note or CC number (any channel) → a target id from src/midi/targets.ts. */
+export interface Mapping {
+  kind: 'note' | 'cc';
+  num: number;
+  target: string;
+}
+
+/** MIDI Learn mode (changed only by src/midi/learn.ts). */
+export interface LearnState {
+  on: boolean;
+  /** Target id waiting for a hardware control, or null. */
+  armed: string | null;
+  /** The last mapping made, as shown on the learn bar ("CC 21 → SWING"), or null. */
+  last: string | null;
 }
 
 export const DEFAULT_CHANNEL = 10; // General MIDI drums

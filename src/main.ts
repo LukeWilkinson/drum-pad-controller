@@ -11,6 +11,8 @@ import * as repeat from './seq/repeat';
 import * as midi from './midi/midi';
 import * as midiOut from './midi/out';
 import * as midiIn from './midi/in';
+import * as learn from './midi/learn';
+import { initTargets } from './midi/targets';
 import * as hits from './pads/hits';
 import { initHits } from './pads/hits';
 import { PADS_PER_BANK } from './audio/kit';
@@ -45,11 +47,12 @@ buildSetupPanel(ui.app, ui);
 initHits(engine, ui, padEls);
 midiOut.initOut(engine);
 midiIn.initIn(ui);
+initTargets(engine, ui);
+learn.initLearn(ui);
 void midi.initMidi(); // the saved MIDI settings; reconnects if MIDI was on last time
 initViews(ui);
 initRail(ui.app.querySelector('.rail-right')!, engine);
 
-let fullLevel = false;
 /** Pad index each screen pad was pressed as (bank × 16 + screen index). */
 const heldPad: number[] = [];
 let kitReady = false;
@@ -89,7 +92,7 @@ attachPadInput(
       hits.move(heldPad[screenIndex], velocity);
     },
   },
-  () => fullLevel,
+  () => state.fullLevel,
 );
 
 // With "Play sounds in app" off the app is silent, so only mute while an output device is connected.
@@ -105,9 +108,9 @@ subscribe((s, changed) => {
   if (changed.has('noteRepeat')) ui.noteRepeat.setAttribute('aria-pressed', String(s.noteRepeat));
 });
 
-ui.fullLevel.addEventListener('click', () => {
-  fullLevel = !fullLevel;
-  ui.fullLevel.setAttribute('aria-pressed', String(fullLevel));
+ui.fullLevel.addEventListener('click', hits.toggleFullLevel);
+subscribe((s, changed) => {
+  if (changed.has('fullLevel')) ui.fullLevel.setAttribute('aria-pressed', String(s.fullLevel));
 });
 
 ui.master.addEventListener('input', () => engine.setMasterVolume(Number(ui.master.value) / 100));
@@ -135,4 +138,4 @@ bootKits(engine, (done, total) => hits.setLast(`LOADING KIT ${done}/${total}`, `
 registerSW({ immediate: true });
 
 // Dev-only handle for checking the engine and store from the browser console.
-if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, seq, repeat, midi, state, KITS, factoryKit, ...kitControl } });
+if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, seq, repeat, midi, learn, state, KITS, factoryKit, ...kitControl } });

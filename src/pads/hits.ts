@@ -55,6 +55,11 @@ export function release(index: number, fromMidi = false): void {
   showRelease(padEls[index % PADS_PER_BANK]);
 }
 
+/** FULL LEVEL: touch hits play at velocity 127. MIDI velocity is always used as sent. */
+export function toggleFullLevel(): void {
+  update({ fullLevel: !state.fullLevel });
+}
+
 /** A finger moved on a held pad: later Note Repeat hits use the new velocity. */
 export function move(index: number, velocity: number): void {
   if (!state.noteRepeat) return;

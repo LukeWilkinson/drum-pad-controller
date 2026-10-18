@@ -78,7 +78,19 @@
   font-size: 14px; font-weight: 700; letter-spacing: .08em; box-shadow: var(--key-shadow);
 }
 .su-learn:disabled { cursor: default; opacity: .6; }
+.su-learn[aria-pressed="true"] { background: var(--amber); color: var(--body); }
 .su-hint { margin: 0; font-size: 13px; line-height: 1.35; color: var(--text-muted); }
+
+/* Learned mappings: "CC 21 → SWING ×". */
+.su-maps { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; font-family: var(--font-mono); font-size: 12px; }
+.su-map {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  min-height: 44px; padding: 0 0 0 10px; background: var(--body); border-radius: 6px;
+}
+.su-map.empty { padding-right: 10px; color: var(--text-muted); }
+.su-map span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.su-map-x { flex: none; width: 44px; height: 44px; background: none; color: var(--text-muted); font-size: 18px; }
+.su-map-x:hover { color: var(--text-strong); }
 
 /* Tablet header chip: a green dot when an output device is connected. */
 .midi-chip[data-on="true"] .midi-dot { background: var(--play); }

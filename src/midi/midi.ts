@@ -7,7 +7,7 @@
 
 import { state, update } from '../state';
 import { getPref, setPref } from '../store/db';
-import type { AccessLike, InLike, MidiState, OutLike } from './types';
+import type { AccessLike, InLike, Mapping, MidiState, OutLike } from './types';
 
 const PREF = 'midi';
 
@@ -18,7 +18,13 @@ interface Saved {
   channel: number;
   localSound: boolean;
   clock: boolean;
+  mappings: Mapping[];
 }
+
+const isMapping = (m: unknown): m is Mapping => {
+  const x = m as Partial<Mapping> | null;
+  return !!x && (x.kind === 'note' || x.kind === 'cc') && Number.isInteger(x.num) && x.num! >= 0 && x.num! <= 127 && typeof x.target === 'string';
+};
 
 let access: AccessLike | null = null;
 /** True when Luke has turned MIDI on (saved, so the next boot reconnects). */
@@ -41,8 +47,8 @@ function patch(p: Partial<MidiState>): void {
 
 function save(): void {
   if (!loaded) return;
-  const { output, input, channel, localSound, clock } = state.midi;
-  const saved: Saved = { enabled, output, input, channel, localSound, clock };
+  const { output, input, channel, localSound, clock, mappings } = state.midi;
+  const saved: Saved = { enabled, output, input, channel, localSound, clock, mappings };
   setPref(PREF, saved).catch(warn);
 }
 
@@ -63,6 +69,7 @@ export async function initMidi(): Promise<void> {
       if (Number.isInteger(saved.channel) && saved.channel! >= 1 && saved.channel! <= 16) p.channel = saved.channel;
       if (typeof saved.localSound === 'boolean') p.localSound = saved.localSound;
       if (typeof saved.clock === 'boolean') p.clock = saved.clock;
+      if (Array.isArray(saved.mappings)) p.mappings = saved.mappings.filter(isMapping);
       if (Object.keys(p).length) update({ midi: { ...state.midi, ...p } });
       enabled = saved.enabled === true;
     }
@@ -171,6 +178,21 @@ export function setLocalSound(localSound: boolean): void {
 
 export function setClockOut(clock: boolean): void {
   patch({ clock });
+}
+
+/** Adds a learned control. An older mapping of the same message is replaced. */
+export function addMapping(m: Mapping): void {
+  const rest = state.midi.mappings.filter((x) => x.kind !== m.kind || x.num !== m.num);
+  patch({ mappings: [...rest, m] });
+}
+
+export function removeMapping(index: number): void {
+  patch({ mappings: state.midi.mappings.filter((_, i) => i !== index) });
+}
+
+/** The learned mapping for a note or CC number, if any. */
+export function mappingFor(kind: Mapping['kind'], num: number): Mapping | undefined {
+  return state.midi.mappings.find((m) => m.kind === kind && m.num === num);
 }
 
 /** The output port to send to, or null (no device chosen, unplugged, or MIDI off). */

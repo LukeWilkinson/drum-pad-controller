@@ -54,7 +54,7 @@ export function buildKitsPanel(app: HTMLElement, engine: AudioEngine): void {
         <div class="kp-sample"></div>
         ${PARAMS.map((k) => {
           const r = PARAM_RANGE[k];
-          return `<label class="kp-slider">
+          return `<label class="kp-slider" data-learn="param:${k}">
             <span class="kp-slider-top"><span>${PARAM_LABEL[k]}</span><span class="kp-val" data-val="${k}"></span></span>
             <input type="range" data-key="${k}" min="${r.min}" max="${r.max}" step="${r.step}">
           </label>`;

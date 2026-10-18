@@ -1,7 +1,10 @@
 // SETUP panel (Settings.dc.html): for now the MIDI card only. Built once; render() updates it from
-// the store. Also drives the tablet header's MIDI chip. The MIDI code does the work (src/midi/midi.ts).
+// the store. Also drives the tablet header's MIDI chip. The MIDI code does the work (src/midi/midi.ts,
+// and src/midi/learn.ts for the MIDI LEARN button and the mappings list).
 
+import { toggleLearn } from '../midi/learn';
 import * as midi from '../midi/midi';
+import { messageLabel, targetLabel } from '../midi/targets';
 import type { MidiState } from '../midi/types';
 import { state, subscribe } from '../state';
 import { escapeHtml } from './dialog';
@@ -46,8 +49,10 @@ export function buildSetupPanel(app: HTMLElement, ui: ScreenRefs): void {
           </label>
           <div class="su-row">Play sounds in app<button class="su-sw su-local" role="switch" aria-checked="true" aria-label="Play sounds in app"></button></div>
           <div class="su-row">Send MIDI clock<button class="su-sw su-clock" role="switch" aria-checked="false" aria-label="Send MIDI clock" disabled data-todo="M4"></button></div>
-          <button class="su-learn" disabled data-todo="M4">MIDI LEARN</button>
-          <p class="su-hint">Notes 36–99 play the pads: A1–A16 are 36–51, then B, C and D. Output goes out on the channel above. Input is read on every channel.</p>
+          <button class="su-learn" aria-pressed="false">MIDI LEARN</button>
+          <p class="su-hint">Tap MIDI Learn, touch a pad, knob or button in the app, then move a control on your hardware.</p>
+          <ul class="su-maps" aria-label="MIDI mappings"></ul>
+          <p class="su-hint">Notes 36–99 play the pads: A1–A16 are 36–51, then B, C and D. A learned note takes over from this. Output goes out on the channel above. Input is read on every channel.</p>
         </div>
       </div>
     </section>`;
@@ -62,6 +67,8 @@ export function buildSetupPanel(app: HTMLElement, ui: ScreenRefs): void {
   const chan = q<HTMLSelectElement>('.su-chan');
   const local = q<HTMLButtonElement>('.su-local');
   const clock = q<HTMLButtonElement>('.su-clock');
+  const learnBtn = q<HTMLButtonElement>('.su-learn');
+  const maps = q<HTMLUListElement>('.su-maps');
 
   power.addEventListener('click', () => {
     const { status } = state.midi;
@@ -72,6 +79,11 @@ export function buildSetupPanel(app: HTMLElement, ui: ScreenRefs): void {
   inp.addEventListener('change', () => midi.setInput(inp.value || null));
   chan.addEventListener('change', () => midi.setChannel(Number(chan.value)));
   local.addEventListener('click', () => midi.setLocalSound(!state.midi.localSound));
+  learnBtn.addEventListener('click', toggleLearn);
+  maps.addEventListener('click', (e) => {
+    const x = (e.target as Element).closest<HTMLElement>('.su-map-x');
+    if (x) midi.removeMapping(Number(x.dataset.i));
+  });
 
   const setSwitch = (el: HTMLElement, on: boolean) => el.setAttribute('aria-checked', String(on));
 
@@ -82,7 +94,7 @@ export function buildSetupPanel(app: HTMLElement, ui: ScreenRefs): void {
     msg.hidden = !MESSAGES[m.status];
     msg.textContent = MESSAGES[m.status] ?? '';
     devices.classList.toggle('off', !ready);
-    for (const el of [out, inp, chan, local]) el.toggleAttribute('disabled', !ready);
+    for (const el of [out, inp, chan, local, learnBtn]) el.toggleAttribute('disabled', !ready);
 
     // Rebuild the lists only when they changed, so an open dropdown isn't disturbed.
     const outHtml = deviceOptions(m.outputs, m.output);
@@ -93,12 +105,29 @@ export function buildSetupPanel(app: HTMLElement, ui: ScreenRefs): void {
     setSwitch(local, m.localSound);
     setSwitch(clock, m.clock);
 
+    const mapsHtml = m.mappings.length
+      ? m.mappings.map((x, i) => {
+          const text = `${messageLabel(x)} → ${targetLabel(x.target, x.kind)}`;
+          return `<li class="su-map"><span>${escapeHtml(text)}</span><button class="su-map-x" data-i="${i}" aria-label="Remove ${escapeHtml(text)}">×</button></li>`;
+        }).join('')
+      : '<li class="su-map empty">No mappings yet.</li>';
+    if (maps.innerHTML !== mapsHtml) maps.innerHTML = mapsHtml;
+
     // Tablet header chip.
     const connected = ready && m.output !== null && m.outputs.includes(m.output);
     ui.midiChip.dataset.on = String(connected);
     ui.midiText.textContent = connected ? `MIDI · ${m.output!.toUpperCase()}` : ready ? 'MIDI ON' : 'MIDI OFF';
   }
 
+  const renderLearn = () => {
+    learnBtn.setAttribute('aria-pressed', String(state.learn.on));
+    learnBtn.textContent = state.learn.on ? 'LISTENING… MOVE A HARDWARE CONTROL' : 'MIDI LEARN';
+  };
+
   render(state.midi);
-  subscribe((s, changed) => changed.has('midi') && render(s.midi));
+  renderLearn();
+  subscribe((s, changed) => {
+    if (changed.has('midi')) render(s.midi);
+    if (changed.has('learn')) renderLearn();
+  });
 }

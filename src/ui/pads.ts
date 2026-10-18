@@ -15,6 +15,8 @@ export function buildPads(well: HTMLElement): HTMLButtonElement[] {
   return Array.from({ length: 16 }, (_, i) => {
     const el = document.createElement('button');
     el.className = 'pad';
+    el.dataset.learn = 'pad'; // MIDI Learn: the pad of the bank on screen (src/midi/targets.ts)
+    el.dataset.screen = String(i);
     el.innerHTML = `
       <span class="pad-fill" aria-hidden="true"></span>
       <span class="pad-led" aria-hidden="true"></span>
