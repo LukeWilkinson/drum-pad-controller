@@ -3,6 +3,8 @@
 // The MIDI code does the work (src/midi/midi.ts, and src/midi/learn.ts for the MIDI LEARN button and
 // the mappings list); src/keys/keys.ts owns the snap settings.
 
+import * as latency from '../audio/latency';
+import { OFFSET_MAX, OFFSET_MIN } from '../audio/latencyTypes';
 import * as keys from '../keys/keys';
 import { KEY_NAMES, SCALES, SCALE_IDS, type ScaleId } from '../keys/scales';
 import { toggleLearn } from '../midi/learn';
@@ -62,6 +64,29 @@ export function buildSetupPanel(app: HTMLElement, ui: ScreenRefs): void {
         </div>
       </div>
     </section>
+    <section class="su-section" aria-labelledby="su-lat-h">
+      <h2 id="su-lat-h">AUDIO &amp; LATENCY</h2>
+      <div class="su-card">
+        <div class="su-row">
+          <div class="su-title"><span class="su-name">Measured</span><span class="su-sub su-lat-src"></span></div>
+          <output class="su-lcd" aria-live="polite"></output>
+        </div>
+        <button class="su-learn su-cal" aria-pressed="false">CALIBRATE · TAP ALONG TO 8 CLICKS</button>
+        <button class="su-tap" hidden>TAP ON EACH CLICK</button>
+        <p class="su-hint su-cal-msg" role="status" hidden></p>
+        <button class="su-link su-reset" hidden>Reset to automatic</button>
+        <label class="su-slider">
+          <span class="su-row">Manual offset<output class="su-off-val"></output></span>
+          <input type="range" class="su-off" min="${OFFSET_MIN}" max="${OFFSET_MAX}" step="1" value="0" aria-label="Manual offset in milliseconds">
+        </label>
+        <p class="su-hint">Raise it if recorded hits land late. Double-tap the slider to reset it to 0.</p>
+        <div class="su-row">
+          <div class="su-title"><span class="su-name">Low-latency mode</span><span class="su-sub">Off uses a bigger buffer: fewer crackles on slow phones</span></div>
+          <button class="su-sw su-low" role="switch" aria-checked="true" aria-label="Low-latency mode"></button>
+        </div>
+        <div class="su-row su-reload" hidden>Applies after a reload<button class="su-learn su-reload-btn">RELOAD</button></div>
+      </div>
+    </section>
     <section class="su-section" aria-labelledby="su-tune-h">
       <h2 id="su-tune-h">AUTO-TUNE</h2>
       <div class="su-card">
@@ -93,6 +118,64 @@ export function buildSetupPanel(app: HTMLElement, ui: ScreenRefs): void {
   const snapPair = q<HTMLElement>('.su-pair');
   const keySel = q<HTMLSelectElement>('.su-key');
   const scaleSel = q<HTMLSelectElement>('.su-scale');
+
+  const calBtn = q<HTMLButtonElement>('.su-cal');
+  const tapBtn = q<HTMLButtonElement>('.su-tap');
+  const calMsg = q<HTMLElement>('.su-cal-msg');
+  const resetBtn = q<HTMLButtonElement>('.su-reset');
+  const lcd = q<HTMLElement>('.su-lcd');
+  const latSrc = q<HTMLElement>('.su-lat-src');
+  const offSlider = q<HTMLInputElement>('.su-off');
+  const offVal = q<HTMLElement>('.su-off-val');
+  const lowSw = q<HTMLButtonElement>('.su-low');
+  const reloadRow = q<HTMLElement>('.su-reload');
+  const runningLow = state.latency.low; // what the audio context was created with
+
+  calBtn.addEventListener('click', () => void latency.startCalibration());
+  tapBtn.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    latency.tap(e.timeStamp);
+  });
+  window.addEventListener('keydown', (e) => {
+    if (e.code !== 'Space' || latency.calibration().phase !== 'running') return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    latency.tap(e.timeStamp);
+  }, true);
+  resetBtn.addEventListener('click', latency.resetMeasured);
+  offSlider.addEventListener('input', () => latency.setOffset(Number(offSlider.value)));
+  let lastOffTap = 0;
+  offSlider.addEventListener('pointerdown', (e) => {
+    if (e.timeStamp - lastOffTap < 350) {
+      latency.setOffset(0);
+      e.preventDefault();
+    }
+    lastOffTap = e.timeStamp;
+  });
+  lowSw.addEventListener('click', () => latency.setLow(!state.latency.low));
+  q<HTMLButtonElement>('.su-reload-btn').addEventListener('click', () => location.reload());
+
+  const renderLatency = () => {
+    const l = state.latency;
+    const eng = Math.round((state.latency.measured === null ? latency.browserDelay() : 0) * 1000);
+    lcd.textContent = l.measured !== null ? `${l.measured} ms` : `${eng} ms`;
+    latSrc.textContent = l.measured !== null ? 'From calibration' : 'Automatic (from the browser)';
+    resetBtn.hidden = l.measured === null;
+    offSlider.value = String(l.offset);
+    offVal.textContent = `${l.offset > 0 ? '+' : ''}${l.offset} ms`;
+    setSwitch(lowSw, l.low);
+    reloadRow.hidden = l.low === runningLow;
+  };
+  const renderCal = (c: latency.CalState) => {
+    const running = c.phase === 'running';
+    calBtn.hidden = running;
+    tapBtn.hidden = !running;
+    if (c.phase === 'running') tapBtn.textContent = `TAP ON EACH CLICK · ${c.taps}/${latency.CLICKS}`;
+    calMsg.hidden = c.phase !== 'failed' && c.phase !== 'done';
+    if (c.phase === 'failed') calMsg.textContent = c.reason;
+    if (c.phase === 'done') calMsg.textContent = `Measured ${c.ms} ms. Recorded hits now use it.`;
+  };
+  latency.onCalibration(renderCal);
 
   snapSw.addEventListener('click', keys.toggleSnap);
   keySel.addEventListener('change', () => keys.setKey(Number(keySel.value)));
@@ -164,10 +247,13 @@ export function buildSetupPanel(app: HTMLElement, ui: ScreenRefs): void {
   };
 
   render(state.midi);
+  renderLatency();
+  renderCal(latency.calibration());
   renderLearn();
   renderSnap();
   subscribe((s, changed) => {
     if (changed.has('midi')) render(s.midi);
+    if (changed.has('latency')) renderLatency();
     if (changed.has('learn')) renderLearn();
     if (changed.has('keys')) renderSnap();
   });

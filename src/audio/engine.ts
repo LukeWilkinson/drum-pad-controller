@@ -6,6 +6,7 @@
 // → stereo panner (only when the pad is panned) → the pad group's mixer strip, plus a reverb and
 // a delay send when the pad has them (src/mix/graph.ts).
 
+import { state } from '../state';
 import { MixGraph } from '../mix/graph';
 import { GROUP_STRIP, type PadStrip } from '../mix/types';
 import {
@@ -58,7 +59,7 @@ export class AudioEngine {
   private scheduled = new Set<Voice>();
 
   constructor() {
-    this.ctx = new AudioContext({ latencyHint: 'interactive' });
+    this.ctx = new AudioContext({ latencyHint: state.latency.low ? 'interactive' : 'playback' });
     this.mix = new MixGraph(this.ctx);
   }
 

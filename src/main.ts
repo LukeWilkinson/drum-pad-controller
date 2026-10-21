@@ -8,6 +8,7 @@ import './styles/mix.css';
 import { registerSW } from 'virtual:pwa-register';
 import { AudioEngine } from './audio/engine';
 import * as clock from './audio/clock';
+import * as latency from './audio/latency';
 import * as seq from './seq/sequencer';
 import * as repeat from './seq/repeat';
 import * as midi from './midi/midi';
@@ -46,6 +47,7 @@ const padEls = buildPads(ui.padwell);
 const engine = new AudioEngine();
 void mix.initMix(engine); // the saved mixer and FX settings
 clock.initClock(engine);
+latency.initLatency(engine);
 seq.initSequencer(engine);
 seq.loadSong(); // the saved loops and tempo; independent of the kit loading below
 repeat.initRepeat(engine);
@@ -155,4 +157,4 @@ bootKits(engine, (done, total) => hits.setLast(`LOADING KIT ${done}/${total}`, `
 registerSW({ immediate: true });
 
 // Dev-only handle for checking the engine and store from the browser console.
-if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, seq, repeat, midi, learn, state, KITS, factoryKit, keys, notes, arp, instrument, mix, ...kitControl } });
+if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, latency, seq, repeat, midi, learn, state, KITS, factoryKit, keys, notes, arp, instrument, mix, ...kitControl } });

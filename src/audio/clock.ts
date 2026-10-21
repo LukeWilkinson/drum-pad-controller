@@ -85,12 +85,15 @@ export function setClick(click: boolean): void {
 }
 
 /**
- * The context time of what the listener hears now: currentTime minus the device's output latency.
- * A pad hit lines up with this (Luke plays along to what he hears).
+ * The context time of what the listener hears when a tap lands: currentTime minus the output delay.
+ * The delay is the calibrated value if there is one, else the browser's report, plus the manual
+ * offset (src/audio/latency.ts). A pad hit lines up with this (Luke plays along to what he hears).
  */
 export function heardTime(): number {
   const ctx = engine.ctx;
-  return ctx.currentTime - (ctx.outputLatency || ctx.baseLatency || 0);
+  const { measured, offset } = state.latency;
+  const delay = measured !== null ? measured / 1000 : ctx.outputLatency || ctx.baseLatency || 0;
+  return ctx.currentTime - delay - offset / 1000;
 }
 
 /** Transport position at context time `time`, in pattern ticks (PPQ per beat, fractional). 0 when stopped. */

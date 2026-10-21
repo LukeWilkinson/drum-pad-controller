@@ -387,6 +387,12 @@ The pinned CC0 VCSL commit (`sgossner/VCSL` c1ea7bc) has `Idiophones/Plucked Idi
 - Claude, per step, by script in the browser pane (`dev-http`), plus layout at the 3 sizes.
 - Claude can't hear the browser pane: reverb / delay / filter sound, meters vs. what's heard, and calibration on a real phone are Luke's checks.
 
+### Step 4, Latency card: done (2026-10-21)
+- **Files:** `src/audio/latencyTypes.ts` (type, defaults, localStorage load/save; pure), `src/audio/latency.ts` (only code that changes `state.latency`; calibration), SETUP "AUDIO & LATENCY" card in `src/ui/setup.ts` + `setup.css`. `clock.heardTime()` = `currentTime - (measured ?? outputLatency ?? baseLatency) - offset`. `engine.ts` picks `latencyHint` 'interactive' (low-latency on, default) or 'playback' from the saved value.
+- **Claude's choices (Luke can override):** the `latency` pref is in **localStorage**, not IndexedDB, because the audio context is created before any async pref can load. Calibration = 8 clicks 0.5 s apart on the audio context; each tap is converted to context time (`currentTime - (performance.now - event.timeStamp)`), the median of taps within 250 ms of a click is `measured` (needs 5 good taps, 0-300 ms). That is output latency plus Luke's tap habit, which is what recorded hits need. Refused while the transport plays. Space also taps while calibrating. Offset: slider -50..+50 ms, double-tap resets. Positive offset = recorded hits land earlier.
+- **Checked by script in the browser pane:** heardTime shifts with offset; fake taps at +40 ms give 42 ms; 2 taps rejected; blocked while playing; pref round trip over a reload; damaged and out-of-range saves fall back; UI taps, label count, LCD, reset and reload row; layout at 3 sizes (no horizontal overflow). `tsc` and `npm run build` pass.
+- **Not checked (Luke, on the phone):** whether tap-along feels right and fixes recorded timing; whether `playback` mode really gives a bigger buffer on the phone (the desktop pane showed baseLatency 0.02 s either way).
+
 ## Live site: GitHub Pages (2026-10-18)
 - **https://lukewilkinson.github.io/drum-pad-controller/** from the public repo https://github.com/LukeWilkinson/drum-pad-controller (remote `origin`). Luke chose a public repo (code and commit email visible) after Netlify suspended the new account.
 - `.github/workflows/pages.yml` builds and deploys on every push to `main` (`vite build --base=/<repo>/`); the first run passed. Pages source is set to "GitHub Actions" in the repo settings.
@@ -410,4 +416,4 @@ The pinned CC0 VCSL commit (`sgossner/VCSL` c1ea7bc) has `Idiophones/Plucked Idi
 - In PowerShell, `npm` is blocked by the script policy; use `npm.cmd`.
 
 ## Next step
-M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above), building on `feat/m6-effects`. Steps 1 (Kalimba), 2 (audio graph) and 3 (MIX / FX tab) done; Luke's ear checks happen with the M6 phone test. Next: step 4, the Latency card (Sonnet, medium).
+M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above), building on `feat/m6-effects`. Steps 1 (Kalimba), 2 (audio graph), 3 (MIX / FX tab) and 4 (Latency card) done; Luke's ear checks happen with the M6 phone test. Next: step 5, the Theme card (Sonnet, medium).
