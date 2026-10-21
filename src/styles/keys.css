@@ -118,14 +118,14 @@
   flex: 1; min-width: 0;
   display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px;
   padding-bottom: 10px; border-radius: 0 0 6px 6px;
-  background: var(--text-strong); box-shadow: inset 0 -5px 0 rgba(0, 0, 0, .18);
+  background: var(--key-white); box-shadow: inset 0 -5px 0 rgba(0, 0, 0, .18);
 }
 .kb-root { width: 6px; height: 6px; border-radius: 3px; pointer-events: none; }
 .kb-label { font-family: var(--font-mono); font-size: 10px; color: var(--switch-off); pointer-events: none; }
 .kb-black {
   position: absolute; top: 6px; width: var(--bw); height: 58%;
   left: calc(6px + (100% - 12px) * var(--p) / var(--n) - var(--bw) / 2);
-  border-radius: 0 0 4px 4px; background: var(--edge); box-shadow: inset 0 -4px 0 rgba(255, 255, 255, .08);
+  border-radius: 0 0 4px 4px; background: var(--key-black); box-shadow: inset 0 -4px 0 rgba(255, 255, 255, .08);
 }
 .kb-key.down { background: var(--amber); }
 .kb-key.out { opacity: .45; } /* snap on: outside the scale */

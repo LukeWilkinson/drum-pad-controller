@@ -393,6 +393,13 @@ The pinned CC0 VCSL commit (`sgossner/VCSL` c1ea7bc) has `Idiophones/Plucked Idi
 - **Checked by script in the browser pane:** heardTime shifts with offset; fake taps at +40 ms give 42 ms; 2 taps rejected; blocked while playing; pref round trip over a reload; damaged and out-of-range saves fall back; UI taps, label count, LCD, reset and reload row; layout at 3 sizes (no horizontal overflow). `tsc` and `npm run build` pass.
 - **Not checked (Luke, on the phone):** whether tap-along feels right and fixes recorded timing; whether `playback` mode really gives a bigger buffer on the phone (the desktop pane showed baseLatency 0.02 s either way).
 
+### Step 5, Theme card: done (2026-10-21), not committed yet
+- `src/ui/themeTypes.ts` (pure; `theme` pref in localStorage so it applies before first paint), `src/ui/theme.ts` (only code that changes `state.theme`; sets `data-theme` / `data-pads` on `<html>` and the `theme-color` meta). `applyTheme()` runs first in `main.ts`.
+- Colours: remaining literals moved to tokens (`--lcd-line`, `--lcd-btn`, `--label`, `--ink`, `--key-white/black`, `--pad-*`, `--pad-edge`). `GROUP_COLOUR` is now `var(--pad-<group>)`; `pads.ts` only sets `--c` (tint and glow come from `color-mix` in `app.css`). Claude's choice: the black/white alpha shadows stay literal (same in every theme).
+- Themes: Chassis / Chassis light / High contrast (brighter pads, 2px pad outline). Pad colours: By drum type / Single colour (amber, Luke's pick). Vibrate on hit: off by default, touch hits only (not MIDI), 8 ms; the switch is disabled where `navigator.vibrate` is missing (iPhones).
+- Checked by script: attributes and saved pref, light/contrast body colours, theme-color meta, single vs type LEDs, vibrate fires once per touch hit only when on, damaged pref falls back, tsc and build clean. Screenshots: light at 390 wide (PADS, SETUP, MIX, KEYS) and 1280×800, contrast on PADS. Fixed on the way: KEYS piano keys inverted in light.
+- Not checked: real phone look of the themes, real vibration, landscape 844×390 in light/contrast, KITS/SEQ tabs in contrast. Luke's phone test covers these.
+
 ## Live site: GitHub Pages (2026-10-18)
 - **https://lukewilkinson.github.io/drum-pad-controller/** from the public repo https://github.com/LukeWilkinson/drum-pad-controller (remote `origin`). Luke chose a public repo (code and commit email visible) after Netlify suspended the new account.
 - `.github/workflows/pages.yml` builds and deploys on every push to `main` (`vite build --base=/<repo>/`); the first run passed. Pages source is set to "GitHub Actions" in the repo settings.
@@ -416,4 +423,4 @@ The pinned CC0 VCSL commit (`sgossner/VCSL` c1ea7bc) has `Idiophones/Plucked Idi
 - In PowerShell, `npm` is blocked by the script policy; use `npm.cmd`.
 
 ## Next step
-M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above), building on `feat/m6-effects`. Steps 1 (Kalimba), 2 (audio graph), 3 (MIX / FX tab) and 4 (Latency card) done; Luke's ear checks happen with the M6 phone test. Next: step 5, the Theme card (Sonnet, medium).
+M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above), building on `feat/m6-effects`. Steps 1 (Kalimba), 2 (audio graph), 3 (MIX / FX tab) 4 (Latency card) and 5 (Theme card) done; Luke's ear checks happen with the M6 phone test. Next: step 6, MIDI Learn targets for the new controls (Sonnet, medium).

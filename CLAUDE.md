@@ -29,7 +29,7 @@ Read SPEC.md (milestones) and DESIGN.md (tokens, layouts) first. The design canv
 - Placeholder controls carry `data-todo="M2"` etc. To find what's left: `grep -r data-todo src`.
 
 ## Conventions
-- Colours come only from the tokens in `src/styles/tokens.css`.
+- Colours come only from the tokens in `src/styles/tokens.css` (themes override them there; only black/white alpha shadows stay literal). Pad colours go through `GROUP_COLOUR` = `var(--pad-*)`.
 - Touch targets must be at least 44px.
 - Icons are inline stroke SVGs. No emoji.
 - Samples: CC0 or public domain only, each recorded in CREDITS.md.
@@ -76,5 +76,6 @@ Read SPEC.md (milestones) and DESIGN.md (tokens, layouts) first. The design canv
   - **Step 2, audio graph: done (2026-10-21).** `src/mix/` (strips, post-fader sends, reverb, tempo-synced delay, master filter, meters, `mix` pref). Sends start at 0 (Luke's pick). Checked by offline renders and script. Notes and Claude's choices in HANDOFF.md.
   - **Step 3, MIX / FX tab: done (2026-10-21).** Faders, meters, mutes, FX cards, live rail send knobs, Kits panel send sliders, KEYS SENDS row. Checked by script and layout at 3 sizes; touch on a real phone not checked. Choices and notes in HANDOFF.md.
 - **Step 4, Latency card: done (2026-10-21), not committed yet.** `src/audio/latency.ts` + `latencyTypes.ts` (pref in localStorage), SETUP card, `heardTime()` uses measured + offset, Low-latency mode picks the AudioContext `latencyHint`. Checked by script and layout at 3 sizes; tap-along feel and the real buffer change need Luke's phone. Notes in HANDOFF.md.
-- **Next:** M6 step 5, the Theme card (Sonnet, medium). Run M5 checklist section 5 (MIDI hardware) whenever MIDI hardware is handy.
+- **Step 5, Theme card: done (2026-10-21), not committed yet.** `src/ui/theme.ts` + `themeTypes.ts` (pref in localStorage), themes via `data-theme` / `data-pads` in `tokens.css`, `GROUP_COLOUR` is now `var(--pad-*)`, vibrate on touch hits (off by default), SETUP Theme card. Checked by script and screenshots (light at 390 and 1280, contrast on PADS); the phone look and real vibration need Luke. Notes in HANDOFF.md.
+- **Next:** M6 step 6, MIDI Learn targets for the new controls (Sonnet, medium). Run M5 checklist section 5 (MIDI hardware) whenever MIDI hardware is handy.
 - PowerShell blocks `npm`; Luke runs `npm.cmd` there.

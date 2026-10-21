@@ -55,6 +55,8 @@ Ignore the "A · Chassis", "B · Glow" and "C · Mono" artboards: they were the 
 }
 ```
 
+- **Themes (M6):** `src/styles/tokens.css` ends with `:root[data-theme="light"]` (Chassis light) and `[data-theme="contrast"]` (High contrast) overrides. Pads use `--pad-kick … --pad-fx` (= the group tokens); `:root[data-pads="single"]` points them all at `--amber`. Piano keys use `--key-white` / `--key-black`. `src/ui/theme.ts` sets the attributes and the `theme-color` meta. Black/white alpha shadows stay literal on purpose: they are the same in every theme.
+
 - **Fonts (Google Fonts):** Archivo Narrow 500/700 for UI labels, mostly uppercase with slight letter-spacing. JetBrains Mono 400/600 for the LCD, numbers and values.
 - **Radii:** buttons 6–8px; cards and wells 10–14px; tab drawer 16px at the top corners; round record button.
 - **Raised buttons:** `box-shadow: inset 0 -3px 0 rgba(0,0,0,.35)` for the hardware key look.

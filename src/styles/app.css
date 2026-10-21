@@ -86,7 +86,7 @@ svg { display: block; }
 .bpm-unit { display: none; font-size: 12px; color: var(--lcd-dim); }
 .lcd-status { display: flex; justify-content: space-between; gap: 6px; font-size: 11px; color: var(--lcd-dim); white-space: nowrap; }
 .lcd-status .last-inline { display: none; color: var(--lcd-text); overflow: hidden; text-overflow: ellipsis; }
-.lcd-last { font-size: 12px; border-top: 1px dashed #5A4120; padding-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lcd-last { font-size: 12px; border-top: 1px dashed var(--lcd-line); padding-top: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* ---------- Transport ---------- */
 
@@ -110,7 +110,7 @@ svg { display: block; }
   display: grid; place-items: center;
 }
 .rec span { width: 35%; height: 35%; border-radius: 50%; background: var(--rec); }
-.rec[aria-pressed="true"] { background: var(--rec); box-shadow: 0 0 24px rgba(232, 67, 46, .7); }
+.rec[aria-pressed="true"] { background: var(--rec); box-shadow: 0 0 24px color-mix(in srgb, var(--rec) 70%, transparent); }
 .rec[aria-pressed="true"] span { background: var(--lcd-bg); }
 .rec.counting { animation: blink .5s steps(2, jump-none) infinite; }
 .key.dub[aria-pressed="true"] { background: var(--amber); color: var(--body); }
@@ -176,8 +176,10 @@ svg { display: block; }
 }
 
 .pad {
-  /* --c (group colour), --c-tint and --c-glow are set per pad in pads.ts; --v is 0–1 velocity */
+  /* --c (group colour) is set per pad in pads.ts; --v is 0–1 velocity */
   --v: 0;
+  --c-tint: color-mix(in srgb, var(--c) 16%, transparent);
+  --c-glow: color-mix(in srgb, var(--c) 70%, transparent);
   position: relative;
   overflow: hidden;
   border-radius: 8px;
@@ -189,6 +191,7 @@ svg { display: block; }
   touch-action: none;
   background: linear-gradient(var(--c-tint), var(--c-tint)), var(--pad-rubber);
   box-shadow: inset 0 -4px 0 rgba(0, 0, 0, .35), inset 0 2px 0 rgba(255, 255, 255, .06);
+  border: var(--pad-edge) solid var(--edge);
   color: var(--text-strong);
   min-width: 0;
   min-height: 0;
@@ -207,7 +210,7 @@ svg { display: block; }
 }
 .pad-num {
   position: relative; margin-top: 6px;
-  font-family: var(--font-mono); font-size: 10px; color: #B8B2A6; pointer-events: none;
+  font-family: var(--font-mono); font-size: 10px; color: var(--label); pointer-events: none;
 }
 .pad-name {
   position: relative; font-size: 13px; font-weight: 700; letter-spacing: .03em;
@@ -215,8 +218,8 @@ svg { display: block; }
 }
 .pad.hit { box-shadow: 0 0 0 2px var(--c), 0 0 var(--glow, 22px) var(--c-glow); z-index: 1; }
 .pad.hit .pad-fill { transform: scaleY(var(--v)); }
-.pad.hot .pad-name { color: #1B1A18; }
-.pad.hot .pad-num { color: rgba(27, 26, 24, .75); }
+.pad.hot .pad-name { color: var(--ink); }
+.pad.hot .pad-num { color: color-mix(in srgb, var(--ink) 75%, transparent); }
 
 /* ---------- Tabs (portrait: bottom drawer with icons) ---------- */
 
@@ -308,7 +311,7 @@ svg { display: block; }
   .lcd { padding: 6px 14px 12px; gap: 6px; }
   .lcd-top { flex-direction: column; align-items: stretch; gap: 6px; }
   .bpm { justify-content: space-between; }
-  .bpm button { width: 44px; height: 44px; border-radius: 6px; background: #3A2A12; color: var(--lcd-text); font-size: 20px; }
+  .bpm button { width: 44px; height: 44px; border-radius: 6px; background: var(--lcd-btn); color: var(--lcd-text); font-size: 20px; }
   .bpm .bpm-tap { font-size: 34px; }
   .bpm-unit { display: inline; }
   .lcd-last { padding-top: 6px; }

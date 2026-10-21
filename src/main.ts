@@ -39,9 +39,11 @@ import { buildSetupPanel } from './ui/setup';
 import { initRail } from './ui/rail';
 import { initTransport } from './ui/transport';
 import { initViews } from './ui/views';
+import { applyTheme } from './ui/theme';
 
 const HINT = 'HIT A PAD — PRESS HIGHER TO HIT HARDER';
 
+applyTheme(); // before anything is drawn, so there is no flash of the wrong theme
 const ui = buildScreen(document.getElementById('app')!);
 const padEls = buildPads(ui.padwell);
 const engine = new AudioEngine();

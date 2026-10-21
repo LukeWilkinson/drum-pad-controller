@@ -81,14 +81,15 @@ export const SAMPLE_DIR = `${SAMPLES_ROOT}sonicpi/`;
 /** Sample file type. The artifact build (scripts/build-artifact.mjs) sets VITE_SAMPLE_EXT=wav, because artifacts can't serve FLAC. */
 export const SAMPLE_EXT: string = import.meta.env.VITE_SAMPLE_EXT || 'flac';
 
+/** CSS colours (theme tokens), so the theme and the single-colour setting restyle every pad. */
 export const GROUP_COLOUR: Record<PadGroup, string> = {
-  kick: '#FF5A4E',
-  snare: '#FF9F1C',
-  hat: '#FFD447',
-  tom: '#5FD38A',
-  cym: '#5BC0EB',
-  perc: '#B794F6',
-  fx: '#F472B6',
+  kick: 'var(--pad-kick)',
+  snare: 'var(--pad-snare)',
+  hat: 'var(--pad-hat)',
+  tom: 'var(--pad-tom)',
+  cym: 'var(--pad-cym)',
+  perc: 'var(--pad-perc)',
+  fx: 'var(--pad-fx)',
 };
 
 /** MPC numbering within a bank: screen index 0 (top-left) is pad 13, index 12 (bottom-left) is pad 1. */

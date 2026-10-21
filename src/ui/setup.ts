@@ -4,6 +4,8 @@
 // the mappings list); src/keys/keys.ts owns the snap settings.
 
 import * as latency from '../audio/latency';
+import * as theme from './theme';
+import { THEMES, THEME_NAMES, type PadColours, type ThemeId } from './themeTypes';
 import { OFFSET_MAX, OFFSET_MIN } from '../audio/latencyTypes';
 import * as keys from '../keys/keys';
 import { KEY_NAMES, SCALES, SCALE_IDS, type ScaleId } from '../keys/scales';
@@ -99,6 +101,21 @@ export function buildSetupPanel(app: HTMLElement, ui: ScreenRefs): void {
           <label>SCALE<select class="su-scale">${SCALE_IDS.map((id) => `<option value="${id}">${SCALES[id].name}</option>`).join('')}</select></label>
         </div>
       </div>
+    </section>
+    <section class="su-section" aria-labelledby="su-theme-h">
+      <h2 id="su-theme-h">THEME</h2>
+      <div class="su-card">
+        <div class="su-opts su-themes" role="group" aria-label="Theme">${THEMES.map((id) => `<button class="su-opt" data-theme-id="${id}" aria-pressed="false">${THEME_NAMES[id]}</button>`).join('')}</div>
+        <div class="su-title"><span class="su-name">Pad colours</span></div>
+        <div class="su-opts" role="group" aria-label="Pad colours">
+          <button class="su-opt su-padc" data-pads="type" aria-pressed="true">By drum type</button>
+          <button class="su-opt su-padc" data-pads="single" aria-pressed="false">Single colour</button>
+        </div>
+        <div class="su-row">
+          <div class="su-title"><span class="su-name">Vibrate on hit</span><span class="su-sub su-vib-sub">A short buzz when a pad is touched</span></div>
+          <button class="su-sw su-vib" role="switch" aria-checked="false" aria-label="Vibrate on hit"></button>
+        </div>
+      </div>
     </section>`;
   app.appendChild(panel);
 
@@ -118,6 +135,10 @@ export function buildSetupPanel(app: HTMLElement, ui: ScreenRefs): void {
   const snapPair = q<HTMLElement>('.su-pair');
   const keySel = q<HTMLSelectElement>('.su-key');
   const scaleSel = q<HTMLSelectElement>('.su-scale');
+
+  const themeBtns = [...panel.querySelectorAll<HTMLButtonElement>('.su-opt[data-theme-id]')];
+  const padBtns = [...panel.querySelectorAll<HTMLButtonElement>('.su-padc')];
+  const vibSw = q<HTMLButtonElement>('.su-vib');
 
   const calBtn = q<HTMLButtonElement>('.su-cal');
   const tapBtn = q<HTMLButtonElement>('.su-tap');
@@ -176,6 +197,14 @@ export function buildSetupPanel(app: HTMLElement, ui: ScreenRefs): void {
     if (c.phase === 'done') calMsg.textContent = `Measured ${c.ms} ms. Recorded hits now use it.`;
   };
   latency.onCalibration(renderCal);
+
+  for (const b of themeBtns) b.addEventListener('click', () => theme.setTheme(b.dataset.themeId as ThemeId));
+  for (const b of padBtns) b.addEventListener('click', () => theme.setPads(b.dataset.pads as PadColours));
+  vibSw.addEventListener('click', () => theme.setVibrate(!state.theme.vibrate));
+  if (!theme.canVibrate()) {
+    vibSw.disabled = true;
+    q<HTMLElement>('.su-vib-sub').textContent = 'Not supported by this browser (iPhones cannot vibrate)';
+  }
 
   snapSw.addEventListener('click', keys.toggleSnap);
   keySel.addEventListener('change', () => keys.setKey(Number(keySel.value)));
@@ -246,13 +275,22 @@ export function buildSetupPanel(app: HTMLElement, ui: ScreenRefs): void {
     scaleSel.value = k.scale;
   };
 
+  const renderTheme = () => {
+    const t = state.theme;
+    for (const b of themeBtns) b.setAttribute('aria-pressed', String(b.dataset.themeId === t.theme));
+    for (const b of padBtns) b.setAttribute('aria-pressed', String(b.dataset.pads === t.pads));
+    setSwitch(vibSw, t.vibrate);
+  };
+
   render(state.midi);
+  renderTheme();
   renderLatency();
   renderCal(latency.calibration());
   renderLearn();
   renderSnap();
   subscribe((s, changed) => {
     if (changed.has('midi')) render(s.midi);
+    if (changed.has('theme')) renderTheme();
     if (changed.has('latency')) renderLatency();
     if (changed.has('learn')) renderLearn();
     if (changed.has('keys')) renderSnap();
