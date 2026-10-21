@@ -11,7 +11,7 @@ export interface PresetInfo {
   meta: string;
 }
 
-/** Four presets per source, in screen order (Keys.dc.html). */
+/** Presets per source, in screen order (Keys.dc.html): 4 synth, 5 sampled (Kalimba was added). */
 export const PRESETS: Record<KeysSource, PresetInfo[]> = {
   synth: [
     { name: 'Warm Pad', meta: 'Poly · slow attack' },
@@ -24,13 +24,17 @@ export const PRESETS: Record<KeysSource, PresetInfo[]> = {
     { name: 'FM Piano', meta: 'Sampled · TX81Z' },
     { name: 'Strings', meta: 'Sampled · ensemble' },
     { name: 'Concert Harp', meta: 'Sampled · plucked' },
+    { name: 'Kalimba', meta: 'Sampled · Tanzanian' },
   ],
 };
+
+/** Preset buttons on the KEYS panel: enough for the source with the most presets. */
+export const PRESET_SLOTS = Math.max(PRESETS.synth.length, PRESETS.sampled.length);
 
 /** KEYS settings (changed only by src/keys/keys.ts). */
 export interface KeysState {
   source: KeysSource;
-  /** The preset picked on each source, 0–3, so switching SYNTH/SAMPLED keeps each choice. */
+  /** The preset picked on each source (an index into PRESETS), so switching SYNTH/SAMPLED keeps each choice. */
   preset: Record<KeysSource, number>;
   /** Octave of the keyboard's left-most C (C4 = middle C). */
   octave: number;

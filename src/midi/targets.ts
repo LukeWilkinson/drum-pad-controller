@@ -10,6 +10,7 @@ import type { AudioEngine } from '../audio/engine';
 import * as clock from '../audio/clock';
 import { BANK_NAMES, PADS_PER_BANK, PAD_COUNT, PARAM_RANGE, padLabel, type ParamKey } from '../audio/kit';
 import * as keys from '../keys/keys';
+import { PRESET_SLOTS } from '../keys/types';
 import { saveMasterVolume, selectBank, setParam } from '../kitControl';
 import { toggleFullLevel } from '../pads/hits';
 import { SWING_MAX, SWING_MIN } from '../seq/pattern';
@@ -79,7 +80,7 @@ export function findTarget(id: string): Target | null {
   if (kind === 'pad' && Number.isInteger(n) && n >= 0 && n < PAD_COUNT) return { label: `PAD ${padLabel(n)}`, pad: n };
   if (kind === 'bank' && Number.isInteger(n) && n >= 0 && n < BANK_NAMES.length) return { label: `BANK ${BANK_NAMES[n]}`, press: () => selectBank(n) };
   if (kind === 'loop' && Number.isInteger(n) && n >= 0 && n < state.patterns.length) return { label: `LOOP ${n + 1}`, press: () => seq.selectPattern(n) };
-  if (kind === 'preset' && Number.isInteger(n) && n >= 0 && n < 4) return { label: `KEYS PRESET ${n + 1}`, press: () => keys.selectPreset(n) };
+  if (kind === 'preset' && Number.isInteger(n) && n >= 0 && n < PRESET_SLOTS) return { label: `KEYS PRESET ${n + 1}`, press: () => keys.selectPreset(n) };
   if (kind === 'param' && arg in PARAM_RANGE) {
     const key = arg as ParamKey;
     const { min, max, step } = PARAM_RANGE[key];

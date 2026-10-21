@@ -344,6 +344,15 @@ The pinned CC0 VCSL commit (`sgossner/VCSL` c1ea7bc) has `Idiophones/Plucked Idi
 6. **MIDI Learn targets** (Sonnet, medium): all new controls in `src/midi/targets.ts` with `data-learn`.
 7. **Docs and Luke's phone checklist** (Haiku or Sonnet, low): README, DESIGN, CREDITS, HANDOFF checklist.
 
+### Step 1, Kalimba: done (2026-10-21)
+- **Pitch:** every Tanzania file plays one octave above its name (like the VCSL piano), and keys are up to ±60 cents off equal temperament. `instruments.json` stores the real note and a measured `cents` per sample; `fetch-instruments` retunes each file by resampling (`aresample=48000,asetrate=…`). Measured after conversion: all 41 files within 3 cents. Duplicate keys k4 (D#4) and k21 (F4) left out → 25 samples, G2–C#7.
+- **Level:** raw kalimba is ~15 dB louder than the harp; `gain: -5` (harp 9, grand 4) is Claude's estimate from RMS, so it needs Luke's ear check.
+- **Pads:** `instruments.json` kalimba `pads` (16 notes) → `fetch-instruments` renders `pad_<note>.flac` from the nearest key (≤ 1 semitone; on a tie the lower key). Kit `kalimba` ("Kalimba", category Acoustic, Luke's pick 2026-10-21) in `kits.json`, group `perc`. `fetch-samples` now skips names with a folder.
+- **KEYS:** `PRESETS.sampled` has 5 entries; `PRESET_SLOTS` (types.ts) sizes the buttons; SYNTH hides the 5th. Phones portrait and tablet: Kalimba is a full-width button under the 2 × 2 grid (Luke's pick: "extra slot"; the keyboard gets shorter only while SAMPLED is shown). Phone landscape: one row of 5 (70 × 44 px, longer names cut with "…"). MIDI Learn `preset:4` = KEYS PRESET 5.
+- **Size:** 2.11 MB for the kalimba; precache 244 entries, 15.1 MB.
+- **Checked by script in the browser pane:** kit loads all 16 pad buffers, pad names C3 (pad 1) … C6 (pad 16), bank B still shared; preset 5 loads 25 samples; notes pick the nearest key and the right playback rate; SYNTH hides slot 5; reload keeps the kit and preset; learn target `preset:4`; Kalimba under the Acoustic chip; layout at 390×844, 844×390, 1280×800 with no page scroll; no console errors. `tsc` and `npm run build` pass.
+- **Not checked (Luke's ear, on the phone):** tuning and tone of the KEYS preset and the pads, level against the other presets and the drums.
+
 ### Checks (planned)
 - Claude, per step, by script in the browser pane (`dev-http`), plus layout at the 3 sizes.
 - Claude can't hear the browser pane: reverb / delay / filter sound, meters vs. what's heard, and calibration on a real phone are Luke's checks.
@@ -371,4 +380,4 @@ The pinned CC0 VCSL commit (`sgossner/VCSL` c1ea7bc) has `Idiophones/Plucked Idi
 - In PowerShell, `npm` is blocked by the script policy; use `npm.cmd`.
 
 ## Next step
-M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above): create branch `feat/m6-effects` and start step 1 (Kalimba).
+M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above), building on `feat/m6-effects`. Step 1 (Kalimba) done; Luke's ear check of the kalimba is open. Next: step 2, the audio graph (Opus, high).

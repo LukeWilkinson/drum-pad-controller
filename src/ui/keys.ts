@@ -1,4 +1,4 @@
-// KEYS panel (Keys.dc.html): the snap chip, SYNTH / SAMPLED, four presets, octave, HOLD / ARP, the
+// KEYS panel (Keys.dc.html): the snap chip, SYNTH / SAMPLED, the presets (4 or 5), octave, HOLD / ARP, the
 // pitch and mod strips, and the keyboard. Built once; render() updates it from the store. The keyboard
 // has 15 white keys (two octaves, C to C); phones show the first 10 (C to E), as in the design.
 // A dot marks the key's root on every octave; with snap on, keys outside the scale are dimmed.
@@ -11,6 +11,7 @@ import {
   ARP_MODE_NAMES,
   ARP_RATES,
   PRESETS,
+  PRESET_SLOTS,
   cOf,
   noteName,
   type ArpMode,
@@ -61,7 +62,7 @@ export function buildKeysPanel(app: HTMLElement, opts: KeysPanelOptions): HTMLEl
       <button class="ky-snap" data-learn="snap" aria-pressed="false"><span class="ky-snap-dot"></span><span class="ky-snap-text"></span><span class="ky-snap-short"></span></button>
     </header>
     <div class="ky-presets" role="group" aria-label="Presets">
-      ${[0, 1, 2, 3].map((i) => `<button class="ky-preset" data-i="${i}" data-learn="preset:${i}" aria-pressed="false"><span class="ky-pname"></span><span class="ky-pmeta"></span></button>`).join('')}
+      ${Array.from({ length: PRESET_SLOTS }, (_, i) => `<button class="ky-preset" data-i="${i}" data-learn="preset:${i}" aria-pressed="false"><span class="ky-pname"></span><span class="ky-pmeta"></span></button>`).join('')}
     </div>
     <div class="ky-oct">
       <span class="ky-label">OCTAVE</span>
@@ -110,12 +111,15 @@ export function buildKeysPanel(app: HTMLElement, opts: KeysPanelOptions): HTMLEl
     const k = state.keys;
     for (const seg of segs) seg.setAttribute('aria-pressed', String(seg.dataset.src === k.source));
     const load = state.keysLoad;
-    PRESETS[k.source].forEach((p, i) => {
+    presets.forEach((btn, i) => {
+      const p = PRESETS[k.source][i];
+      btn.hidden = !p; // SYNTH has one preset fewer than SAMPLED
+      if (!p) return;
       const current = i === k.preset[k.source];
       const loading = current && load ? (load.failed ? "Couldn't load samples" : `Loading ${load.done}/${load.total}`) : '';
-      presets[i].querySelector('.ky-pname')!.textContent = p.name;
-      presets[i].querySelector('.ky-pmeta')!.textContent = loading || p.meta;
-      presets[i].setAttribute('aria-pressed', String(current));
+      btn.querySelector('.ky-pname')!.textContent = p.name;
+      btn.querySelector('.ky-pmeta')!.textContent = loading || p.meta;
+      btn.setAttribute('aria-pressed', String(current));
     });
     octVal.textContent = `C${k.octave}`;
     holdBtn.setAttribute('aria-pressed', String(k.hold));

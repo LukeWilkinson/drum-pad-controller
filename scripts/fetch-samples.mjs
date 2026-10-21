@@ -11,10 +11,10 @@ const OUT = join(ROOT, 'public', 'samples', 'sonicpi');
 const { source, kits, banks } = JSON.parse(readFileSync(join(ROOT, 'src', 'audio', 'kits.json'), 'utf8'));
 
 const FILES = new Set();
+// Names with a folder ("instruments/kalimba/pad_60") aren't Sonic Pi files: fetch-instruments makes them.
 const addPads = (pads) => {
   for (const pad of pads) {
-    FILES.add(pad.hard);
-    if (pad.soft) FILES.add(pad.soft);
+    for (const name of [pad.hard, pad.soft]) if (name && !name.includes('/')) FILES.add(name);
   }
 };
 for (const kit of kits) {

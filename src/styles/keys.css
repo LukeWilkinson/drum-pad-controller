@@ -53,6 +53,9 @@
   min-width: 0;
 }
 .ky-preset[aria-pressed="true"] { background: var(--raised); border-color: var(--amber); }
+.ky-preset[hidden] { display: none; }
+/* SAMPLED's 5th preset (Kalimba) gets the full width under the 2 × 2 grid. */
+.ky-preset:nth-child(5) { grid-column: 1 / -1; }
 .ky-pname { font-size: 15px; font-weight: 700; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ky-pmeta { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
@@ -134,8 +137,10 @@
   .ky-snap-text { display: none; }
   .ky-snap-short { display: inline; }
   .ky-src { order: 0; flex: 1 1 auto; }
-  .ky-presets { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+  /* One row: 4 synth or 5 sampled presets share the width. */
+  .ky-presets { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; }
   .ky-preset { height: 44px; padding: 0 6px; }
+  .ky-preset:nth-child(5) { grid-column: auto; }
   .ky-pname { font-size: 12px; }
   .ky-pmeta { display: none; }
   .ky-strips { flex-direction: row; }

@@ -66,7 +66,7 @@ export function setSource(source: KeysSource): void {
   if (source !== state.keys.source) set({ source });
 }
 
-/** Picks preset 0–3 on the current source. */
+/** Picks a preset on the current source (ignored if that source has no preset `index`). */
 export function selectPreset(index: number): void {
   const { source, preset } = state.keys;
   if (index === preset[source] || !PRESETS[source][index]) return;
