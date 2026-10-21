@@ -71,4 +71,5 @@ Read SPEC.md (milestones) and DESIGN.md (tokens, layouts) first. The design canv
 - **Live site (2026-10-18):** https://lukewilkinson.github.io/drum-pad-controller/ (public repo `origin`, GitHub Pages deploys every push to `main` via `.github/workflows/pages.yml`). Pushing to `main` publishes, so ask Luke before pushing. Details in HANDOFF.md ("Live site").
 - **Artifact copy (2026-10-18):** a private artifact so Luke can play on any network, built by `npm run build:artifact` (WAV samples, no service worker). URL and update steps are in HANDOFF.md ("Artifact copy").
 - **M6 Effects and settings: planning paused (2026-10-18), not approved.** Luke's 4 decisions, the 4 open questions and the draft steps are in HANDOFF.md ("M6").
-- **Next:** Resume M6 planning in plan mode from HANDOFF.md ("M6"): ask the 4 open questions, finalise the steps, get approval. Run M5 checklist section 5 (MIDI hardware) whenever MIDI hardware is handy.
+- **Next:** Resume M6 planning in plan mode from HANDOFF.md ("M6"): ask the 4 open questions, finalise the steps, get approval. Luke also wants a kalimba sound (pads and/or KEYS) at some point: see HANDOFF.md "Wishlist", and ask where it fits. Run M5 checklist section 5 (MIDI hardware) whenever MIDI hardware is handy.
+- PowerShell blocks `npm`; Luke runs `npm.cmd` there.

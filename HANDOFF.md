@@ -356,5 +356,12 @@ SPEC milestone 6: reverb, delay, filter, master volume, latency calibration, the
 - In the artifact: no Web MIDI, no install, no offline mode; kits and loops saved there are separate from the installed app.
 - Checked by Claude in the browser pane from `dist-artifact` (`artifact-preview` in launch.json): kit loads from WAVs, a pad hit shows on the LCD. Not checked on the live artifact or on the phone.
 
+## Wishlist from Luke
+- **Kalimba sound (2026-10-21):** add a kalimba to the kits (a pad sound) and/or KEYS (a SAMPLED preset), "at some point". Needs a CC0 / public-domain source; check the pinned Versilian libraries (VCSL, VSCO-2 CE) first, not yet confirmed that either has one. Ask Luke whether it fits into M6 or later, and pads, KEYS or both.
+
+## Open issue
+- **Phone can't open the home-wifi server (2026-10-18):** `npm.cmd run lan` served fine from the PC at its network address (checked by curl on the PC; firewall allows Node on Private; VPN off), but the phone couldn't open it. Not solved; Luke never said which check he tried. The GitHub Pages site makes this optional.
+- In PowerShell, `npm` is blocked by the script policy; use `npm.cmd`.
+
 ## Next step
-M5 merged into `main` (2856f83, 2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 planning is paused (see "M6" above): resume in plan mode, ask Luke the 4 open questions, finalise the steps and get plan approval.
+M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 planning is paused (see "M6" above): resume in plan mode, ask Luke the 4 open questions, finalise the steps and get plan approval. Ask where the kalimba (wishlist) fits.
