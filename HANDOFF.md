@@ -300,8 +300,8 @@ Run `npm run dev` (or `npm run lan` for the offline check) and open the **Networ
    - [ ] MIDI Learn on octave, HOLD, ARP, snap and the presets.
 6. Known gaps: incoming pitch bend doesn't move the PITCH thumb; MOD strip is a placeholder; memory use with all four sampled instruments loaded on a phone is untested.
 
-## M6 (Effects and settings): planning paused 2026-10-18, not approved yet
-No code changed yet. When resumed, build on a new branch `feat/m6-effects`.
+## M6 (Effects and settings): plan approved 2026-10-21
+No code changed yet. Build on a new branch `feat/m6-effects` from `main`.
 
 ### Scope (SPEC.md + design)
 SPEC milestone 6: reverb, delay, filter, master volume, latency calibration, theme. Design artboards: `Fx.dc.html` and `Settings.dc.html` on the canvas.
@@ -323,19 +323,26 @@ SPEC milestone 6: reverb, delay, filter, master volume, latency calibration, the
 - **KEYS FX:** two small REVERB / DELAY send knobs on the KEYS tab, saved in the `keys` pref.
 - **Low-latency mode:** On = smallest buffer (`latencyHint: 'interactive'`, today's setting). Off = bigger buffer for fewer crackles on slow phones. Applies after a reload.
 
-### Still to ask Luke (Claude's recommendation first)
-1. **Per-pad sends on phones:** add REVERB SEND / DELAY SEND sliders to the Kits panel too (recommended), or tablet rail only?
-2. **MIDI Learn targets:** faders, mutes, FX switches, all 9 FX knobs and the per-pad sends (recommended), or FX knobs only, or none?
-3. **Metronome click:** skips mixer and FX but follows master volume (recommended), or fully dry?
-4. **Vibrate on hit default:** off (recommended) or on (as drawn)?
+### Decisions from Luke (2026-10-21)
+1. **Per-pad sends:** REVERB SEND / DELAY SEND on the Kits panel pad editor too, not only the tablet rail.
+2. **MIDI Learn:** every new control: faders, mutes, FX switches, all 9 FX knobs, per-pad sends.
+3. **Metronome click:** skips the mixer strips and FX, but follows MASTER.
+4. **Vibrate on hit:** off by default.
+5. **Kalimba:** in both KEYS (a SAMPLED preset) and pads, built as step 1 of M6.
+6. **Kalimba pads:** a 5th built-in kit "Kalimba". Bank A = 16 kalimba notes; banks B–D stay the shared drums. Group `perc` (PERC strip).
+7. **Pad notes:** C major pentatonic, pad 1 (bottom-left) = C3 up to pad 16 (top-right) = C6 (C3 D3 E3 G3 A3 C4 … A5 C6).
 
-### Draft steps (not final)
-1. **Audio graph.** New mixer + FX module: pad voices → group strip (gain, mute, analyser) → master; per-pad reverb/delay sends (`reverbSend`, `delaySend` in `PadParams`, old kits default 0); KEYS bus → KEYS strip + its sends; reverb (ConvolverNode, generated IR), tempo-synced delay (feedback loop), master filter (LP/HP/BP); master strip = existing master volume. A `src/mix/` control module is the only code that changes `state.mix` and saves the `mix` pref.
-2. **MIX / FX tab** at 390×844, 844×390 and 1280×800: faders, meters (rAF while visible), mutes, FX cards with knobs; live tablet-rail send knobs; KEYS send knobs.
-3. **Latency card:** 8-click tap-along calibration, manual offset, Low-latency mode; `heardTime()` uses the measured + offset value.
-4. **Theme card:** move hard-coded colours to tokens; three themes via `data-theme`; pad colours single / by type; vibrate on hit.
-5. **MIDI Learn targets** (scope depends on question 2).
-6. **Docs and Luke's phone checklist.**
+### Kalimba source (checked 2026-10-21)
+The pinned CC0 VCSL commit (`sgossner/VCSL` c1ea7bc) has `Idiophones/Plucked Idiophones/Kalimba, Tanzania`: 27 keys, G1 to C#6, one file per key (`MBira3_pluck_Main_<note>_k<n>_50_100_rr2.wav`). There is also `Kalimba, Kenya` (15 keys, B2–B4). Tanzania is used for its wider range. No new licence; CREDITS.md gets rows.
+
+### Steps (approved 2026-10-21; Luke checks in after each; one commit per step)
+1. **Kalimba** (Sonnet, medium). `instruments.json` gets a `kalimba` instrument from the Tanzania files (check a few files' real pitch first: VCSL piano was named an octave off). `PRESETS.sampled` in `src/keys/types.ts` gets Kalimba; check the preset picker fits at 3 sizes. `fetch-instruments` also renders the 16 pentatonic pad notes from the nearest real key (ffmpeg resample, ≤ 2 semitones) as `instruments/kalimba/pad_<note>`, so each pad is a plain one-sample pad. New kit in `kits.json`. Record the new precache MB.
+2. **Audio graph** (Opus, high). New `src/mix/` module, the only code that changes `state.mix` and saves the `mix` pref. Pad voices → group strip (gain, mute, analyser) → master; per-pad `reverbSend` / `delaySend` in `PadParams` (old kits default 0); KEYS bus → KEYS strip + its sends; reverb (ConvolverNode, generated IR), tempo-synced delay (feedback loop), master filter (LP/HP/BP); MASTER strip = today's `setMasterVolume()`. The click goes straight to master, after the FX.
+3. **MIX / FX tab** (Sonnet, high) at 390×844, 844×390, 1280×800: faders, meters (rAF while visible), mutes, FX cards with 270° knobs (reuse `src/ui/rail.ts` knob code); live tablet-rail send knobs; send sliders in the Kits panel; KEYS send knobs.
+4. **Latency card** (Sonnet, medium): 8-click tap-along calibration, manual offset (−50 to +50 ms), Low-latency mode; `heardTime()` uses the measured + offset value.
+5. **Theme card** (Sonnet, medium): move the ~28 hard-coded colours into `tokens.css`; Chassis / Chassis light / High contrast via `data-theme`; pad colours by type / single; vibrate on hit (default off).
+6. **MIDI Learn targets** (Sonnet, medium): all new controls in `src/midi/targets.ts` with `data-learn`.
+7. **Docs and Luke's phone checklist** (Haiku or Sonnet, low): README, DESIGN, CREDITS, HANDOFF checklist.
 
 ### Checks (planned)
 - Claude, per step, by script in the browser pane (`dev-http`), plus layout at the 3 sizes.
@@ -357,11 +364,11 @@ SPEC milestone 6: reverb, delay, filter, master volume, latency calibration, the
 - Checked by Claude in the browser pane from `dist-artifact` (`artifact-preview` in launch.json): kit loads from WAVs, a pad hit shows on the LCD. Not checked on the live artifact or on the phone.
 
 ## Wishlist from Luke
-- **Kalimba sound (2026-10-21):** add a kalimba to the kits (a pad sound) and/or KEYS (a SAMPLED preset), "at some point". Needs a CC0 / public-domain source; check the pinned Versilian libraries (VCSL, VSCO-2 CE) first, not yet confirmed that either has one. Ask Luke whether it fits into M6 or later, and pads, KEYS or both.
+- **Kalimba sound (2026-10-21):** now M6 step 1 (KEYS preset + a "Kalimba" kit). See "M6" above.
 
 ## Open issue
 - **Phone can't open the home-wifi server (2026-10-18):** `npm.cmd run lan` served fine from the PC at its network address (checked by curl on the PC; firewall allows Node on Private; VPN off), but the phone couldn't open it. Not solved; Luke never said which check he tried. The GitHub Pages site makes this optional.
 - In PowerShell, `npm` is blocked by the script policy; use `npm.cmd`.
 
 ## Next step
-M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 planning is paused (see "M6" above): resume in plan mode, ask Luke the 4 open questions, finalise the steps and get plan approval. Ask where the kalimba (wishlist) fits.
+M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above): create branch `feat/m6-effects` and start step 1 (Kalimba).
