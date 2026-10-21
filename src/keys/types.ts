@@ -49,6 +49,9 @@ export interface KeysState {
   arp: boolean;
   arpMode: ArpMode;
   arpRate: ArpRate;
+  /** How much of the KEYS bus goes to the reverb and the delay, 0–1 (the mixer applies them). */
+  reverbSend: number;
+  delaySend: number;
 }
 
 export const ARP_MODES = ['up', 'down', 'updown', 'random'] as const;
@@ -73,6 +76,8 @@ export const DEFAULT_KEYS: KeysState = {
   arp: false,
   arpMode: 'up',
   arpRate: '1/16',
+  reverbSend: 0,
+  delaySend: 0,
 };
 
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];

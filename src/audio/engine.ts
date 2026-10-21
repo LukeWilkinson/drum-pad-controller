@@ -3,9 +3,13 @@
 // so the only delay is the device's output latency. Sequenced hits and metronome clicks are
 // scheduled ahead with playAt()/click() by the clock (src/audio/clock.ts).
 // Voice chain: source (pitch via playbackRate) → gain (velocity × pad volume, decay envelope)
-// → stereo panner (only when the pad is panned) → master.
+// → stereo panner (only when the pad is panned) → the pad group's mixer strip, plus a reverb and
+// a delay send when the pad has them (src/mix/graph.ts).
 
+import { MixGraph } from '../mix/graph';
+import { GROUP_STRIP, type PadStrip } from '../mix/types';
 import {
+  DEFAULT_PARAMS,
   PADS_PER_BANK,
   SAMPLE_DIR,
   SAMPLE_EXT,
@@ -41,8 +45,9 @@ export class AudioEngine {
   readonly ctx: AudioContext;
   /** False mutes the app's own sound (a DAW plays the MIDI notes instead). The hit hook still hears every hit. */
   localSound = true;
+  /** Mixer strips, effects and master volume (set by src/mix/mix.ts). */
+  readonly mix: MixGraph;
   private hook: HitHook | null = null;
-  private master: GainNode;
   private buffers = new Map<string, AudioBuffer>();
   /** Samples being fetched, so two kits asking for the same file share one download. */
   private loading = new Map<string, Promise<void>>();
@@ -54,18 +59,16 @@ export class AudioEngine {
 
   constructor() {
     this.ctx = new AudioContext({ latencyHint: 'interactive' });
-    this.master = this.ctx.createGain();
-    this.master.gain.value = 0.82;
-    this.master.connect(this.ctx.destination);
+    this.mix = new MixGraph(this.ctx);
   }
 
   get running(): boolean {
     return this.ctx.state === 'running';
   }
 
-  /** Where other sound sources (the KEYS instrument) connect: the master gain. */
+  /** Where the KEYS instrument connects: the mixer's KEYS strip. */
   get input(): AudioNode {
-    return this.master;
+    return this.mix.keysIn;
   }
 
   /** The kit currently playing (null until the first kit is set). */
@@ -130,10 +133,6 @@ export class AudioEngine {
     return this.buffers.get(name);
   }
 
-  setMasterVolume(v: number): void {
-    this.master.gain.setTargetAtTime(v, this.ctx.currentTime, 0.01);
-  }
-
   setHitHook(hook: HitHook | null): void {
     this.hook = hook;
   }
@@ -173,7 +172,7 @@ export class AudioEngine {
     gain.gain.setValueAtTime(0, when);
     gain.gain.linearRampToValueAtTime(level, when + 0.001);
     gain.gain.exponentialRampToValueAtTime(0.001, when + 0.045);
-    osc.connect(gain).connect(this.master);
+    osc.connect(gain).connect(this.mix.clickIn);
     osc.start(when);
     osc.stop(when + 0.05);
     this.track({ src: osc, gain, when });
@@ -195,7 +194,7 @@ export class AudioEngine {
   async preview(name: string): Promise<void> {
     await this.loadSamples([name]);
     const buffer = this.buffers.get(name);
-    if (buffer) this.startVoice(buffer, 0.8, { volumeDb: 0, pitch: 0, pan: 0, decay: 1 }, 0);
+    if (buffer) this.startVoice(buffer, 0.8, DEFAULT_PARAMS, 0);
   }
 
   /** `when` 0 means now: the source starts with start(0), the lowest-latency path. */
@@ -208,7 +207,7 @@ export class AudioEngine {
     if (!buffer) return;
 
     if (pad.choke && !pad.chokedOnly) this.choke(pad.choke, when || this.ctx.currentTime);
-    const voice = this.startVoice(buffer, Math.pow(velocity / 127, 1.6), params, when);
+    const voice = this.startVoice(buffer, Math.pow(velocity / 127, 1.6), params, when, GROUP_STRIP[pad.group]);
 
     if (pad.choke) {
       const group = pad.choke;
@@ -225,7 +224,8 @@ export class AudioEngine {
     voice.src.addEventListener('ended', () => this.scheduled.delete(voice));
   }
 
-  private startVoice(buffer: AudioBuffer, velGain: number, p: PadParams, when: number): Voice {
+  /** Without a `strip` (a sample preview) the voice skips the strips and sends. */
+  private startVoice(buffer: AudioBuffer, velGain: number, p: Readonly<PadParams>, when: number, strip?: PadStrip): Voice {
     const now = when || this.ctx.currentTime;
     const src = this.ctx.createBufferSource();
     src.buffer = buffer;
@@ -242,7 +242,12 @@ export class AudioEngine {
       panner.pan.value = p.pan;
       out = gain.connect(panner);
     }
-    out.connect(this.master);
+    if (strip) {
+      const nodes = this.mix.pads[strip];
+      out.connect(nodes.dry);
+      this.send(out, p.reverbSend, nodes.rv);
+      this.send(out, p.delaySend, nodes.dl);
+    } else out.connect(this.mix.previewIn);
     src.start(when);
 
     if (p.decay < 1) {
@@ -254,6 +259,14 @@ export class AudioEngine {
       src.stop(now + length + 0.005);
     }
     return { src, gain, when: now };
+  }
+
+  /** A per-voice send gain, only when the pad sends anything (most don't). */
+  private send(from: AudioNode, amount: number, to: AudioNode): void {
+    if (!(amount > 0)) return;
+    const g = this.ctx.createGain();
+    g.gain.value = amount;
+    from.connect(g).connect(to);
   }
 
   /** Drum samples are plain names in SAMPLE_DIR; a name with a folder ("instruments/grand/60") is under samples/. */

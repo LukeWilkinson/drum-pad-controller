@@ -153,7 +153,7 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
       </div>
       ${KNOBS.map(knob).join('')}
       <label class="master" data-learn="master">MASTER
-        <input type="range" min="0" max="100" value="82" aria-label="Master volume">
+        <input type="range" min="0" max="100" value="64" aria-label="Master volume">
       </label>
     </aside>
 

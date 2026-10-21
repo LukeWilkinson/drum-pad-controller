@@ -5,6 +5,7 @@
 import type { ActiveKit, UserKit } from './audio/kit';
 import { DEFAULT_KEYS, type KeysState } from './keys/types';
 import { DEFAULT_CHANNEL, DEFAULT_KEYS_CHANNEL, type LearnState, type MidiState } from './midi/types';
+import { defaultMix, type MixState } from './mix/types';
 import { PATTERN_COUNT, emptyPattern, type Pattern, type Quant } from './seq/pattern';
 
 export type View = 'pads' | 'kits' | 'seq' | 'keys' | 'setup';
@@ -50,6 +51,8 @@ export interface AppState {
   keys: KeysState;
   /** Samples of the sampled instrument just picked: loading progress, or null when ready (src/keys/keys.ts). */
   keysLoad: { done: number; total: number; failed: boolean } | null;
+  /** Mixer strips and FX (changed only by src/mix/mix.ts). */
+  mix: MixState;
 }
 
 /** 'count' = count-in bar before recording starts. */
@@ -92,6 +95,7 @@ export const state: AppState = {
   learn: { on: false, armed: null, last: null },
   keys: { ...DEFAULT_KEYS, preset: { ...DEFAULT_KEYS.preset } },
   keysLoad: null,
+  mix: defaultMix(),
 };
 
 const listeners = new Set<Listener>();

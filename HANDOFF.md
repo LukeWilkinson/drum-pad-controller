@@ -353,6 +353,23 @@ The pinned CC0 VCSL commit (`sgossner/VCSL` c1ea7bc) has `Idiophones/Plucked Idi
 - **Checked by script in the browser pane:** kit loads all 16 pad buffers, pad names C3 (pad 1) … C6 (pad 16), bank B still shared; preset 5 loads 25 samples; notes pick the nearest key and the right playback rate; SYNTH hides slot 5; reload keeps the kit and preset; learn target `preset:4`; Kalimba under the Acoustic chip; layout at 390×844, 844×390, 1280×800 with no page scroll; no console errors. `tsc` and `npm run build` pass.
 - **Not checked (Luke's ear, on the phone):** tuning and tone of the KEYS preset and the pads, level against the other presets and the drums.
 
+### Step 2, audio graph: done (2026-10-21)
+- **Luke's pick (2026-10-21):** every send starts at 0% (kits sound as before until a pad's send is turned up). Step 3's cards should say so.
+- **Files:** `src/mix/types.ts` (strips, `GROUP_STRIP`, FX lists and ranges, fader law, `DEFAULT_MIX`; imports only a type), `src/mix/graph.ts` (`MixGraph`: the nodes; diagram at the top), `src/mix/impulse.ts` (generated reverb impulse), `src/mix/mix.ts` (only code that changes `state.mix`; `mix` pref, 500 ms after the last change and at once when hidden). `engine.mix` is the graph; `engine.setMasterVolume()` and `kitControl.saveMasterVolume()` are gone.
+- **Claude's choices (Luke can override):**
+  - Fader = position 0–1 with a square law: gain = 2 × pos², so 0 = silent, 0.5 = −6 dB, 0.71 = 0 dB, 1 = +6 dB. Strips default to 0 dB; MASTER to the old default 0.82 (pos 0.64). The rail's master slider and MIDI `master` now move the MASTER fader position. The old `master` pref is read once when there is no `mix` pref.
+  - Sends are post-fader: a strip's fader and mute also scale its reverb and delay sends. Per-voice send gains are made only when the pad's send is above 0.
+  - Reverb and delay returns go into the master sum, so the master filter also filters them. The metronome click goes straight into the master fader: no strips, no FX, but MASTER and its mute apply.
+  - Reverb: SIZE ROOM / PLATE / HALL (pre-delay, early echoes, darkness), DECAY 0.3–6 s, MIX = return level; impulse rebuilt 120 ms after a knob rests. Off disconnects the convolver input (saves CPU) and fades the return.
+  - Delay: TIME from 11 tempo-synced values (1/32 … 1/2, dotted and triplet), follows the BPM; FDBK 0–90 % through a 5 kHz low-pass; MIX = return level. Off also stops the repeats.
+  - Filter: LOW-P / BAND-P / HIGH-P, CUTOFF 40 Hz–18 kHz, RES as a Q factor 0.5–12 (0.71 = flat); on/off is a crossfade with a bypass.
+  - Defaults as drawn in Fx.dc.html: reverb on (HALL, 1.8 s, 25 %), delay on (1/8 D, 35 %, 18 %), filter off (LOW-P, 8.2 kHz, 0.71).
+  - Meters: `engine.mix.levels()` gives each strip's post-fader peak in dB over the last ~43 ms (for step 3's rAF).
+  - `PadParams` has `reverbSend` / `delaySend` (0–1, `PARAM_LABEL` "REVERB SEND" / "DELAY SEND", shown as %); saved kits without them load at 0. KEYS sends are `state.keys.reverbSend` / `delaySend` (`keys.setSend()`, `keys` pref).
+- **Checked by script in the browser pane:** offline renders of `MixGraph` (OfflineAudioContext): dry peak 0.82 at defaults, mute silent, fader 0.5 = −6.04 dB, click skips the filter and follows MASTER, reverb tail decays and is silent when off or when its strip is muted, delay echoes 0.375 s apart at 1/8 D 120 BPM with feedback exactly 0.35 and first echo exactly 0.82 × 0.18, KEYS delay send, filter LP 500 Hz −16.8 dB / HP 5 kHz −1.1 dB on white noise. In the app: pads route by group (cym → HATS, tom → PERC), sends connect only when set, previews skip the strips, old saved kits get sends 0, live meters (kick −0.7 dB on KICKS, muted −inf 3/3; KEYS note on KEYS and MASTER), `mix` and `keys` prefs round trip, clamping, bad values keep the current setting, damaged `mix` pref, old `master` pref migration, MIDI `master` target, BPM change retimes the delay. `tsc` and `npm run build` pass. One first muted-kick reading showed −10.6 dB but did not come back in 3 reruns.
+- **Not checked:** no UI yet (step 3), so no layout change to check. How the reverb, delay and filter sound is Luke's ear check (step 3 adds the controls).
+- The browser pane's prefs were put back to the defaults after testing.
+
 ### Checks (planned)
 - Claude, per step, by script in the browser pane (`dev-http`), plus layout at the 3 sizes.
 - Claude can't hear the browser pane: reverb / delay / filter sound, meters vs. what's heard, and calibration on a real phone are Luke's checks.
@@ -380,4 +397,4 @@ The pinned CC0 VCSL commit (`sgossner/VCSL` c1ea7bc) has `Idiophones/Plucked Idi
 - In PowerShell, `npm` is blocked by the script policy; use `npm.cmd`.
 
 ## Next step
-M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above), building on `feat/m6-effects`. Step 1 (Kalimba) done; Luke's ear check of the kalimba is open. Next: step 2, the audio graph (Opus, high).
+M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above), building on `feat/m6-effects`. Steps 1 (Kalimba) and 2 (audio graph) done; Luke's ear checks happen with the M6 phone test. Next: step 3, the MIX / FX tab (Sonnet, high).

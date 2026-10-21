@@ -14,13 +14,13 @@ import * as midiOut from './midi/out';
 import * as midiClock from './midi/clock';
 import * as midiIn from './midi/in';
 import * as learn from './midi/learn';
-import { initTargets } from './midi/targets';
 import * as hits from './pads/hits';
 import { initHits } from './pads/hits';
 import { PADS_PER_BANK } from './audio/kit';
 import { KITS, factoryKit } from './audio/kits';
 import * as kitControl from './kitControl';
-import { bootKits, kitLabel, saveMasterVolume } from './kitControl';
+import { bootKits, kitLabel } from './kitControl';
+import * as mix from './mix/mix';
 import { attachPadInput } from './pads/input';
 import * as keys from './keys/keys';
 import * as notes from './keys/notes';
@@ -42,6 +42,7 @@ const HINT = 'HIT A PAD — PRESS HIGHER TO HIT HARDER';
 const ui = buildScreen(document.getElementById('app')!);
 const padEls = buildPads(ui.padwell);
 const engine = new AudioEngine();
+void mix.initMix(engine); // the saved mixer and FX settings
 clock.initClock(engine);
 seq.initSequencer(engine);
 seq.loadSong(); // the saved loops and tempo; independent of the kit loading below
@@ -60,7 +61,6 @@ initHits(engine, ui, padEls);
 midiOut.initOut(engine, instrument);
 midiClock.initMidiClock(engine);
 midiIn.initIn(ui);
-initTargets(engine, ui);
 learn.initLearn(ui);
 void midi.initMidi(); // the saved MIDI settings; reconnects if MIDI was on last time
 initViews(ui);
@@ -128,19 +128,18 @@ subscribe((s, changed) => {
   if (changed.has('fullLevel')) ui.fullLevel.setAttribute('aria-pressed', String(s.fullLevel));
 });
 
-ui.master.addEventListener('input', () => engine.setMasterVolume(Number(ui.master.value) / 100));
-ui.master.addEventListener('change', () => saveMasterVolume(Number(ui.master.value) / 100));
+// The rail's master slider is the MASTER strip's fader (0–100 = fader position).
+ui.master.addEventListener('input', () => mix.setLevel('master', Number(ui.master.value) / 100));
+subscribe((s, changed) => {
+  if (changed.has('mix')) ui.master.value = String(Math.round(s.mix.strips.master.level * 100));
+});
 
 // Stop the browser zooming / scrolling the page on double-tap or pinch.
 document.addEventListener('dblclick', (e) => e.preventDefault());
 document.addEventListener('touchmove', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
 
 bootKits(engine, (done, total) => hits.setLast(`LOADING KIT ${done}/${total}`, `LOADING ${done}/${total}`))
-  .then((master) => {
-    if (master !== undefined) {
-      ui.master.value = String(Math.round(master * 100));
-      engine.setMasterVolume(master);
-    }
+  .then(() => {
     kitReady = true;
     if (engine.running) hits.setLast(HINT, 'READY');
     else hits.setLast('TAP A PAD TO START AUDIO', 'TAP TO START');
@@ -153,4 +152,4 @@ bootKits(engine, (done, total) => hits.setLast(`LOADING KIT ${done}/${total}`, `
 registerSW({ immediate: true });
 
 // Dev-only handle for checking the engine and store from the browser console.
-if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, seq, repeat, midi, learn, state, KITS, factoryKit, keys, notes, arp, instrument, ...kitControl } });
+if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, seq, repeat, midi, learn, state, KITS, factoryKit, keys, notes, arp, instrument, mix, ...kitControl } });

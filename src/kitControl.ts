@@ -2,7 +2,7 @@
 // active kit, so the engine, the store and IndexedDB never disagree.
 
 import type { AudioEngine } from './audio/engine';
-import { PADS_PER_BANK, PAD_COUNT, PARAM_RANGE, type ActiveKit, type ParamKey, type UserKit } from './audio/kit';
+import { DEFAULT_PARAMS, PADS_PER_BANK, PAD_COUNT, PARAM_RANGE, type ActiveKit, type ParamKey, type UserKit } from './audio/kit';
 import { DEFAULT_KIT_ID, KITS, factoryKit, findKit } from './audio/kits';
 import { deleteUserKit, getPref, listUserKits, saveUserKit, setPref } from './store/db';
 import { state, update } from './state';
@@ -15,17 +15,15 @@ let selectToken = 0;
 
 const ignore = (err: unknown) => console.warn('[store]', err);
 
-/** Restores saved kits, the last kit and master volume. Returns the saved master volume (0–1), if any. */
-export async function bootKits(e: AudioEngine, onProgress?: Progress): Promise<number | undefined> {
+/** Restores saved kits and the last kit. (Master volume is in the `mix` pref: src/mix/mix.ts.) */
+export async function bootKits(e: AudioEngine, onProgress?: Progress): Promise<void> {
   engine = e;
-  const [userKits, lastKit, master] = await Promise.all([
+  const [userKits, lastKit] = await Promise.all([
     listUserKits().catch((err) => (ignore(err), [] as UserKit[])),
     getPref<string>('lastKit').catch(ignore),
-    getPref<number>('master').catch(ignore),
   ]);
   update({ userKits });
   await selectKit(lastKit ?? DEFAULT_KIT_ID, onProgress);
-  return master ?? undefined;
 }
 
 /** Loads a factory or user kit by id. Unknown ids fall back to the default kit. */
@@ -46,7 +44,8 @@ export async function selectKit(id: string, onProgress?: Progress): Promise<void
  */
 function fromUserKit(user: UserKit): ActiveKit {
   const pads = structuredClone(user.pads);
-  const params = structuredClone(user.params);
+  // Kits saved before M6 have no reverb / delay sends: they start dry.
+  const params = user.params.map((p) => ({ ...DEFAULT_PARAMS, ...p }));
   if (pads.length < PAD_COUNT) {
     const base = factoryKit(findKit(user.baseKitId) ?? KITS[0]);
     pads.push(...base.pads.slice(pads.length));
@@ -115,10 +114,6 @@ export async function deleteKit(id: string): Promise<void> {
 export function selectBank(bank: number): void {
   if (bank === state.bank) return;
   update({ bank, selectedPad: bank * PADS_PER_BANK + (state.selectedPad % PADS_PER_BANK) });
-}
-
-export function saveMasterVolume(v: number): void {
-  setPref('master', v).catch(ignore);
 }
 
 /** "My Neon Electronic 2" etc., numbered past any saved kit already using the name. */

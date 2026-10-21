@@ -6,19 +6,18 @@
 // A target has `press` (button), `set` (knob, 0–1) or `pad`. Notes press; a CC sets a knob, or
 // presses a button when it rises past 64. The BPM readout has both: tap tempo, or BPM from a CC.
 
-import type { AudioEngine } from '../audio/engine';
 import * as clock from '../audio/clock';
 import { BANK_NAMES, PADS_PER_BANK, PAD_COUNT, PARAM_RANGE, padLabel, type ParamKey } from '../audio/kit';
 import * as keys from '../keys/keys';
 import { PRESET_SLOTS } from '../keys/types';
-import { saveMasterVolume, selectBank, setParam } from '../kitControl';
+import { selectBank, setParam } from '../kitControl';
+import * as mix from '../mix/mix';
 import { toggleFullLevel } from '../pads/hits';
 import { SWING_MAX, SWING_MIN } from '../seq/pattern';
 import * as repeat from '../seq/repeat';
 import * as seq from '../seq/sequencer';
 import { state } from '../state';
 import { PARAM_LABEL } from '../ui/format';
-import type { ScreenRefs } from '../ui/screen';
 import type { Mapping } from './types';
 
 export interface Target {
@@ -27,25 +26,6 @@ export interface Target {
   set?: (v: number) => void;
   /** A pad (0–63): a note plays it with its velocity and releases on note-off. */
   pad?: number;
-}
-
-const MASTER_SAVE_MS = 500;
-
-let engine: AudioEngine;
-let ui: ScreenRefs;
-let masterTimer = 0;
-
-export function initTargets(e: AudioEngine, refs: ScreenRefs): void {
-  engine = e;
-  ui = refs;
-}
-
-/** Moves the master slider (the rail on tablets) and saves shortly after the last change. */
-function setMaster(v: number): void {
-  ui.master.value = String(Math.round(v * 100));
-  engine.setMasterVolume(v);
-  clearTimeout(masterTimer);
-  masterTimer = window.setTimeout(() => saveMasterVolume(v), MASTER_SAVE_MS);
 }
 
 const between = (min: number, max: number, v: number) => min + v * (max - min);
@@ -62,7 +42,7 @@ const FIXED: Record<string, Target> = {
   'note-repeat': { label: 'NOTE REPEAT', press: repeat.toggleNoteRepeat },
   'full-level': { label: 'FULL LEVEL', press: toggleFullLevel },
   swing: { label: 'SWING', set: (v) => seq.setSwing(between(SWING_MIN, SWING_MAX, v)) },
-  master: { label: 'MASTER', set: setMaster },
+  master: { label: 'MASTER', set: (v) => mix.setLevel('master', v) },
   'oct-down': { label: 'KEYS OCTAVE −', press: () => keys.nudgeOctave(-1) },
   'oct-up': { label: 'KEYS OCTAVE +', press: () => keys.nudgeOctave(1) },
   hold: { label: 'KEYS HOLD', press: keys.toggleHold },

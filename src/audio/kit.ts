@@ -32,6 +32,10 @@ export interface PadParams {
   pan: number;
   /** How much of the sample plays, 0–1. 1 plays the whole sample. */
   decay: number;
+  /** How much goes to the reverb, 0–1 (kits saved before M6 get 0). */
+  reverbSend: number;
+  /** How much goes to the delay, 0–1. */
+  delaySend: number;
 }
 
 export type ParamKey = keyof PadParams;
@@ -41,9 +45,11 @@ export const PARAM_RANGE: Record<ParamKey, { min: number; max: number; step: num
   pitch: { min: -24, max: 24, step: 1 },
   pan: { min: -1, max: 1, step: 0.02 },
   decay: { min: 0.05, max: 1, step: 0.01 },
+  reverbSend: { min: 0, max: 1, step: 0.01 },
+  delaySend: { min: 0, max: 1, step: 0.01 },
 };
 
-export const DEFAULT_PARAMS: Readonly<PadParams> = { volumeDb: 0, pitch: 0, pan: 0, decay: 1 };
+export const DEFAULT_PARAMS: Readonly<PadParams> = { volumeDb: 0, pitch: 0, pan: 0, decay: 1, reverbSend: 0, delaySend: 0 };
 
 /** What the engine plays: 64 pads (banks A–D) plus their settings. */
 export interface ActiveKit {
