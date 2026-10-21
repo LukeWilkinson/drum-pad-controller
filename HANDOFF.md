@@ -390,6 +390,31 @@ The pinned CC0 VCSL commit (`sgossner/VCSL` c1ea7bc) has `Idiophones/Plucked Idi
 - **Checked by script (`?fakemidi`, dev-http):** all 27 controls arm by tap and learn (labels as "CC 21 → KICKS LEVEL"); CC 127 / 0 moves kicks and keys faders to 1 / 0, MASTER at 64 = 0.50, mute and FX switch toggle on a CC rising past 64, all 9 knobs land on the right values (reverb SIZE 2, DECAY 0.3, MIX 1; delay TIME 5, FDBK 0.9, MIX 0; filter TYPE 2, CUTOFF 869 Hz, RES 12), KEYS sends 100% / 50%. Mappings survive a reload; bad ids (`fxk:reverb:7`, `level:master`, `mute:bogus`) are ignored. Learn outlines checked in screenshots on MIX (800 wide) and KEYS (390×844). `tsc` and `npm run build` pass (precache unchanged).
 - **Not checked:** real MIDI hardware, notes (as opposed to CCs) on the new buttons, outlines at 844×390 and 1280×800. The browser pane's mappings, mix and keys sends were put back to defaults.
 
+### Step 7, docs and checklist: done (2026-10-21)
+- README: Kalimba (5 kits, 5th SAMPLED preset), per-pad sends, new Mix / FX, Latency and theme, and MIDI Learn sections. DESIGN: built notes for Mix/FX and Settings. CREDITS already covered the kalimba (step 1). Luke's checklist is below. Nothing here was run on a device.
+
+## Luke's phone and hardware checklist for M6
+Open the live site or `npm run dev` Network address on the phone. Tap a pad first to start audio.
+1. Kalimba (ears):
+   - [ ] KEYS → SAMPLED → Kalimba (5th preset, full-width under the 2 × 2 grid in portrait): in tune, tone good, level near the other presets (gain −5 is a guess).
+   - [ ] KITS → Kalimba kit: pads C3 (bottom-left) up to C6 (top-right), pentatonic, in tune, level against the drums.
+2. MIX / FX:
+   - [ ] Faders drag smoothly by finger; touching the track jumps; double-tap resets; M mutes; meters move; OUT shows the peak.
+   - [ ] Turn a pad's REVERB SEND up (KITS tab): you hear reverb. Same for DELAY SEND; delay follows the BPM. KEYS REVERB / DELAY knobs work.
+   - [ ] FILTER on: LOW-P / BAND-P / HIGH-P, CUTOFF and RES sweep sounds right and doesn't click. Reverb SIZE / DECAY change the tail.
+   - [ ] Metronome click stays dry; MASTER fader changes its volume.
+   - [ ] Reload: the mixer and FX settings are kept. Phone landscape: the MIX panel scrolls and nothing is cut off.
+3. Latency (SETUP → Audio & Latency):
+   - [ ] CALIBRATE: tap along to the 8 clicks; a MEASURED value appears. Record a loop of taps with the click on: do hits land closer to the beat? Adjust OFFSET if not.
+   - [ ] Low-latency mode off, reload: fewer crackles on a busy phone (if any)? On again: back to snappy.
+4. Theme (SETUP → Theme):
+   - [ ] Chassis light and High contrast: every tab (PADS, KITS, SEQ, KEYS, MIX, SETUP) readable, in portrait and landscape.
+   - [ ] Pad colours "Single colour". Vibrate on hit: buzz on touch hits (not on iPhones).
+5. MIDI Learn (hardware: loopMIDI or a controller; also the open M5 section 5):
+   - [ ] Learn a fader or knob on a CC for a mixer fader, an FX knob and a KEYS send; a note or button for a mute and an FX switch. They move or toggle the on-screen control.
+   - [ ] Mappings are kept after a reload; × in the list removes one.
+6. Known gaps: sound-related items are unverified by Claude; the touch feel of faders and knobs was tested with synthetic events only.
+
 ### Checks (planned)
 - Claude, per step, by script in the browser pane (`dev-http`), plus layout at the 3 sizes.
 - Claude can't hear the browser pane: reverb / delay / filter sound, meters vs. what's heard, and calibration on a real phone are Luke's checks.
@@ -430,4 +455,4 @@ The pinned CC0 VCSL commit (`sgossner/VCSL` c1ea7bc) has `Idiophones/Plucked Idi
 - In PowerShell, `npm` is blocked by the script policy; use `npm.cmd`.
 
 ## Next step
-M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above), building on `feat/m6-effects`. Steps 1 (Kalimba), 2 (audio graph), 3 (MIX / FX tab) 4 (Latency card) and 5 (Theme card) done; Luke's ear checks happen with the M6 phone test. Step 6 (MIDI Learn targets) done. Next: step 7, docs and Luke's phone checklist (Haiku or Sonnet, low).
+M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above), building on `feat/m6-effects`. Steps 1 (Kalimba), 2 (audio graph), 3 (MIX / FX tab) 4 (Latency card) and 5 (Theme card) done; Luke's ear checks happen with the M6 phone test. Step 6 (MIDI Learn targets) and 7 (docs, checklist) done: M6 is built. Next: Luke runs the M6 checklist on the phone, then merge `feat/m6-effects` into `main` (ask Luke before pushing).

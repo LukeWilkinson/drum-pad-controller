@@ -130,11 +130,13 @@ Keep the pad screen uncluttered. Everything else lives behind the tabs.
 - **Mix/FX:**
   - five channels plus master, each with a fader, meter, dB readout and mute button
   - Reverb, Delay and Filter cards, each with an on/off switch and three 270° arc knobs
+  - built: 160 px faders (120 px on phone landscape, where the panel scrolls), meters from −54 to +6 dB, the OUT readout holds the peak 1.5 s, send-fed cards show a one-line hint until something sends to them; MIDI Learn outlines every fader, mute, switch and knob
 - **Settings:**
   - **MIDI:** output, input, channel, send clock, MIDI Learn (amber "listening" state) and a list of mappings
   - **Latency:** measured value shown in the LCD style, a calibrate button (tap along to 8 clicks), manual offset, low-latency mode
   - **Auto-tune:** two separate cards, each with its own on/off switch. Scale snap has key and scale. Vocal pitch correction has a mic status and level meter, a headphones note, key and scale, a "match scale snap key" button, strength and speed (hard to natural). When a card is off its controls dim to 45%.
   - **Theme:** Chassis, Chassis light, High contrast; pad colours (by drum type or a single colour); vibrate on hit
+  - built: Latency and Theme cards are in SETUP; the KEYS tab gets a SENDS row (REVERB / DELAY knobs) and a fifth SAMPLED preset (Kalimba)
 
 ## Build note
 
