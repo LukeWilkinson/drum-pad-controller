@@ -4,7 +4,7 @@
 import { subscribe, update, type View } from '../state';
 import type { ScreenRefs } from './screen';
 
-const VIEWS: View[] = ['pads', 'kits', 'seq', 'keys', 'setup'];
+const VIEWS: View[] = ['pads', 'kits', 'seq', 'keys', 'mix', 'setup'];
 
 export function initViews(ui: ScreenRefs): void {
   for (const view of VIEWS) {

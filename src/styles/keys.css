@@ -76,6 +76,14 @@
 .ky-opt { min-height: 44px; }
 .ky-opt[aria-pressed="true"] { background: var(--amber); color: var(--body); }
 
+/* ---------- FX sends (small knobs) ---------- */
+
+.ky-sends { display: flex; align-items: center; gap: 10px; flex: none; }
+.ky-knob { flex: 1; min-width: 0; height: 44px; gap: 8px; justify-content: flex-start; padding: 0 6px; border-radius: 8px; background: var(--well); }
+.ky-knob-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
+.ky-knob-label { font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--text-muted); }
+.ky-knob-val { font-family: var(--font-mono); font-size: 12px; color: var(--text-strong); }
+
 /* ---------- Pitch and mod strips ---------- */
 
 .ky-strips { display: flex; flex-direction: column; gap: 6px; flex: none; }

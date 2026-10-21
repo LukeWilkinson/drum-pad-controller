@@ -11,7 +11,7 @@ import { escapeHtml, openDialog } from './dialog';
 
 type Category = 'All' | (typeof CATEGORIES)[number] | 'My kits';
 const CHIPS: Category[] = ['All', ...CATEGORIES, 'My kits'];
-const PARAMS: ParamKey[] = ['volumeDb', 'pitch', 'pan', 'decay'];
+const PARAMS: ParamKey[] = ['volumeDb', 'pitch', 'pan', 'decay', 'reverbSend', 'delaySend'];
 
 const PLAY = '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor"/></svg>';
 const TRASH =

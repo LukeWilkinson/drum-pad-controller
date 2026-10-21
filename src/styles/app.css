@@ -357,7 +357,12 @@ svg { display: block; }
 /* Right rail (tablet only) */
 .rail-label { font-size: 11px; font-weight: 700; letter-spacing: .1em; color: var(--text-muted); }
 .sel-name { font-family: var(--font-mono); font-size: 15px; color: var(--amber); }
-.knob { display: flex; align-items: center; gap: 10px; }
+.knob { display: flex; align-items: center; gap: 10px; touch-action: none; cursor: ns-resize; }
+.knob-svg { flex: none; }
+.k-track { stroke: var(--edge); }
+.k-arc { stroke: var(--amber); }
+.k-cap { fill: var(--knob); }
+.knob:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 8px; }
 .knob-text { display: flex; flex-direction: column; }
 .knob-label { font-size: 12px; font-weight: 700; letter-spacing: .08em; color: var(--text-muted); }
 .knob-val { font-family: var(--font-mono); font-size: 13px; color: var(--text-strong); }

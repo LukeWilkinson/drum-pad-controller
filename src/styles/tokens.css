@@ -7,6 +7,8 @@
   --drawer: #232220;      /* tab bar / drawer */
   --edge: #191816;        /* borders, deep shadow */
   --pad-rubber: #45433F;  /* pad base under the colour tint */
+  --knob: #4A4844;        /* knob cap */
+  --fader-cap: #6A675F;   /* mixer fader cap */
 
   /* text */
   --text: #D6D1C6;

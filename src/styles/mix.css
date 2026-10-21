@@ -1,0 +1,118 @@
+/* MIX / FX panel (Fx.dc.html). Loaded after app.css and the other panels.
+   .app[data-view="mix"] hides the pad grid and shows the panel, placed like the Kits panel:
+   - phone portrait: the panel takes everything above the tab bar (controls hidden)
+   - phone landscape and tablet: the panel takes the pad grid's place; the rails stay
+   The panel scrolls when it is taller than the space. */
+
+.mix-panel {
+  --fader-h: 160px;
+  grid-area: pads;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding-bottom: 12px;
+}
+.app[data-view="mix"] .mix-panel { display: flex; }
+.app[data-view="mix"] .padwell { display: none; }
+
+.app[data-view="mix"] { grid-template-areas: "pads" "pads" "tabs"; }
+.app[data-view="mix"] .controls { display: none; }
+
+@media (orientation: landscape) and (max-height: 540px) {
+  .app[data-view="mix"] { grid-template-areas: "controls pads" ". pads" "tabs pads"; }
+  .app[data-view="mix"] .controls { display: flex; }
+  .mix-panel { --fader-h: 120px; width: var(--pad-size); padding-bottom: 0; gap: 8px; }
+}
+
+@media (min-width: 1024px) and (min-height: 600px) {
+  .app[data-view="mix"] { grid-template-areas: "tabs tabs status" "controls pads right"; }
+  .app[data-view="mix"] .controls { display: flex; }
+  .mix-panel { width: var(--pad-size); padding-bottom: 0; }
+}
+
+/* ---------- Header ---------- */
+
+.mx-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex: none; }
+.mx-head h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: .04em; color: var(--text-strong); }
+.mx-out { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+
+/* ---------- Mixer well ---------- */
+
+.mx-well {
+  flex: none; background: var(--well); border-radius: 12px; padding: 10px 6px;
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px;
+}
+.mx-strip { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+.mx-name { font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--text); }
+.mx-strip.master .mx-name { color: var(--amber); }
+.mx-fm { display: flex; gap: 5px; height: var(--fader-h); }
+
+/* The fader's touch area is 36px wide; the cap is 26px. --lv is the position 0–1 (set by mix.ts). */
+.mx-fader {
+  --lv: 0.7;
+  position: relative; width: 36px; height: 100%;
+  touch-action: none; cursor: ns-resize;
+}
+.mx-fader:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 4px; }
+.mx-rail { position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; margin-left: -2px; border-radius: 2px; background: var(--raised); }
+.mx-cap {
+  position: absolute; left: 50%; width: 26px; height: 18px; margin-left: -13px; border-radius: 3px;
+  bottom: calc(var(--lv) * (100% - 18px));
+  background: var(--fader-cap);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .15);
+}
+.mx-line {
+  position: absolute; left: 50%; width: 16px; height: 2px; margin-left: -8px; background: var(--c);
+  bottom: calc(var(--lv) * (100% - 18px) + 8px);
+}
+
+.mx-meter { width: 5px; border-radius: 2px; background: var(--body); display: flex; flex-direction: column; justify-content: flex-end; overflow: hidden; }
+.mx-fill { width: 100%; height: 0; background: linear-gradient(to top, var(--play) 65%, var(--hat) 85%, var(--rec)); }
+.mx-strip.muted .mx-fill { opacity: .35; }
+
+.mx-db { font-family: var(--font-mono); font-size: 10px; color: var(--text-muted); }
+.mx-mute {
+  width: 44px; height: 44px; border-radius: 4px; background: var(--raised); color: var(--text);
+  font-size: 11px; font-weight: 700; box-shadow: var(--key-shadow);
+}
+.mx-mute[aria-pressed="true"] { background: var(--rec); color: var(--text-strong); }
+
+/* ---------- Effect cards ---------- */
+
+.mx-fx {
+  flex: none; background: var(--raised); border-radius: 10px; padding: 10px 12px;
+  display: grid; grid-template-columns: 76px minmax(0, 1fr); align-items: center; column-gap: 8px; row-gap: 6px;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .25);
+}
+.mx-fx-head { display: flex; flex-direction: column; gap: 8px; }
+.mx-fx-name { font-size: 15px; font-weight: 700; letter-spacing: .05em; color: var(--text-strong); }
+.mx-switch {
+  position: relative; width: 52px; height: 44px; padding: 0; background: none; border-radius: 14px;
+}
+/* The visible track is 28px tall; the button is 44px for the finger. */
+.mx-switch::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 8px; height: 28px; border-radius: 14px;
+  background: var(--switch-off);
+}
+.mx-switch[aria-checked="true"]::before { background: var(--play); }
+.mx-switch span {
+  position: absolute; top: 11px; left: 3px; width: 22px; height: 22px; border-radius: 11px;
+  background: var(--text-strong);
+}
+.mx-switch[aria-checked="true"] span { left: 27px; }
+.mx-fx-head { margin-bottom: -8px; } /* the switch's extra touch height shouldn't push the card taller */
+
+.mx-fx-knobs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
+.mx-knob { flex-direction: column; align-items: center; gap: 2px; min-width: 0; padding: 2px 0; }
+.mx-fx .k-track { stroke: var(--well); }
+.mx-fx.off .mx-knob { opacity: .55; }
+.mx-k-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; color: var(--text-muted); }
+.mx-k-val { font-family: var(--font-mono); font-size: 10px; color: var(--text); white-space: nowrap; }
+
+.mx-hint { grid-column: 1 / -1; margin: 0; font-size: 11px; line-height: 1.3; color: var(--text-muted); }
+.mx-hint[hidden] { display: none; }

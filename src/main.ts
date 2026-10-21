@@ -4,6 +4,7 @@ import './styles/kits.css';
 import './styles/seq.css';
 import './styles/setup.css';
 import './styles/keys.css';
+import './styles/mix.css';
 import { registerSW } from 'virtual:pwa-register';
 import { AudioEngine } from './audio/engine';
 import * as clock from './audio/clock';
@@ -30,6 +31,7 @@ import { buildKeysPanel } from './ui/keys';
 import { state, subscribe } from './state';
 import { applyKit, buildPads } from './ui/pads';
 import { buildKitsPanel } from './ui/kits';
+import { buildMixPanel } from './ui/mix';
 import { buildScreen } from './ui/screen';
 import { buildSeqPanel } from './ui/seq';
 import { buildSetupPanel } from './ui/setup';
@@ -52,6 +54,7 @@ applyKit(padEls, KITS[0].pads); // colours straight away; replaced if a differen
 buildKitsPanel(ui.app, engine);
 buildSeqPanel(ui.app, engine);
 buildSetupPanel(ui.app, ui);
+buildMixPanel(ui.app, engine);
 const keysBoard = buildKeysPanel(ui.app, { onBend: notes.bend });
 const instrument = keys.initKeys(engine); // after initClock: Tone runs on the engine's context
 seq.attachKeys(instrument); // loops play their KEYS notes on it

@@ -35,7 +35,7 @@ Milestone 1 (Pads) and Milestone 2 (Kits and presets) passed Luke's phone test (
 - The pad picker cells on the Kits panel are 40px, slightly under the 44px touch-target rule, so they fit beside the sliders on a 390px-wide phone, as in the design. Hitting a real pad also selects it.
 - On phone portrait, long kit names are cut short in the LCD (e.g. "KIT 01 · STUDIO ACOUSTI…").
 - Shaker, Rim, Clap and Vox FX in Studio Acoustic still use the closest Sonic Pi sample (there is no real clap or vocal). They can be changed with SWAP SAMPLE.
-- Styled but not working yet (`data-todo`; `grep -r data-todo src` lists them): KEYS/MIX/SETUP tabs, and the FX send knobs (M6).
+- Styled but not working yet (`data-todo`; `grep -r data-todo src` lists them): only the KEYS MOD strip (the MIX tab and the send knobs are live since M6 step 3).
 - The desktop artboard extras (step strip, shortcut legend) are not built.
 
 ## M3 (Sequencer and looping): built on `feat/m3-sequencer`, phone test passed (2026-10-17)
@@ -370,6 +370,19 @@ The pinned CC0 VCSL commit (`sgossner/VCSL` c1ea7bc) has `Idiophones/Plucked Idi
 - **Not checked:** no UI yet (step 3), so no layout change to check. How the reverb, delay and filter sound is Luke's ear check (step 3 adds the controls).
 - The browser pane's prefs were put back to the defaults after testing.
 
+### Step 3, MIX / FX tab: done (2026-10-21)
+- **Files:** `src/ui/mix.ts` + `src/styles/mix.css` (the panel; `main.ts` builds it; `View` and `views.ts` have `'mix'`), `src/ui/knob.ts` (new shared knob: `knobSvg()`, `setKnobArc()`, `bindKnob()` with drag, arrow keys and double-tap on a 0–1 value; the rail, the FX cards and the KEYS sends all use it; `rail.ts` was moved onto it), `tokens.css` gets `--knob` and `--fader-cap`. Knob colours are CSS classes now (`.k-track`, `.k-arc`, `.k-cap`), so they follow the tokens.
+- **Panel (as Fx.dc.html):** header "MIX / FX" + `OUT −x.x dB` (master peak, held 1.5 s, "−∞" when silent). Six strips: fader (cap drag or touch the track to jump; snaps to 0 dB within 2 % of travel; double-tap resets; arrow keys step 2 %, Shift 10 %), meter, dB readout, M button (red while muted). REVERB / DELAY / FILTER cards: switch (44 px touch area, 28 px drawn) and three knobs; the knobs dim while the card is off but still turn.
+- **Claude's choices (Luke can override):**
+  - Knob scales: DECAY, CUTOFF and RES are logarithmic; FDBK and MIX linear; SIZE, TIME and TYPE are lists (each step is 200 px / (n − 1) of drag; 11 delay times = 20 px each).
+  - Meter scale −54 dB (bottom) to +6 dB (top, the fader's top), peak with a 40 dB/s fall; rAF runs only while the MIX tab is showing and the page is visible.
+  - The REVERB and DELAY cards show a one-line hint ("Nothing sends here yet. Turn up a pad's REVERB SEND (KITS tab) or the KEYS reverb knob.") only while no pad of the kit and not the KEYS bus sends to that effect. It hides itself as soon as any send is above 0.
+  - Fader heights: 160 px (120 px on phone landscape, where the panel scrolls). On phone landscape the panel is 366 px tall and scrolls (content 712 px); portrait phone and tablet fit without scrolling.
+  - KEYS sends: a SENDS row with two small knobs (REVERB, DELAY) between the OCTAVE row and the PITCH / MOD strips. Costs 56 px of keyboard height: portrait 338 → 282 px, phone landscape about 160 → 106 px (the keyboard's minimum is 100).
+- **Live send knobs:** tablet rail REVERB SEND / DELAY SEND (`data-key`, so they are also learn targets `param:reverbSend` / `param:delaySend` already), and Kits panel sliders for both (6 sliders now; the panel scrolls as before).
+- **Checked by script in the browser pane (`dev-http`):** fader touch on the track, cap drag (+20 px = +0.14), 0 dB snap, double-tap reset, arrow keys, level 0 = "−∞", mute on / off, FILTER switch, knob drags (REVERB MIX 25 → 50 %, DELAY TIME 1/8 D → 1/4), double-tap resets, Shift+ArrowUp on CUTOFF clamps at 18.0 kHz, live meters (kick: KICKS 90 % → decaying, MASTER follows, OUT readout), reverb and delay tails audible on the master meter with a pad's sends up, KEYS send knob (drag → 30 %, state, double-tap → 0), hints hide when a send is above 0 (pad slider, rail knob, KEYS knob), rail knobs and Kits sliders agree both ways, layout at 390×844 (MIX panel 746 px, no scroll), 844×390 (MIX scrolls 366 / 712; KEYS board 106 px) and 1280×800 (KEYS and MIX fit; Kits scrolls as before). `tsc` and `npm run build` pass (precache unchanged, 244 entries, 15.1 MB).
+- **Not checked:** touch dragging on a real phone (faders and knobs use pointer capture and `touch-action: none`; tested with synthetic pointer events only), how the effects sound, MIX at other tablet sizes, MIDI Learn on the new controls (step 6). Two stale `SyntaxError` lines (`saveMasterVolume`, `initTargets`) sit in the browser pane's console log from before the reload; the app boots and runs without errors now.
+
 ### Checks (planned)
 - Claude, per step, by script in the browser pane (`dev-http`), plus layout at the 3 sizes.
 - Claude can't hear the browser pane: reverb / delay / filter sound, meters vs. what's heard, and calibration on a real phone are Luke's checks.
@@ -397,4 +410,4 @@ The pinned CC0 VCSL commit (`sgossner/VCSL` c1ea7bc) has `Idiophones/Plucked Idi
 - In PowerShell, `npm` is blocked by the script policy; use `npm.cmd`.
 
 ## Next step
-M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above), building on `feat/m6-effects`. Steps 1 (Kalimba) and 2 (audio graph) done; Luke's ear checks happen with the M6 phone test. Next: step 3, the MIX / FX tab (Sonnet, high).
+M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above), building on `feat/m6-effects`. Steps 1 (Kalimba), 2 (audio graph) and 3 (MIX / FX tab) done; Luke's ear checks happen with the M6 phone test. Next: step 4, the Latency card (Sonnet, medium).

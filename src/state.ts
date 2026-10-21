@@ -8,7 +8,7 @@ import { DEFAULT_CHANNEL, DEFAULT_KEYS_CHANNEL, type LearnState, type MidiState 
 import { defaultMix, type MixState } from './mix/types';
 import { PATTERN_COUNT, emptyPattern, type Pattern, type Quant } from './seq/pattern';
 
-export type View = 'pads' | 'kits' | 'seq' | 'keys' | 'setup';
+export type View = 'pads' | 'kits' | 'seq' | 'keys' | 'mix' | 'setup';
 
 export interface AppState {
   /** The kit playing now (null until the first kit has loaded). */
