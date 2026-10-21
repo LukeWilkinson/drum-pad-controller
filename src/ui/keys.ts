@@ -79,7 +79,7 @@ export function buildKeysPanel(app: HTMLElement, opts: KeysPanelOptions): HTMLEl
       <span class="ky-label">SENDS</span>
       ${(['reverb', 'delay'] as const)
         .map(
-          (fx) => `<div class="knob ky-knob" data-fx="${fx}" role="slider" tabindex="0" aria-label="KEYS ${fx} send" aria-valuemin="0" aria-valuemax="100">
+          (fx) => `<div class="knob ky-knob" data-fx="${fx}" data-learn="keys-send:${fx}" role="slider" tabindex="0" aria-label="KEYS ${fx} send" aria-valuemin="0" aria-valuemax="100">
         ${knobSvg(36)}<span class="ky-knob-text"><span class="ky-knob-label">${fx.toUpperCase()}</span><span class="ky-knob-val"></span></span>
       </div>`,
         )

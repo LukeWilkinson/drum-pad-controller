@@ -11,7 +11,9 @@ import { BANK_NAMES, PADS_PER_BANK, PAD_COUNT, PARAM_RANGE, padLabel, type Param
 import * as keys from '../keys/keys';
 import { PRESET_SLOTS } from '../keys/types';
 import { selectBank, setParam } from '../kitControl';
+import { FX } from '../mix/knobs';
 import * as mix from '../mix/mix';
+import { STRIPS, STRIP_LABEL, type StripId } from '../mix/types';
 import { toggleFullLevel } from '../pads/hits';
 import { SWING_MAX, SWING_MIN } from '../seq/pattern';
 import * as repeat from '../seq/repeat';
@@ -28,6 +30,7 @@ export interface Target {
   pad?: number;
 }
 
+const isStrip = (s: string): s is StripId => (STRIPS as readonly string[]).includes(s);
 const between = (min: number, max: number, v: number) => min + v * (max - min);
 
 const FIXED: Record<string, Target> = {
@@ -61,6 +64,21 @@ export function findTarget(id: string): Target | null {
   if (kind === 'bank' && Number.isInteger(n) && n >= 0 && n < BANK_NAMES.length) return { label: `BANK ${BANK_NAMES[n]}`, press: () => selectBank(n) };
   if (kind === 'loop' && Number.isInteger(n) && n >= 0 && n < state.patterns.length) return { label: `LOOP ${n + 1}`, press: () => seq.selectPattern(n) };
   if (kind === 'preset' && Number.isInteger(n) && n >= 0 && n < PRESET_SLOTS) return { label: `KEYS PRESET ${n + 1}`, press: () => keys.selectPreset(n) };
+  if (kind === 'level' && isStrip(arg) && arg !== 'master') return { label: `${STRIP_LABEL[arg]} LEVEL`, set: (v) => mix.setLevel(arg, v) };
+  if (kind === 'mute' && isStrip(arg)) return { label: `MUTE ${STRIP_LABEL[arg]}`, press: () => mix.toggleMute(arg) };
+  if (kind === 'fx') {
+    const fx = FX.find((f) => f.id === arg);
+    if (fx) return { label: `${fx.name} ON / OFF`, press: () => mix.toggleFx(fx.id) };
+  }
+  if (kind === 'fxk') {
+    const [, fxId, i] = id.split(':');
+    const fx = FX.find((f) => f.id === fxId);
+    const knob = fx?.knobs[Number(i)];
+    if (fx && knob && Number.isInteger(Number(i))) return { label: `${fx.name} ${knob.label}`, set: (v) => knob.apply(knob.scale.from(v)) };
+  }
+  if (kind === 'keys-send' && (arg === 'reverb' || arg === 'delay')) {
+    return { label: `KEYS ${arg.toUpperCase()} SEND`, set: (v) => keys.setSend(arg, Math.round(v * 100) / 100) };
+  }
   if (kind === 'param' && arg in PARAM_RANGE) {
     const key = arg as ParamKey;
     const { min, max, step } = PARAM_RANGE[key];

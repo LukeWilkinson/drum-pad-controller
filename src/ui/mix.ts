@@ -4,20 +4,8 @@
 
 import type { AudioEngine } from '../audio/engine';
 import * as mix from '../mix/mix';
-import {
-  DEFAULT_MIX,
-  DELAY_TIMES,
-  FILTER_TYPES,
-  FX_RANGE,
-  REVERB_SIZES,
-  STRIPS,
-  STRIP_LABEL,
-  faderGain,
-  faderLevel,
-  gainDb,
-  type FxId,
-  type StripId,
-} from '../mix/types';
+import { FX } from '../mix/knobs';
+import { DEFAULT_MIX, STRIPS, STRIP_LABEL, faderGain, faderLevel, gainDb, type FxId, type StripId } from '../mix/types';
 import { state, subscribe } from '../state';
 import { bindKnob, knobSvg, setKnobArc } from './knob';
 
@@ -49,76 +37,6 @@ function fmtDb(db: number): string {
   return `${r < 0 ? MINUS : '+'}${Math.abs(r).toFixed(1)}`;
 }
 
-// ---------- Knob definitions ----------
-
-/** How a knob's value maps onto its 0–1 turn. */
-interface Scale {
-  to(v: number): number;
-  from(n: number): number;
-  /** One arrow-key step as a fraction of the turn. */
-  step: number;
-}
-
-const linear = (min: number, max: number): Scale => ({
-  to: (v) => (v - min) / (max - min),
-  from: (n) => min + n * (max - min),
-  step: 0.02,
-});
-const log = (min: number, max: number): Scale => ({
-  to: (v) => Math.log(v / min) / Math.log(max / min),
-  from: (n) => min * Math.pow(max / min, n),
-  step: 0.02,
-});
-/** `count` values 0 … count − 1. */
-const list = (count: number): Scale => ({
-  to: (v) => v / (count - 1),
-  from: (n) => Math.round(n * (count - 1)),
-  step: 1 / (count - 1),
-});
-
-interface KnobDef {
-  label: string;
-  scale: Scale;
-  value(): number;
-  apply(v: number): void;
-  default: number;
-  text(v: number): string;
-}
-
-const pct = (v: number) => `${Math.round(v * 100)}%`;
-const delayName = (i: number) => DELAY_TIMES[i].name.replace(/([DT])$/, ' $1'); // "1/8D" → "1/8 D"
-const hz = (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(1)} kHz` : `${Math.round(v)} Hz`);
-
-const FX: { id: FxId; name: string; knobs: KnobDef[] }[] = [
-  {
-    id: 'reverb',
-    name: 'REVERB',
-    knobs: [
-      { label: 'SIZE', scale: list(REVERB_SIZES.length), value: () => state.mix.reverb.size, apply: (v) => mix.setReverb({ size: v }), default: DEFAULT_MIX.reverb.size, text: (v) => REVERB_SIZES[v] },
-      { label: 'DECAY', scale: log(FX_RANGE.decay.min, FX_RANGE.decay.max), value: () => state.mix.reverb.decay, apply: (v) => mix.setReverb({ decay: v }), default: DEFAULT_MIX.reverb.decay, text: (v) => `${v.toFixed(1)} s` },
-      { label: 'MIX', scale: linear(0, 1), value: () => state.mix.reverb.mix, apply: (v) => mix.setReverb({ mix: v }), default: DEFAULT_MIX.reverb.mix, text: pct },
-    ],
-  },
-  {
-    id: 'delay',
-    name: 'DELAY',
-    knobs: [
-      { label: 'TIME', scale: list(DELAY_TIMES.length), value: () => state.mix.delay.time, apply: (v) => mix.setDelay({ time: v }), default: DEFAULT_MIX.delay.time, text: delayName },
-      { label: 'FDBK', scale: linear(FX_RANGE.feedback.min, FX_RANGE.feedback.max), value: () => state.mix.delay.feedback, apply: (v) => mix.setDelay({ feedback: v }), default: DEFAULT_MIX.delay.feedback, text: pct },
-      { label: 'MIX', scale: linear(0, 1), value: () => state.mix.delay.mix, apply: (v) => mix.setDelay({ mix: v }), default: DEFAULT_MIX.delay.mix, text: pct },
-    ],
-  },
-  {
-    id: 'filter',
-    name: 'FILTER',
-    knobs: [
-      { label: 'TYPE', scale: list(FILTER_TYPES.length), value: () => state.mix.filter.type, apply: (v) => mix.setFilter({ type: v }), default: DEFAULT_MIX.filter.type, text: (v) => FILTER_TYPES[v].name },
-      { label: 'CUTOFF', scale: log(FX_RANGE.cutoff.min, FX_RANGE.cutoff.max), value: () => state.mix.filter.cutoff, apply: (v) => mix.setFilter({ cutoff: v }), default: DEFAULT_MIX.filter.cutoff, text: hz },
-      { label: 'RES', scale: log(FX_RANGE.res.min, FX_RANGE.res.max), value: () => state.mix.filter.res, apply: (v) => mix.setFilter({ res: v }), default: DEFAULT_MIX.filter.res, text: (v) => v.toFixed(v < 1 ? 2 : 1) },
-    ],
-  },
-];
-
 /** Shown on a send-fed card while nothing is sending to it (every send starts at 0). */
 const HINT: Partial<Record<FxId, string>> = {
   reverb: "Nothing sends here yet. Turn up a pad's REVERB SEND (KITS tab) or the KEYS reverb knob.",
@@ -142,13 +60,13 @@ export function buildMixPanel(app: HTMLElement, engine: AudioEngine): void {
       <div class="mx-strip${id === 'master' ? ' master' : ''}" data-strip="${id}" style="--c:${STRIP_COLOUR[id]}">
         <span class="mx-name">${STRIP_LABEL[id]}</span>
         <div class="mx-fm">
-          <div class="mx-fader" role="slider" tabindex="0" aria-label="${STRIP_LABEL[id]} level" aria-valuemin="0" aria-valuemax="100">
+          <div class="mx-fader" data-learn="${id === 'master' ? 'master' : `level:${id}`}" role="slider" tabindex="0" aria-label="${STRIP_LABEL[id]} level" aria-valuemin="0" aria-valuemax="100">
             <span class="mx-rail"></span><span class="mx-cap"></span><span class="mx-line"></span>
           </div>
           <div class="mx-meter" aria-hidden="true"><span class="mx-fill"></span></div>
         </div>
         <span class="mx-db"></span>
-        <button class="mx-mute" aria-pressed="false" aria-label="Mute ${STRIP_LABEL[id]}">M</button>
+        <button class="mx-mute" data-learn="mute:${id}" aria-pressed="false" aria-label="Mute ${STRIP_LABEL[id]}">M</button>
       </div>`,
       ).join('')}
     </section>
@@ -157,13 +75,13 @@ export function buildMixPanel(app: HTMLElement, engine: AudioEngine): void {
     <section class="mx-fx" data-fx="${fx.id}" aria-label="${fx.name}">
       <div class="mx-fx-head">
         <span class="mx-fx-name">${fx.name}</span>
-        <button class="mx-switch" role="switch" aria-checked="false" aria-label="${fx.name}"><span></span></button>
+        <button class="mx-switch" data-learn="fx:${fx.id}" role="switch" aria-checked="false" aria-label="${fx.name}"><span></span></button>
       </div>
       <div class="mx-fx-knobs">
         ${fx.knobs
           .map(
             (k, i) => `
-        <div class="knob mx-knob" data-i="${i}" role="slider" tabindex="0" aria-label="${fx.name} ${k.label}" aria-valuemin="0" aria-valuemax="1">
+        <div class="knob mx-knob" data-i="${i}" data-learn="fxk:${fx.id}:${i}" role="slider" tabindex="0" aria-label="${fx.name} ${k.label}" aria-valuemin="0" aria-valuemax="1">
           ${knobSvg(48)}<span class="mx-k-label">${k.label}</span><span class="mx-k-val"></span>
         </div>`,
           )
