@@ -4,6 +4,7 @@
 
 import type { ActiveKit, UserKit } from './audio/kit';
 import { loadLatency, type LatencyState } from './audio/latencyTypes';
+import type { UserSampleInfo } from './audio/userSamples';
 import { loadTheme, type ThemeState } from './ui/themeTypes';
 import { DEFAULT_KEYS, type KeysState } from './keys/types';
 import { DEFAULT_CHANNEL, DEFAULT_KEYS_CHANNEL, type LearnState, type MidiState } from './midi/types';
@@ -24,6 +25,8 @@ export interface AppState {
   view: View;
   /** Saved kits, newest first. */
   userKits: UserKit[];
+  /** Imported samples, oldest first (changed only by src/audio/userSamples.ts). */
+  userSamples: UserSampleInfo[];
   /** Transport (changed only by src/audio/clock.ts). */
   playing: boolean;
   bpm: number;
@@ -74,6 +77,7 @@ export const state: AppState = {
   selectedPad: 12, // Kick
   view: 'pads',
   userKits: [],
+  userSamples: [],
   playing: false,
   bpm: 120,
   click: true,

@@ -142,6 +142,17 @@
 .sw-play { width: 44px; height: 44px; flex: none; border-radius: 6px; background: none; color: var(--amber); display: grid; place-items: center; }
 .sw-pick { flex: 1; height: 44px; text-align: left; padding: 0 8px; background: none; color: var(--text); font: 13px var(--font-mono); }
 .sw-row.current .sw-pick { color: var(--amber); }
+.sw-pick { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sw-len { color: var(--text-muted); font-size: 11px; }
+.sw-del { width: 44px; height: 44px; flex: none; border-radius: 6px; background: none; color: var(--text-muted); display: grid; place-items: center; }
+.sw-top { display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; }
+.sw-import { height: 44px; }
+.dlg p.sw-msg { margin: 0; font-size: 12px; line-height: 1.35; color: var(--text-muted); min-height: 2.7em; }
+.dlg p.sw-empty { margin: 2px 4px 4px; font-size: 12px; color: var(--text-muted); }
+/* Phone landscape: the list gives way so the dialog's buttons stay on screen. */
+@media (max-height: 540px) {
+  .sw-list { max-height: calc(100dvh - 250px); }
+}
 
 .knob[data-key] { touch-action: none; cursor: ns-resize; border-radius: 8px; }
 .knob[data-key]:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }

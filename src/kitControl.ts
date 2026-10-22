@@ -63,13 +63,16 @@ export function setParam(index: number, key: ParamKey, value: number): void {
   update({ edited: true }, 'params');
 }
 
-/** Puts a different sample on a pad. The soft layer is dropped, since it belonged to the old sample. */
-export async function swapSample(index: number, sample: string): Promise<void> {
+/**
+ * Puts a different sample on a pad. The soft layer is dropped, since it belonged to the old sample.
+ * `name` renames the pad (an imported sample gives the pad its own name).
+ */
+export async function swapSample(index: number, sample: string, name?: string): Promise<void> {
   const kit = state.kit;
   if (!kit) return;
   await engine.loadSamples([sample]);
   const { soft: _soft, ...rest } = kit.pads[index];
-  kit.pads[index] = { ...rest, hard: sample };
+  kit.pads[index] = { ...rest, hard: sample, ...(name ? { name } : {}) };
   update({ edited: true }, 'pads');
 }
 

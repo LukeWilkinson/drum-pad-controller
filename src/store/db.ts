@@ -1,13 +1,26 @@
 // Small promise wrapper over IndexedDB (no dependency).
-// Stores: `userKits` (saved kits, keyed by id) and `prefs` (key → value, e.g. last kit, master volume).
+// Stores: `userKits` (saved kits, keyed by id), `prefs` (key → value, e.g. last kit, master volume)
+// and `samples` (imported sounds as WAV blobs, keyed by their `user:` id; added in version 2).
 // Every call rejects if IndexedDB is unavailable (private mode on some browsers); callers carry on without saving.
 
 import type { UserKit } from '../audio/kit';
 
+/** An imported sample as stored: the processed sound as a WAV file. */
+export interface StoredSample {
+  /** "user:" + 16 hex digits of the original file's SHA-256. */
+  id: string;
+  name: string;
+  wav: Blob;
+  seconds: number;
+  /** Date.now() of the import. */
+  addedAt: number;
+}
+
 const DB_NAME = 'drumpad';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const KITS = 'userKits';
 const PREFS = 'prefs';
+const SAMPLES = 'samples';
 
 let opening: Promise<IDBDatabase> | null = null;
 
@@ -18,8 +31,18 @@ function db(): Promise<IDBDatabase> {
       const d = req.result;
       if (!d.objectStoreNames.contains(KITS)) d.createObjectStore(KITS, { keyPath: 'id' });
       if (!d.objectStoreNames.contains(PREFS)) d.createObjectStore(PREFS);
+      if (!d.objectStoreNames.contains(SAMPLES)) d.createObjectStore(SAMPLES, { keyPath: 'id' });
     };
-    req.onsuccess = () => resolve(req.result);
+    // Another tab still has version 1 open: it closes its copy so this one can upgrade (it reopens on its next call).
+    req.onblocked = () => console.warn('[store] waiting for another tab to close the old database');
+    req.onsuccess = () => {
+      const d = req.result;
+      d.onversionchange = () => {
+        d.close();
+        opening = null;
+      };
+      resolve(d);
+    };
     req.onerror = () => {
       opening = null;
       reject(req.error);
@@ -58,4 +81,22 @@ export function getPref<T>(key: string): Promise<T | undefined> {
 
 export function setPref(key: string, value: unknown): Promise<void> {
   return run(PREFS, 'readwrite', (s) => s.put(value, key));
+}
+
+/** Imported samples, oldest first. */
+export async function listSamples(): Promise<StoredSample[]> {
+  const all = await run<StoredSample[]>(SAMPLES, 'readonly', (s) => s.getAll());
+  return all.sort((a, b) => a.addedAt - b.addedAt);
+}
+
+export function getSample(id: string): Promise<StoredSample | undefined> {
+  return run<StoredSample | undefined>(SAMPLES, 'readonly', (s) => s.get(id));
+}
+
+export function saveSample(sample: StoredSample): Promise<void> {
+  return run(SAMPLES, 'readwrite', (s) => s.put(sample));
+}
+
+export function deleteSample(id: string): Promise<void> {
+  return run(SAMPLES, 'readwrite', (s) => s.delete(id));
 }

@@ -51,7 +51,8 @@ export function hit(index: number, velocity: number, fromMidi = false): void {
   if (Math.floor(index / PADS_PER_BANK) === state.bank) showHit(padEls[index % PADS_PER_BANK], velocity);
   anyHit = true;
   const name = state.kit?.pads[index].name.toUpperCase() ?? '';
-  setLast(`${padTitle(index)} · VEL ${velocity}`, `${name} · VEL ${velocity}`);
+  if (engine.padMissing(index)) setLast(`${padTitle(index)} · SAMPLE MISSING`, `${name} · MISSING`);
+  else setLast(`${padTitle(index)} · VEL ${velocity}`, `${name} · VEL ${velocity}`);
   update({ selectedPad: index });
 }
 

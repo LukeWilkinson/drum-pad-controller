@@ -7,7 +7,9 @@
 // a delay send when the pad has them (src/mix/graph.ts).
 
 import { state } from '../state';
+import { getSample } from '../store/db';
 import { MixGraph } from '../mix/graph';
+import { USER_PREFIX } from './userSamples';
 import { GROUP_STRIP, type PadStrip } from '../mix/types';
 import {
   DEFAULT_PARAMS,
@@ -52,6 +54,8 @@ export class AudioEngine {
   private buffers = new Map<string, AudioBuffer>();
   /** Samples being fetched, so two kits asking for the same file share one download. */
   private loading = new Map<string, Promise<void>>();
+  /** Imported samples a kit asked for that aren't stored any more. */
+  private missing = new Set<string>();
   private kit: ActiveKit | null = null;
   /** Voices still ringing, per choke group, so they can be cut off. */
   private chokeVoices = new Map<string, Set<Voice>>();
@@ -270,8 +274,34 @@ export class AudioEngine {
     from.connect(g).connect(to);
   }
 
-  /** Drum samples are plain names in SAMPLE_DIR; a name with a folder ("instruments/grand/60") is under samples/. */
+  /** True when pad `index` uses an imported sample that is no longer stored (the pad is silent). */
+  padMissing(index: number): boolean {
+    const pad = this.kit?.pads[index];
+    return !!pad && this.missing.has(pad.hard);
+  }
+
+  /** Drops a sample from memory (an imported sample that was deleted). */
+  forget(name: string): void {
+    this.buffers.delete(name);
+    this.missing.delete(name);
+  }
+
+  /**
+   * Drum samples are plain names in SAMPLE_DIR; a name with a folder ("instruments/grand/60") is under samples/.
+   * Imported samples ("user:…") come from IndexedDB; one that is gone is noted, not thrown, so the rest of the kit still loads.
+   */
   private async fetchSample(name: string): Promise<void> {
+    if (name.startsWith(USER_PREFIX)) {
+      const stored = await getSample(name).catch((err: unknown) => (console.warn('[audio]', err), undefined));
+      if (!stored) {
+        console.warn(`[audio] imported sample ${name} is missing`);
+        this.missing.add(name);
+        return;
+      }
+      this.missing.delete(name);
+      this.buffers.set(name, await this.ctx.decodeAudioData(await stored.wav.arrayBuffer()));
+      return;
+    }
     const res = await fetch(`${name.includes('/') ? SAMPLES_ROOT : SAMPLE_DIR}${name}.${SAMPLE_EXT}`);
     if (!res.ok) throw new Error(`Sample ${name}: HTTP ${res.status}`);
     this.buffers.set(name, await this.ctx.decodeAudioData(await res.arrayBuffer()));
