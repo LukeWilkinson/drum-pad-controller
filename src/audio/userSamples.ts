@@ -6,7 +6,7 @@ import type { AudioEngine } from './engine';
 import { sampleNamesOf } from './kit';
 import { editSample } from './sampleEdit';
 import { encodeWav } from './wav';
-import { deleteSample, listSamples, saveSample, type StoredSample } from '../store/db';
+import { deleteSample, getSample, listSamples, saveSample, type StoredSample } from '../store/db';
 import { state, update } from '../state';
 
 export const USER_PREFIX = 'user:';
@@ -86,6 +86,36 @@ export async function importFile(file: File): Promise<UserSampleInfo> {
   const added = info(stored);
   update({ userSamples: [...state.userSamples, added] });
   return added;
+}
+
+/**
+ * Stores a sample that came inside a shared kit (already trimmed and normalised by the sender).
+ * Returns false when the WAV can't be decoded; a sample already stored is kept as it is.
+ */
+export async function addShared(id: string, name: string, wav: Uint8Array): Promise<boolean> {
+  if (state.userSamples.some((s) => s.id === id)) return true;
+  let decoded: AudioBuffer;
+  try {
+    decoded = await engine.ctx.decodeAudioData(wav.slice().buffer); // decoding detaches its input
+  } catch {
+    return false;
+  }
+  if (decoded.duration > MAX_SECONDS + 1) return false;
+  const stored: StoredSample = { id, name, wav: new Blob([wav.slice()], { type: 'audio/wav' }), seconds: decoded.duration, addedAt: Date.now() };
+  await saveSample(stored);
+  engine.forget(id); // a pad that found it missing earlier loads it next time
+  update({ userSamples: [...state.userSamples, info(stored)] });
+  return true;
+}
+
+/** The stored WAV bytes of imported samples, for a shared kit file. Ones that are gone are left out. */
+export async function wavsOf(ids: string[]): Promise<{ id: string; name: string; wav: Uint8Array }[]> {
+  const out: { id: string; name: string; wav: Uint8Array }[] = [];
+  for (const id of ids) {
+    const s = await getSample(id).catch(() => undefined);
+    if (s) out.push({ id, name: s.name, wav: new Uint8Array(await s.wav.arrayBuffer()) });
+  }
+  return out;
 }
 
 /** Saved kits (and the kit playing now) that use the sample; it can't be deleted while this is not empty. */

@@ -384,7 +384,8 @@ const SONG_KEY = 'song';
 const SAVE_DELAY = 500; // ms; a burst of edits (or a recorded take) becomes one write
 const SONG_FIELDS = ['patterns', 'pattern', 'bpm', 'click', 'quant', 'swing', 'countIn', 'noteRepeat'] as const satisfies readonly Change[];
 
-interface Song {
+/** The loops and their settings: what autosaves, and what a shared song file carries. */
+export interface Song {
   patterns: Pattern[];
   pattern: number;
   bpm: number;
@@ -410,34 +411,45 @@ function flushSave(): void {
   if (!saveTimer) return;
   clearTimeout(saveTimer);
   saveTimer = 0;
+  setPref(SONG_KEY, currentSong()).catch(warn); // IndexedDB copies the data straight away
+}
+
+/** The song as it is now (shares the live loops; IndexedDB and JSON.stringify copy them). */
+export function currentSong(): Song {
   const { patterns, pattern, bpm, click, quant, swing, countIn, noteRepeat } = state;
-  const song: Song = { patterns, pattern, bpm, click, quant, swing, countIn, noteRepeat };
-  setPref(SONG_KEY, song).catch(warn); // IndexedDB copies the data straight away
+  return { patterns, pattern, bpm, click, quant, swing, countIn, noteRepeat };
 }
 
 /** Restores the saved song, if any. Call once at boot, while stopped. Bad or missing fields keep their defaults. */
 export async function loadSong(): Promise<void> {
   try {
     const song = await getPref<Partial<Song>>(SONG_KEY).catch(warn);
-    if (!song || typeof song !== 'object') return;
-
-    const patch: Partial<typeof state> = {};
-    if (Array.isArray(song.patterns)) {
-      patch.patterns = Array.from({ length: PATTERN_COUNT }, (_, i) => cleanPattern(song.patterns![i]));
-      history.length = 0;
-    }
-    if (Number.isInteger(song.pattern) && song.pattern! >= 0 && song.pattern! < PATTERN_COUNT) patch.pattern = song.pattern;
-    if (QUANTS.includes(song.quant as Quant)) patch.quant = song.quant;
-    if (typeof song.swing === 'number') patch.swing = Math.min(SWING_MAX, Math.max(SWING_MIN, Math.round(song.swing)));
-    if (typeof song.countIn === 'boolean') patch.countIn = song.countIn;
-    // Nothing is held at boot, so Note Repeat can be set directly (repeat.ts imports this file).
-    if (typeof song.noteRepeat === 'boolean') patch.noteRepeat = song.noteRepeat;
-    if (Object.keys(patch).length) update(patch);
-    if (typeof song.bpm === 'number' && Number.isFinite(song.bpm)) clock.setBpm(song.bpm);
-    if (typeof song.click === 'boolean') clock.setClick(song.click);
+    if (song && typeof song === 'object') applySong(song);
   } finally {
     songLoaded = true;
   }
+}
+
+/**
+ * Replaces the song with `song` (a saved or shared one), checking every field: bad or missing
+ * fields keep their current value, bad hits and notes are dropped. Must be called while stopped.
+ * Undo history is cleared, since it belonged to the old loops.
+ */
+export function applySong(song: Partial<Song>): void {
+  const patch: Partial<typeof state> = {};
+  if (Array.isArray(song.patterns)) {
+    patch.patterns = Array.from({ length: PATTERN_COUNT }, (_, i) => cleanPattern(song.patterns![i]));
+    history.length = 0;
+  }
+  if (Number.isInteger(song.pattern) && song.pattern! >= 0 && song.pattern! < PATTERN_COUNT) patch.pattern = song.pattern;
+  if (QUANTS.includes(song.quant as Quant)) patch.quant = song.quant;
+  if (typeof song.swing === 'number') patch.swing = Math.min(SWING_MAX, Math.max(SWING_MIN, Math.round(song.swing)));
+  if (typeof song.countIn === 'boolean') patch.countIn = song.countIn;
+  // Nothing is held while stopped, so Note Repeat can be set directly (repeat.ts imports this file).
+  if (typeof song.noteRepeat === 'boolean') patch.noteRepeat = song.noteRepeat;
+  if (Object.keys(patch).length) update(patch);
+  if (typeof song.bpm === 'number' && Number.isFinite(song.bpm)) clock.setBpm(song.bpm);
+  if (typeof song.click === 'boolean') clock.setClick(song.click);
 }
 
 /** A saved loop, with anything out of range dropped. */

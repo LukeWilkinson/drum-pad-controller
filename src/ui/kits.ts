@@ -9,6 +9,7 @@ import { defaultSaveName, deleteKit, saveKit, selectKit, setParam, swapSample } 
 import { state, subscribe, update, type Change } from '../state';
 import { PARAM_LABEL, formatParam } from './format';
 import { escapeHtml, openDialog } from './dialog';
+import { openShareDialog } from './share';
 
 type Category = 'All' | (typeof CATEGORIES)[number] | 'My kits';
 const CHIPS: Category[] = ['All', ...CATEGORIES, 'My kits'];
@@ -36,6 +37,7 @@ export function buildKitsPanel(app: HTMLElement, engine: AudioEngine): void {
     <header class="kp-head">
       <h1>KITS</h1>
       <div class="kp-actions">
+        <button class="kp-btn kp-share">SHARE</button>
         <button class="kp-btn kp-load">LOAD PRESET</button>
         <button class="kp-btn primary kp-save">SAVE</button>
       </div>
@@ -188,6 +190,8 @@ export function buildKitsPanel(app: HTMLElement, engine: AudioEngine): void {
       await askSwap();
     } else if (t.classList.contains('kp-save')) {
       await askSave();
+    } else if (t.classList.contains('kp-share')) {
+      await openShareDialog();
     } else if (t.classList.contains('kp-load')) {
       category = 'My kits';
       renderChips();

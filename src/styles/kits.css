@@ -133,6 +133,13 @@
 .dlg-field input:focus { outline: none; border-color: var(--amber); }
 .dlg-btns { display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
 
+/* ---------- Share dialog (src/ui/share.ts) ---------- */
+
+.dlg p.sh-hint { font-size: 13px; color: var(--text-muted); }
+.sh-list { display: flex; flex-direction: column; gap: 6px; }
+.sh-list .kp-btn { width: 100%; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dlg p.sh-msg { margin: 8px 0 10px; min-height: 1.4em; font-size: 12px; color: var(--text-muted); }
+
 /* ---------- Swap sample list ---------- */
 
 .sw-list { max-height: min(60vh, 480px); overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; margin: 0 -4px 12px; }

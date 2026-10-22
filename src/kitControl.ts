@@ -98,6 +98,20 @@ export async function saveKit(name?: string): Promise<void> {
   setPref('lastKit', saved.id).catch(ignore);
 }
 
+/**
+ * Adds a kit from a shared file to the saved kits (not loaded). A name already used by a built-in
+ * or saved kit gets a number: "Boom Bap 2". Returns the new kit.
+ */
+export async function addKit(shared: Pick<UserKit, 'name' | 'baseKitId' | 'pads' | 'params'>): Promise<UserKit> {
+  const used = new Set([...KITS.map((k) => k.name), ...state.userKits.map((u) => u.name)]);
+  let name = shared.name;
+  for (let n = 2; used.has(name); n++) name = `${shared.name} ${n}`;
+  const kit: UserKit = { ...structuredClone(shared), id: `user-${Date.now().toString(36)}`, name, savedAt: Date.now() };
+  await saveUserKit(kit);
+  update({ userKits: await listUserKits() });
+  return kit;
+}
+
 /** Deletes a saved kit. If it is the one playing, it keeps playing as unsaved changes to its base kit. */
 export async function deleteKit(id: string): Promise<void> {
   await deleteUserKit(id);
