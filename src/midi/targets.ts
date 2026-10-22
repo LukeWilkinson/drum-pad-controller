@@ -7,6 +7,7 @@
 // presses a button when it rises past 64. The BPM readout has both: tap tempo, or BPM from a CC.
 
 import * as clock from '../audio/clock';
+import * as recorder from '../audio/recorder';
 import { BANK_NAMES, PADS_PER_BANK, PAD_COUNT, PARAM_RANGE, padLabel, type ParamKey } from '../audio/kit';
 import * as keys from '../keys/keys';
 import { PRESET_SLOTS } from '../keys/types';
@@ -46,6 +47,7 @@ const FIXED: Record<string, Target> = {
   'full-level': { label: 'FULL LEVEL', press: toggleFullLevel },
   swing: { label: 'SWING', set: (v) => seq.setSwing(between(SWING_MIN, SWING_MAX, v)) },
   master: { label: 'MASTER', set: (v) => mix.setLevel('master', v) },
+  'rec-out': { label: 'REC OUT', press: () => void recorder.toggleRecordOut().catch(console.warn) },
   'oct-down': { label: 'KEYS OCTAVE −', press: () => keys.nudgeOctave(-1) },
   'oct-up': { label: 'KEYS OCTAVE +', press: () => keys.nudgeOctave(1) },
   hold: { label: 'KEYS HOLD', press: keys.toggleHold },

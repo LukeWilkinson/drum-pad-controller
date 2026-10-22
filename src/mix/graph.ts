@@ -9,8 +9,9 @@
 //   strips dry ─→ master sum ←─ reverb return (MIX × on) ← convolver ← reverb in
 //                     │      ←─ delay return  (MIX × on) ← delay line (+ feedback) ← delay in
 //                     ├→ bypass gain ────┐
-//                     └→ filter → filter gain ─┴→ master fader (× mute) → meter → speakers
-//   metronome click ──────────────────────────→ master fader (skips strips and FX)
+//                     └→ filter → filter gain ─┴→ master fader (× mute) ─┬→ meter, speakers
+//                                                                        └→ recorder tap (src/audio/recorder.ts)
+//   metronome click ──→ click fader (follows MASTER) ──→ meter, speakers (skips strips, FX and the recorder)
 //
 // Sends are post-fader, so pulling a strip down or muting it also quietens its reverb and delay.
 // This file only builds and sets nodes; src/mix/mix.ts decides the values.
@@ -34,8 +35,10 @@ export class MixGraph {
   readonly pads: Record<PadStrip, PadStripNodes>;
   /** Where the KEYS instrument connects. */
   readonly keysIn: GainNode;
-  /** Where the metronome click connects: the master fader, after the strips and FX. */
+  /** Where the metronome click connects: its own fader that follows MASTER, so it is heard but never recorded. */
   readonly clickIn: AudioNode;
+  /** Everything after the MASTER fader except the click: what WAV export records. */
+  readonly recordTap: AudioNode;
   /** Plays straight into the master sum (sample previews in the Kits panel). */
   readonly previewIn: AudioNode;
 
@@ -47,6 +50,7 @@ export class MixGraph {
   private filter: BiquadFilterNode;
   private filterGain: GainNode;
   private master: GainNode;
+  private clickFader: GainNode;
   private meters = new Map<StripId, AnalyserNode>();
   /** About 43 ms at 48 kHz: longer than a screen frame, so a meter read each frame misses no peak. */
   private meterData = new Float32Array(2048);
@@ -75,7 +79,11 @@ export class MixGraph {
     const masterMeter = this.meter('master');
     this.master.connect(masterMeter);
     this.master.connect(ctx.destination);
-    this.clickIn = this.master;
+    this.recordTap = this.master;
+    this.clickFader = gain();
+    this.clickFader.connect(masterMeter);
+    this.clickFader.connect(ctx.destination);
+    this.clickIn = this.clickFader;
 
     this.sum = gain();
     this.previewIn = this.sum;
@@ -125,7 +133,10 @@ export class MixGraph {
   /** A strip's fader and mute. */
   setStrip(id: StripId, level: number, mute: boolean): void {
     const g = mute ? 0 : faderGain(level);
-    if (id === 'master') this.ramp(this.master.gain, g);
+    if (id === 'master') {
+      this.ramp(this.master.gain, g);
+      this.ramp(this.clickFader.gain, g);
+    }
     else if (id === 'keys') this.ramp(this.keysFader.gain, g);
     else for (const node of Object.values(this.pads[id])) this.ramp(node.gain, g);
   }

@@ -5,6 +5,7 @@
 import type { ActiveKit, UserKit } from './audio/kit';
 import { loadLatency, type LatencyState } from './audio/latencyTypes';
 import type { UserSampleInfo } from './audio/userSamples';
+import type { RecorderState } from './audio/recorder';
 import { loadTheme, type ThemeState } from './ui/themeTypes';
 import { DEFAULT_KEYS, type KeysState } from './keys/types';
 import { DEFAULT_CHANNEL, DEFAULT_KEYS_CHANNEL, type LearnState, type MidiState } from './midi/types';
@@ -62,6 +63,8 @@ export interface AppState {
   latency: LatencyState;
   /** Theme, pad colours and vibrate (changed only by src/ui/theme.ts). */
   theme: ThemeState;
+  /** WAV export: RECORD OUT or a BOUNCE running (changed only by src/audio/recorder.ts). */
+  recorder: RecorderState;
 }
 
 /** 'count' = count-in bar before recording starts. */
@@ -108,6 +111,7 @@ export const state: AppState = {
   mix: defaultMix(),
   latency: loadLatency(),
   theme: loadTheme(),
+  recorder: { mode: 'off', since: 0, label: '' },
 };
 
 const listeners = new Set<Listener>();

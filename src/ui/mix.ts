@@ -53,6 +53,7 @@ export function buildMixPanel(app: HTMLElement, engine: AudioEngine): void {
     <header class="mx-head">
       <h1>MIX / FX</h1>
       <span class="mx-out" aria-label="Output level">OUT ${MINUS}∞ dB</span>
+      <button class="mx-rec" data-learn="rec-out" aria-pressed="false" aria-label="Record the output to a WAV file"><span class="rec-dot" aria-hidden="true"></span>REC OUT</button>
     </header>
     <section class="mx-well" aria-label="Mixer">
       ${STRIPS.map(

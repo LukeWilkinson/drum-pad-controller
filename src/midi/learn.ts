@@ -13,7 +13,7 @@ import { idOf, messageLabel, targetLabel } from './targets';
 import type { LearnState, Mapping } from './types';
 
 /** Taps here pass through while learning. */
-const PASS = '.tabs, .learn-bar, .setup-panel, .status, dialog';
+const PASS = '.tabs, .learn-bar, .rec-bar, .setup-panel, .status, dialog';
 /** Events a control could act on (range inputs move on mousedown/touchstart). pointerdown arms; the rest are only stopped. */
 const STOPPED = ['pointerdown', 'pointerup', 'mousedown', 'touchstart', 'click', 'dblclick'] as const;
 

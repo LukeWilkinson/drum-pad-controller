@@ -396,6 +396,33 @@ svg { display: block; }
   font-family: var(--font-mono); font-size: 12px; font-weight: 600;
 }
 .learn-bar[hidden] { display: none; }
+
+/* ---------- Recording status bar (src/ui/record.ts) ---------- */
+
+/* Same place as the learn bar; above it when both show. The app makes room for whichever are up. */
+.app[data-rec-on] { --learn-h: calc(60px + env(safe-area-inset-bottom)); }
+.app[data-rec-on][data-learn-on] { --learn-h: calc(120px + env(safe-area-inset-bottom)); }
+.rec-bar {
+  position: fixed; z-index: 21; left: 50%; transform: translateX(-50%);
+  bottom: calc(6px + env(safe-area-inset-bottom));
+  width: min(520px, calc(100% - 32px));
+  display: flex; align-items: center; gap: 10px;
+  padding: 4px 4px 4px 14px; border-radius: 10px;
+  background: var(--drawer); color: var(--text-strong); border: 2px solid var(--rec);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .45);
+  font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+}
+.app[data-learn-on] .rec-bar { bottom: calc(66px + env(safe-area-inset-bottom)); }
+.rec-bar[hidden] { display: none; }
+.rec-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rec-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--rec); flex: none; }
+.rec-bar .rec-dot { animation: rec-blink 1s steps(2, start) infinite; }
+@keyframes rec-blink { to { visibility: hidden; } }
+.rec-stop {
+  flex: none; height: 44px; padding: 0 16px; border-radius: 8px;
+  background: var(--rec); color: var(--text-strong); font: 700 13px var(--font-ui); letter-spacing: .08em;
+}
+.dlg p.rec-file { font-family: var(--font-mono); font-size: 12px; word-break: break-all; }
 .learn-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .learn-done {
   flex: none; height: 44px; padding: 0 16px; border-radius: 8px;

@@ -63,6 +63,10 @@ let loopNotes: { until: number; cancel: () => void }[] = [];
 /** Context time the transport starts at after a count-in. */
 let countEndsAt = 0;
 let countTimer = 0;
+/** Context time from which loop hits aren't scheduled (playUntil); Infinity normally. */
+let until = Infinity;
+/** The next pass's downbeat can come out a hair before the end (float rounding); 0.1 ms keeps it out. */
+const UNTIL_SLACK = 1e-4;
 
 export function initSequencer(e: AudioEngine): void {
   engine = e;
@@ -72,6 +76,7 @@ export function initSequencer(e: AudioEngine): void {
     // Stopped: recording ends, a queued loop takes over, and the next start begins at bar 1.
     clearTimeout(countTimer);
     startStep = 0;
+    until = Infinity;
     for (const n of loopNotes) n.cancel(); // loop notes still sounding end now
     loopNotes = [];
     const patch: Partial<typeof state> = {};
@@ -104,7 +109,16 @@ function current(): Pattern {
 
 // ---------- Playback ----------
 
+/**
+ * A bounce (src/audio/recorder.ts) ends on an exact context time: loop hits and notes from then on
+ * aren't scheduled. Cleared when the transport stops.
+ */
+export function playUntil(time: number): void {
+  until = time - UNTIL_SLACK;
+}
+
 function scheduleStep(time: number, step: number): void {
+  if (time >= until) return;
   if (step % STEPS_PER_BAR === 0 && state.queued !== null) {
     startStep = step;
     update({ pattern: state.queued, queued: null });
@@ -120,7 +134,8 @@ function scheduleStep(time: number, step: number): void {
     if (ev.tick >= to) break;
     const playedAt = fresh.get(ev);
     if (playedAt !== undefined && absTick - playedAt < len / 2) continue;
-    engine.playAt(ev.pad, ev.vel, time + (ev.tick - from + swingTicks(ev.tick, state.swing)) * spt);
+    const when = time + (ev.tick - from + swingTicks(ev.tick, state.swing)) * spt;
+    if (when < until) engine.playAt(ev.pad, ev.vel, when);
   }
   if (!instrument) return;
   const now = engine.ctx.currentTime;
@@ -132,6 +147,7 @@ function scheduleStep(time: number, step: number): void {
     const playedAt = fresh.get(n);
     if (playedAt !== undefined && absTick - playedAt < len / 2) continue;
     const when = time + (n.tick - from + swingTicks(n.tick, state.swing)) * spt;
+    if (when >= until) continue;
     const length = Math.min(n.len, len) * spt;
     loopNotes.push({ until: when + length, cancel: instrument.playAt(n.note, n.vel, when, length) });
   }

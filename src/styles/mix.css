@@ -39,7 +39,14 @@
 
 .mx-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex: none; }
 .mx-head h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: .04em; color: var(--text-strong); }
-.mx-out { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); }
+.mx-out { font-family: var(--font-mono); font-size: 12px; color: var(--text-muted); margin-left: auto; }
+.mx-rec {
+  flex: none; height: 44px; padding: 0 12px; border-radius: 6px;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--raised); color: var(--text); box-shadow: var(--key-shadow);
+  font-size: 12px; font-weight: 700; letter-spacing: .06em;
+}
+.mx-rec[aria-pressed="true"] { background: var(--rec); color: var(--text-strong); }
 
 /* ---------- Mixer well ---------- */
 
