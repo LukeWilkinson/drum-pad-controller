@@ -1,4 +1,4 @@
-/* SETUP panel (Settings.dc.html): the MIDI and Scale snap cards. Loaded after app.css, kits.css and seq.css.
+/* SETUP panel (Settings.dc.html): the MIDI, latency, AUTO-TUNE and theme cards. Loaded after app.css, kits.css and seq.css.
    .app[data-view="setup"] hides the pad grid and shows the panel, placed like the Kits panel:
    - phone portrait: the panel takes everything above the tab bar (controls hidden)
    - phone landscape and tablet: the panel takes the pad grid's place; the rails stay */
@@ -101,6 +101,28 @@
 .su-pair label { display: flex; flex-direction: column; gap: 4px; font-size: 11px; font-weight: 700; letter-spacing: .08em; color: var(--text-muted); }
 .su-pair select { width: 100%; max-width: none; }
 
+/* Vocal pitch correction card: mic status row (icon, text, input meter, heard → target note). */
+.su-vbody { display: flex; flex-direction: column; gap: 10px; }
+.su-vbody.off { opacity: .45; }
+.su-mic {
+  display: flex; align-items: center; gap: 10px; min-height: 36px; padding: 0 10px;
+  background: var(--body); border-radius: 8px; font-size: 12px; color: var(--text-muted);
+}
+.su-mic svg { flex: none; }
+.su-mic[data-mic="on"] { color: var(--text); }
+.su-mic[data-mic="on"] svg { color: var(--play); }
+.su-mic[data-mic="denied"] svg, .su-mic[data-mic="nomic"] svg, .su-mic[data-mic="error"] svg { color: var(--rec); }
+.su-mic-text { flex: none; }
+.su-mic-meter { flex: 1; min-width: 40px; height: 6px; border-radius: 3px; background: var(--raised); overflow: hidden; display: flex; }
+.su-mic-meter span { width: 0; background: linear-gradient(90deg, var(--play) 70%, var(--hat)); }
+.su-mic-note { flex: none; min-width: 60px; text-align: right; font-family: var(--font-mono); font-size: 12px; color: var(--text-strong); }
+.su-match {
+  height: 44px; border-radius: 6px; border: 1.5px dashed var(--switch-off); background: none;
+  color: var(--text); font-size: 12px; font-weight: 700; letter-spacing: .06em;
+}
+.su-v-out { font-family: var(--font-mono); font-size: 13px; color: var(--text-strong); }
+.su-ends { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); }
+
 /* Tablet header chip: a green dot when an output device is connected. */
 .midi-chip[data-on="true"] .midi-dot { background: var(--play); }
 
@@ -120,7 +142,7 @@
 .su-link { align-self: flex-start; min-height: 44px; padding: 0; background: none; color: var(--text-muted); font-size: 13px; text-decoration: underline; }
 .su-slider { display: flex; flex-direction: column; gap: 0; }
 .su-off-val { font-family: var(--font-mono); font-size: 13px; color: var(--text-strong); }
-.su-off { width: 100%; height: 44px; margin: 0; accent-color: var(--amber); cursor: pointer; }
+.su-off, .su-range { width: 100%; height: 44px; margin: 0; accent-color: var(--amber); cursor: pointer; }
 .su-reload .su-learn { width: 120px; height: 44px; }
 
 /* Theme card: a row of choice buttons (one pressed) */

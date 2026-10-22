@@ -11,6 +11,7 @@ import { DEFAULT_KEYS, type KeysState } from './keys/types';
 import { DEFAULT_CHANNEL, DEFAULT_KEYS_CHANNEL, type LearnState, type MidiState } from './midi/types';
 import { defaultMix, type MixState } from './mix/types';
 import { PATTERN_COUNT, emptyPattern, type Pattern, type Quant } from './seq/pattern';
+import { DEFAULT_VOCAL, type VocalState } from './vocal/types';
 
 export type View = 'pads' | 'kits' | 'seq' | 'keys' | 'mix' | 'setup';
 
@@ -65,6 +66,8 @@ export interface AppState {
   theme: ThemeState;
   /** WAV export: RECORD OUT or a BOUNCE running (changed only by src/audio/recorder.ts). */
   recorder: RecorderState;
+  /** Vocal pitch correction from the mic (changed only by src/vocal/vocal.ts). */
+  vocal: VocalState;
 }
 
 /** 'count' = count-in bar before recording starts. */
@@ -112,6 +115,7 @@ export const state: AppState = {
   latency: loadLatency(),
   theme: loadTheme(),
   recorder: { mode: 'off', since: 0, label: '' },
+  vocal: { ...DEFAULT_VOCAL },
 };
 
 const listeners = new Set<Listener>();

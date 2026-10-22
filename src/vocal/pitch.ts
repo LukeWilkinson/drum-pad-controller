@@ -21,13 +21,20 @@ export function midiToHz(midi: number): number {
   return 440 * 2 ** ((midi - 69) / 12);
 }
 
+/** The KEYS scales plus Chromatic (every semitone), which only the vocal tuner offers. */
+export type VocalScale = ScaleId | 'chromatic';
+
+function inVocalScale(note: number, key: number, scale: VocalScale): boolean {
+  return scale === 'chromatic' || inScale(note, key, scale);
+}
+
 /** The scale note nearest to a fractional pitch; exactly halfway goes down, as `snap()` does. */
-export function nearestInScale(midi: number, key: number, scale: ScaleId): number {
+export function nearestInScale(midi: number, key: number, scale: VocalScale): number {
   const lo = Math.floor(midi);
   let best = lo;
   let bestDist = Infinity;
   for (let n = lo - 6; n <= lo + 7; n++) {
-    if (!inScale(n, key, scale)) continue;
+    if (!inVocalScale(n, key, scale)) continue;
     const d = Math.abs(n - midi);
     if (d < bestDist) {
       best = n; // ascending with a strict <, so a tie keeps the lower note
@@ -188,14 +195,15 @@ export class Yin {
 export interface TuneSettings {
   /** Pitch class 0–11 (C = 0). */
   key: number;
-  scale: ScaleId;
+  scale: VocalScale;
   /** 0–1: how much of the way to the scale note the voice is pulled. */
   strength: number;
   /** Milliseconds the correction takes to settle (one-pole time constant). 0 = hard. */
   speed: number;
 }
 
-export const DEFAULT_TUNE: TuneSettings = { key: 0, scale: 'major', strength: 1, speed: 20 };
+/** As drawn in Settings.dc.html: strength 80 %, speed 25 ms. */
+export const DEFAULT_TUNE: TuneSettings = { key: 0, scale: 'major', strength: 0.8, speed: 25 };
 /** Fastest and slowest SPEED (ms). */
 export const SPEED_MAX = 200;
 
@@ -226,7 +234,7 @@ export class Corrector {
     if (
       prev !== null &&
       prev !== target &&
-      inScale(prev, s.key, s.scale) &&
+      inVocalScale(prev, s.key, s.scale) &&
       Math.abs(midi - prev) < Math.abs(midi - target) + HYSTERESIS
     ) {
       target = prev;

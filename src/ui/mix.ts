@@ -1,4 +1,4 @@
-// MIX / FX panel (Fx.dc.html): six mixer strips (fader, level meter, dB readout, mute) and the REVERB, DELAY
+// MIX / FX panel (Fx.dc.html): seven mixer strips (fader, level meter, dB readout, mute) and the REVERB, DELAY
 // and FILTER cards (on/off switch and three knobs each). Built once; render() follows the store, and the
 // meters redraw every frame while the tab is showing. All changes go through src/mix/mix.ts.
 
@@ -25,6 +25,7 @@ const STRIP_COLOUR: Record<StripId, string> = {
   hats: 'var(--hat)',
   perc: 'var(--perc)',
   keys: 'var(--cym)',
+  vox: 'var(--fx)',
   master: 'var(--amber)',
 };
 
@@ -39,8 +40,8 @@ function fmtDb(db: number): string {
 
 /** Shown on a send-fed card while nothing is sending to it (every send starts at 0). */
 const HINT: Partial<Record<FxId, string>> = {
-  reverb: "Nothing sends here yet. Turn up a pad's REVERB SEND (KITS tab) or the KEYS reverb knob.",
-  delay: "Nothing sends here yet. Turn up a pad's DELAY SEND (KITS tab) or the KEYS delay knob.",
+  reverb: "Nothing sends here yet. Turn up a pad's REVERB SEND (KITS tab), the KEYS reverb knob or the VOX reverb send (SETUP).",
+  delay: "Nothing sends here yet. Turn up a pad's DELAY SEND (KITS tab), the KEYS delay knob or the VOX delay send (SETUP).",
 };
 
 // ---------- Panel ----------
@@ -210,10 +211,10 @@ export function buildMixPanel(app: HTMLElement, engine: AudioEngine): void {
     }
   }
 
-  /** True when no pad of the kit and not the KEYS bus sends to this effect. */
+  /** True when no pad of the kit and neither the KEYS nor the VOX bus sends to this effect. */
   function nothingSends(fx: FxId): boolean {
     const key = fx === 'reverb' ? 'reverbSend' : 'delaySend';
-    if (state.keys[key] > 0) return false;
+    if (state.keys[key] > 0 || state.vocal[key] > 0) return false;
     const params = state.kit?.params;
     if (!params) return true;
     for (let i = 0; i < params.length; i++) if (params[i][key] > 0) return false;
@@ -226,7 +227,7 @@ export function buildMixPanel(app: HTMLElement, engine: AudioEngine): void {
 
   subscribe((_s, changed) => {
     if (changed.has('mix')) renderMix();
-    if (changed.has('kit') || changed.has('params') || changed.has('keys')) renderHints();
+    if (changed.has('kit') || changed.has('params') || changed.has('keys') || changed.has('vocal')) renderHints();
   });
   renderMix();
   renderHints();

@@ -200,6 +200,8 @@ steadyCase('G2 +40 c (98 Hz), hard', SR, midiHz(43) * 2 ** (40 / 1200), midiHz(4
 steadyCase('E5 +30 c (659 Hz), hard', SR, midiHz(76) * 2 ** (30 / 1200), midiHz(76), hard);
 steadyCase('A3 +50 c, 44.1 kHz', 44100, A3 * 2 ** (50 / 1200), A3, hard);
 steadyCase('D4 +45 c, A minor', SR, midiHz(62) * 2 ** (45 / 1200), midiHz(62), { ...hard, key: 9, scale: 'minor' });
+// Chromatic pulls to the nearest semitone, even one outside C major (A#3).
+steadyCase('A#3 +35 c, chromatic', SR, midiHz(58) * 2 ** (35 / 1200), midiHz(58), { ...hard, scale: 'chromatic' });
 // A wide shift: B3 −40 c in A minor pentatonic goes up 1.4 semitones to C4 (A3 is 1.6 below).
 steadyCase('B3 -40 c → C4, pent minor', SR, midiHz(59) * 2 ** (-40 / 1200), midiHz(60), { ...hard, key: 9, scale: 'pentMinor' });
 // A real voice's period wobbles about 0.5 % cycle to cycle; hard tune should not add to it.

@@ -11,6 +11,7 @@ import * as clock from './audio/clock';
 import * as latency from './audio/latency';
 import * as userSamples from './audio/userSamples';
 import * as recorder from './audio/recorder';
+import * as vocal from './vocal/vocal';
 import { initRecordUi } from './ui/record';
 import * as seq from './seq/sequencer';
 import * as repeat from './seq/repeat';
@@ -64,6 +65,7 @@ buildSeqPanel(ui.app, engine);
 buildSetupPanel(ui.app, ui);
 buildMixPanel(ui.app, engine);
 recorder.initRecorder(engine);
+vocal.initVocal(engine); // the saved vocal settings; the mic stays off until its switch
 initRecordUi(ui.app); // after the MIX panel: it wires that panel's REC OUT button
 const keysBoard = buildKeysPanel(ui.app, { onBend: notes.bend });
 const instrument = keys.initKeys(engine); // after initClock: Tone runs on the engine's context
@@ -165,4 +167,4 @@ bootKits(engine, (done, total) => hits.setLast(`LOADING KIT ${done}/${total}`, `
 registerSW({ immediate: true });
 
 // Dev-only handle for checking the engine and store from the browser console.
-if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, latency, seq, repeat, midi, learn, state, KITS, factoryKit, keys, notes, arp, instrument, mix, userSamples, recorder, ...kitControl } });
+if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, latency, seq, repeat, midi, learn, state, KITS, factoryKit, keys, notes, arp, instrument, mix, userSamples, recorder, vocal, ...kitControl } });

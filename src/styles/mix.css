@@ -52,12 +52,12 @@
 
 .mx-well {
   flex: none; background: var(--well); border-radius: 12px; padding: 10px 6px;
-  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px;
+  display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 3px;
 }
 .mx-strip { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
 .mx-name { font-size: 11px; font-weight: 700; letter-spacing: .04em; color: var(--text); }
 .mx-strip.master .mx-name { color: var(--amber); }
-.mx-fm { display: flex; gap: 5px; height: var(--fader-h); }
+.mx-fm { display: flex; gap: 3px; height: var(--fader-h); }
 
 /* The fader's touch area is 36px wide; the cap is 26px. --lv is the position 0–1 (set by mix.ts). */
 .mx-fader {
