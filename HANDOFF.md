@@ -35,7 +35,7 @@ Milestone 1 (Pads) and Milestone 2 (Kits and presets) passed Luke's phone test (
 - The pad picker cells on the Kits panel are 40px, slightly under the 44px touch-target rule, so they fit beside the sliders on a 390px-wide phone, as in the design. Hitting a real pad also selects it.
 - On phone portrait, long kit names are cut short in the LCD (e.g. "KIT 01 · STUDIO ACOUSTI…").
 - Shaker, Rim, Clap and Vox FX in Studio Acoustic still use the closest Sonic Pi sample (there is no real clap or vocal). They can be changed with SWAP SAMPLE.
-- Styled but not working yet (`data-todo`; `grep -r data-todo src` lists them): KEYS/MIX/SETUP tabs, and the FX send knobs (M6).
+- Styled but not working yet (`data-todo`; `grep -r data-todo src` lists them): only the KEYS MOD strip (the MIX tab and the send knobs are live since M6 step 3).
 - The desktop artboard extras (step strip, shortcut legend) are not built.
 
 ## M3 (Sequencer and looping): built on `feat/m3-sequencer`, phone test passed (2026-10-17)
@@ -344,9 +344,93 @@ The pinned CC0 VCSL commit (`sgossner/VCSL` c1ea7bc) has `Idiophones/Plucked Idi
 6. **MIDI Learn targets** (Sonnet, medium): all new controls in `src/midi/targets.ts` with `data-learn`.
 7. **Docs and Luke's phone checklist** (Haiku or Sonnet, low): README, DESIGN, CREDITS, HANDOFF checklist.
 
+### Step 1, Kalimba: done (2026-10-21)
+- **Pitch:** every Tanzania file plays one octave above its name (like the VCSL piano), and keys are up to ±60 cents off equal temperament. `instruments.json` stores the real note and a measured `cents` per sample; `fetch-instruments` retunes each file by resampling (`aresample=48000,asetrate=…`). Measured after conversion: all 41 files within 3 cents. Duplicate keys k4 (D#4) and k21 (F4) left out → 25 samples, G2–C#7.
+- **Level:** raw kalimba is ~15 dB louder than the harp; `gain: -5` (harp 9, grand 4) is Claude's estimate from RMS, so it needs Luke's ear check.
+- **Pads:** `instruments.json` kalimba `pads` (16 notes) → `fetch-instruments` renders `pad_<note>.flac` from the nearest key (≤ 1 semitone; on a tie the lower key). Kit `kalimba` ("Kalimba", category Acoustic, Luke's pick 2026-10-21) in `kits.json`, group `perc`. `fetch-samples` now skips names with a folder.
+- **KEYS:** `PRESETS.sampled` has 5 entries; `PRESET_SLOTS` (types.ts) sizes the buttons; SYNTH hides the 5th. Phones portrait and tablet: Kalimba is a full-width button under the 2 × 2 grid (Luke's pick: "extra slot"; the keyboard gets shorter only while SAMPLED is shown). Phone landscape: one row of 5 (70 × 44 px, longer names cut with "…"). MIDI Learn `preset:4` = KEYS PRESET 5.
+- **Size:** 2.11 MB for the kalimba; precache 244 entries, 15.1 MB.
+- **Checked by script in the browser pane:** kit loads all 16 pad buffers, pad names C3 (pad 1) … C6 (pad 16), bank B still shared; preset 5 loads 25 samples; notes pick the nearest key and the right playback rate; SYNTH hides slot 5; reload keeps the kit and preset; learn target `preset:4`; Kalimba under the Acoustic chip; layout at 390×844, 844×390, 1280×800 with no page scroll; no console errors. `tsc` and `npm run build` pass.
+- **Not checked (Luke's ear, on the phone):** tuning and tone of the KEYS preset and the pads, level against the other presets and the drums.
+
+### Step 2, audio graph: done (2026-10-21)
+- **Luke's pick (2026-10-21):** every send starts at 0% (kits sound as before until a pad's send is turned up). Step 3's cards should say so.
+- **Files:** `src/mix/types.ts` (strips, `GROUP_STRIP`, FX lists and ranges, fader law, `DEFAULT_MIX`; imports only a type), `src/mix/graph.ts` (`MixGraph`: the nodes; diagram at the top), `src/mix/impulse.ts` (generated reverb impulse), `src/mix/mix.ts` (only code that changes `state.mix`; `mix` pref, 500 ms after the last change and at once when hidden). `engine.mix` is the graph; `engine.setMasterVolume()` and `kitControl.saveMasterVolume()` are gone.
+- **Claude's choices (Luke can override):**
+  - Fader = position 0–1 with a square law: gain = 2 × pos², so 0 = silent, 0.5 = −6 dB, 0.71 = 0 dB, 1 = +6 dB. Strips default to 0 dB; MASTER to the old default 0.82 (pos 0.64). The rail's master slider and MIDI `master` now move the MASTER fader position. The old `master` pref is read once when there is no `mix` pref.
+  - Sends are post-fader: a strip's fader and mute also scale its reverb and delay sends. Per-voice send gains are made only when the pad's send is above 0.
+  - Reverb and delay returns go into the master sum, so the master filter also filters them. The metronome click goes straight into the master fader: no strips, no FX, but MASTER and its mute apply.
+  - Reverb: SIZE ROOM / PLATE / HALL (pre-delay, early echoes, darkness), DECAY 0.3–6 s, MIX = return level; impulse rebuilt 120 ms after a knob rests. Off disconnects the convolver input (saves CPU) and fades the return.
+  - Delay: TIME from 11 tempo-synced values (1/32 … 1/2, dotted and triplet), follows the BPM; FDBK 0–90 % through a 5 kHz low-pass; MIX = return level. Off also stops the repeats.
+  - Filter: LOW-P / BAND-P / HIGH-P, CUTOFF 40 Hz–18 kHz, RES as a Q factor 0.5–12 (0.71 = flat); on/off is a crossfade with a bypass.
+  - Defaults as drawn in Fx.dc.html: reverb on (HALL, 1.8 s, 25 %), delay on (1/8 D, 35 %, 18 %), filter off (LOW-P, 8.2 kHz, 0.71).
+  - Meters: `engine.mix.levels()` gives each strip's post-fader peak in dB over the last ~43 ms (for step 3's rAF).
+  - `PadParams` has `reverbSend` / `delaySend` (0–1, `PARAM_LABEL` "REVERB SEND" / "DELAY SEND", shown as %); saved kits without them load at 0. KEYS sends are `state.keys.reverbSend` / `delaySend` (`keys.setSend()`, `keys` pref).
+- **Checked by script in the browser pane:** offline renders of `MixGraph` (OfflineAudioContext): dry peak 0.82 at defaults, mute silent, fader 0.5 = −6.04 dB, click skips the filter and follows MASTER, reverb tail decays and is silent when off or when its strip is muted, delay echoes 0.375 s apart at 1/8 D 120 BPM with feedback exactly 0.35 and first echo exactly 0.82 × 0.18, KEYS delay send, filter LP 500 Hz −16.8 dB / HP 5 kHz −1.1 dB on white noise. In the app: pads route by group (cym → HATS, tom → PERC), sends connect only when set, previews skip the strips, old saved kits get sends 0, live meters (kick −0.7 dB on KICKS, muted −inf 3/3; KEYS note on KEYS and MASTER), `mix` and `keys` prefs round trip, clamping, bad values keep the current setting, damaged `mix` pref, old `master` pref migration, MIDI `master` target, BPM change retimes the delay. `tsc` and `npm run build` pass. One first muted-kick reading showed −10.6 dB but did not come back in 3 reruns.
+- **Not checked:** no UI yet (step 3), so no layout change to check. How the reverb, delay and filter sound is Luke's ear check (step 3 adds the controls).
+- The browser pane's prefs were put back to the defaults after testing.
+
+### Step 3, MIX / FX tab: done (2026-10-21)
+- **Files:** `src/ui/mix.ts` + `src/styles/mix.css` (the panel; `main.ts` builds it; `View` and `views.ts` have `'mix'`), `src/ui/knob.ts` (new shared knob: `knobSvg()`, `setKnobArc()`, `bindKnob()` with drag, arrow keys and double-tap on a 0–1 value; the rail, the FX cards and the KEYS sends all use it; `rail.ts` was moved onto it), `tokens.css` gets `--knob` and `--fader-cap`. Knob colours are CSS classes now (`.k-track`, `.k-arc`, `.k-cap`), so they follow the tokens.
+- **Panel (as Fx.dc.html):** header "MIX / FX" + `OUT −x.x dB` (master peak, held 1.5 s, "−∞" when silent). Six strips: fader (cap drag or touch the track to jump; snaps to 0 dB within 2 % of travel; double-tap resets; arrow keys step 2 %, Shift 10 %), meter, dB readout, M button (red while muted). REVERB / DELAY / FILTER cards: switch (44 px touch area, 28 px drawn) and three knobs; the knobs dim while the card is off but still turn.
+- **Claude's choices (Luke can override):**
+  - Knob scales: DECAY, CUTOFF and RES are logarithmic; FDBK and MIX linear; SIZE, TIME and TYPE are lists (each step is 200 px / (n − 1) of drag; 11 delay times = 20 px each).
+  - Meter scale −54 dB (bottom) to +6 dB (top, the fader's top), peak with a 40 dB/s fall; rAF runs only while the MIX tab is showing and the page is visible.
+  - The REVERB and DELAY cards show a one-line hint ("Nothing sends here yet. Turn up a pad's REVERB SEND (KITS tab) or the KEYS reverb knob.") only while no pad of the kit and not the KEYS bus sends to that effect. It hides itself as soon as any send is above 0.
+  - Fader heights: 160 px (120 px on phone landscape, where the panel scrolls). On phone landscape the panel is 366 px tall and scrolls (content 712 px); portrait phone and tablet fit without scrolling.
+  - KEYS sends: a SENDS row with two small knobs (REVERB, DELAY) between the OCTAVE row and the PITCH / MOD strips. Costs 56 px of keyboard height: portrait 338 → 282 px, phone landscape about 160 → 106 px (the keyboard's minimum is 100).
+- **Live send knobs:** tablet rail REVERB SEND / DELAY SEND (`data-key`, so they are also learn targets `param:reverbSend` / `param:delaySend` already), and Kits panel sliders for both (6 sliders now; the panel scrolls as before).
+- **Checked by script in the browser pane (`dev-http`):** fader touch on the track, cap drag (+20 px = +0.14), 0 dB snap, double-tap reset, arrow keys, level 0 = "−∞", mute on / off, FILTER switch, knob drags (REVERB MIX 25 → 50 %, DELAY TIME 1/8 D → 1/4), double-tap resets, Shift+ArrowUp on CUTOFF clamps at 18.0 kHz, live meters (kick: KICKS 90 % → decaying, MASTER follows, OUT readout), reverb and delay tails audible on the master meter with a pad's sends up, KEYS send knob (drag → 30 %, state, double-tap → 0), hints hide when a send is above 0 (pad slider, rail knob, KEYS knob), rail knobs and Kits sliders agree both ways, layout at 390×844 (MIX panel 746 px, no scroll), 844×390 (MIX scrolls 366 / 712; KEYS board 106 px) and 1280×800 (KEYS and MIX fit; Kits scrolls as before). `tsc` and `npm run build` pass (precache unchanged, 244 entries, 15.1 MB).
+- **Not checked:** touch dragging on a real phone (faders and knobs use pointer capture and `touch-action: none`; tested with synthetic pointer events only), how the effects sound, MIX at other tablet sizes, MIDI Learn on the new controls (step 6). Two stale `SyntaxError` lines (`saveMasterVolume`, `initTargets`) sit in the browser pane's console log from before the reload; the app boots and runs without errors now.
+
+### Step 6, MIDI Learn targets: done (2026-10-21)
+- **New targets** (`src/midi/targets.ts`): `level:<kicks|snare|hats|perc|keys>` (faders; MASTER stays `master`), `mute:<strip>` (6), `fx:<reverb|delay|filter>` (card switches, press), `fxk:<fx>:<0-2>` (9 FX knobs) and `keys-send:<reverb|delay>`. A CC sets faders and knobs (list knobs round to the nearest entry, log knobs stay log); a note or a CC rising past 64 presses mutes and switches.
+- **Per-pad sends** were already learnable (`param:reverbSend` / `param:delaySend` on the rail and Kits sliders). Theme, vibrate and latency are in SETUP, which learn mode lets through, so they are not targets (Claude's choice).
+- **Files:** `src/mix/knobs.ts` (new, pure: scales and the 9 knob definitions, moved out of `ui/mix.ts` so MIDI and the cards share them); `data-learn` on the faders, mutes, switches and knobs in `src/ui/mix.ts` and on the KEYS send knobs in `src/ui/keys.ts`.
+- **Checked by script (`?fakemidi`, dev-http):** all 27 controls arm by tap and learn (labels as "CC 21 → KICKS LEVEL"); CC 127 / 0 moves kicks and keys faders to 1 / 0, MASTER at 64 = 0.50, mute and FX switch toggle on a CC rising past 64, all 9 knobs land on the right values (reverb SIZE 2, DECAY 0.3, MIX 1; delay TIME 5, FDBK 0.9, MIX 0; filter TYPE 2, CUTOFF 869 Hz, RES 12), KEYS sends 100% / 50%. Mappings survive a reload; bad ids (`fxk:reverb:7`, `level:master`, `mute:bogus`) are ignored. Learn outlines checked in screenshots on MIX (800 wide) and KEYS (390×844). `tsc` and `npm run build` pass (precache unchanged).
+- **Not checked:** real MIDI hardware, notes (as opposed to CCs) on the new buttons, outlines at 844×390 and 1280×800. The browser pane's mappings, mix and keys sends were put back to defaults.
+
+### Step 7, docs and checklist: done (2026-10-21)
+- README: Kalimba (5 kits, 5th SAMPLED preset), per-pad sends, new Mix / FX, Latency and theme, and MIDI Learn sections. DESIGN: built notes for Mix/FX and Settings. CREDITS already covered the kalimba (step 1). Luke's checklist is below. Nothing here was run on a device.
+
+## Luke's phone and hardware checklist for M6
+Open the live site or `npm run dev` Network address on the phone. Tap a pad first to start audio.
+1. Kalimba (ears):
+   - [ ] KEYS → SAMPLED → Kalimba (5th preset, full-width under the 2 × 2 grid in portrait): in tune, tone good, level near the other presets (gain −5 is a guess).
+   - [ ] KITS → Kalimba kit: pads C3 (bottom-left) up to C6 (top-right), pentatonic, in tune, level against the drums.
+2. MIX / FX:
+   - [ ] Faders drag smoothly by finger; touching the track jumps; double-tap resets; M mutes; meters move; OUT shows the peak.
+   - [ ] Turn a pad's REVERB SEND up (KITS tab): you hear reverb. Same for DELAY SEND; delay follows the BPM. KEYS REVERB / DELAY knobs work.
+   - [ ] FILTER on: LOW-P / BAND-P / HIGH-P, CUTOFF and RES sweep sounds right and doesn't click. Reverb SIZE / DECAY change the tail.
+   - [ ] Metronome click stays dry; MASTER fader changes its volume.
+   - [ ] Reload: the mixer and FX settings are kept. Phone landscape: the MIX panel scrolls and nothing is cut off.
+3. Latency (SETUP → Audio & Latency):
+   - [ ] CALIBRATE: tap along to the 8 clicks; a MEASURED value appears. Record a loop of taps with the click on: do hits land closer to the beat? Adjust OFFSET if not.
+   - [ ] Low-latency mode off, reload: fewer crackles on a busy phone (if any)? On again: back to snappy.
+4. Theme (SETUP → Theme):
+   - [ ] Chassis light and High contrast: every tab (PADS, KITS, SEQ, KEYS, MIX, SETUP) readable, in portrait and landscape.
+   - [ ] Pad colours "Single colour". Vibrate on hit: buzz on touch hits (not on iPhones).
+5. MIDI Learn (hardware: loopMIDI or a controller; also the open M5 section 5):
+   - [ ] Learn a fader or knob on a CC for a mixer fader, an FX knob and a KEYS send; a note or button for a mute and an FX switch. They move or toggle the on-screen control.
+   - [ ] Mappings are kept after a reload; × in the list removes one.
+6. Known gaps: sound-related items are unverified by Claude; the touch feel of faders and knobs was tested with synthetic events only.
+
 ### Checks (planned)
 - Claude, per step, by script in the browser pane (`dev-http`), plus layout at the 3 sizes.
 - Claude can't hear the browser pane: reverb / delay / filter sound, meters vs. what's heard, and calibration on a real phone are Luke's checks.
+
+### Step 4, Latency card: done (2026-10-21)
+- **Files:** `src/audio/latencyTypes.ts` (type, defaults, localStorage load/save; pure), `src/audio/latency.ts` (only code that changes `state.latency`; calibration), SETUP "AUDIO & LATENCY" card in `src/ui/setup.ts` + `setup.css`. `clock.heardTime()` = `currentTime - (measured ?? outputLatency ?? baseLatency) - offset`. `engine.ts` picks `latencyHint` 'interactive' (low-latency on, default) or 'playback' from the saved value.
+- **Claude's choices (Luke can override):** the `latency` pref is in **localStorage**, not IndexedDB, because the audio context is created before any async pref can load. Calibration = 8 clicks 0.5 s apart on the audio context; each tap is converted to context time (`currentTime - (performance.now - event.timeStamp)`), the median of taps within 250 ms of a click is `measured` (needs 5 good taps, 0-300 ms). That is output latency plus Luke's tap habit, which is what recorded hits need. Refused while the transport plays. Space also taps while calibrating. Offset: slider -50..+50 ms, double-tap resets. Positive offset = recorded hits land earlier.
+- **Checked by script in the browser pane:** heardTime shifts with offset; fake taps at +40 ms give 42 ms; 2 taps rejected; blocked while playing; pref round trip over a reload; damaged and out-of-range saves fall back; UI taps, label count, LCD, reset and reload row; layout at 3 sizes (no horizontal overflow). `tsc` and `npm run build` pass.
+- **Not checked (Luke, on the phone):** whether tap-along feels right and fixes recorded timing; whether `playback` mode really gives a bigger buffer on the phone (the desktop pane showed baseLatency 0.02 s either way).
+
+### Step 5, Theme card: done (2026-10-21), not committed yet
+- `src/ui/themeTypes.ts` (pure; `theme` pref in localStorage so it applies before first paint), `src/ui/theme.ts` (only code that changes `state.theme`; sets `data-theme` / `data-pads` on `<html>` and the `theme-color` meta). `applyTheme()` runs first in `main.ts`.
+- Colours: remaining literals moved to tokens (`--lcd-line`, `--lcd-btn`, `--label`, `--ink`, `--key-white/black`, `--pad-*`, `--pad-edge`). `GROUP_COLOUR` is now `var(--pad-<group>)`; `pads.ts` only sets `--c` (tint and glow come from `color-mix` in `app.css`). Claude's choice: the black/white alpha shadows stay literal (same in every theme).
+- Themes: Chassis / Chassis light / High contrast (brighter pads, 2px pad outline). Pad colours: By drum type / Single colour (amber, Luke's pick). Vibrate on hit: off by default, touch hits only (not MIDI), 8 ms; the switch is disabled where `navigator.vibrate` is missing (iPhones).
+- Checked by script: attributes and saved pref, light/contrast body colours, theme-color meta, single vs type LEDs, vibrate fires once per touch hit only when on, damaged pref falls back, tsc and build clean. Screenshots: light at 390 wide (PADS, SETUP, MIX, KEYS) and 1280×800, contrast on PADS. Fixed on the way: KEYS piano keys inverted in light.
+- Not checked: real phone look of the themes, real vibration, landscape 844×390 in light/contrast, KITS/SEQ tabs in contrast. Luke's phone test covers these.
 
 ## Live site: GitHub Pages (2026-10-18)
 - **https://lukewilkinson.github.io/drum-pad-controller/** from the public repo https://github.com/LukeWilkinson/drum-pad-controller (remote `origin`). Luke chose a public repo (code and commit email visible) after Netlify suspended the new account.
@@ -371,4 +455,4 @@ The pinned CC0 VCSL commit (`sgossner/VCSL` c1ea7bc) has `Idiophones/Plucked Idi
 - In PowerShell, `npm` is blocked by the script policy; use `npm.cmd`.
 
 ## Next step
-M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above): create branch `feat/m6-effects` and start step 1 (Kalimba).
+M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above), building on `feat/m6-effects`. Steps 1 (Kalimba), 2 (audio graph), 3 (MIX / FX tab) 4 (Latency card) and 5 (Theme card) done; Luke's ear checks happen with the M6 phone test. Step 6 (MIDI Learn targets) and 7 (docs, checklist) done: M6 is built. **PC test passed (2026-10-22):** Luke checked it at localhost on the PC, all good; phone-only items (vibrate, touch feel, landscape, Low-latency buffer) not run yet. M6 merged into `main` locally (2026-10-22), not pushed. Next: push `main` when Luke says so, then plan M7 (SPEC milestone 7, stretch goals) in a fresh chat.

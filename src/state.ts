@@ -3,11 +3,14 @@
 // (pad settings, swapped samples) are announced with the extra change names 'params' and 'pads'.
 
 import type { ActiveKit, UserKit } from './audio/kit';
+import { loadLatency, type LatencyState } from './audio/latencyTypes';
+import { loadTheme, type ThemeState } from './ui/themeTypes';
 import { DEFAULT_KEYS, type KeysState } from './keys/types';
 import { DEFAULT_CHANNEL, DEFAULT_KEYS_CHANNEL, type LearnState, type MidiState } from './midi/types';
+import { defaultMix, type MixState } from './mix/types';
 import { PATTERN_COUNT, emptyPattern, type Pattern, type Quant } from './seq/pattern';
 
-export type View = 'pads' | 'kits' | 'seq' | 'keys' | 'setup';
+export type View = 'pads' | 'kits' | 'seq' | 'keys' | 'mix' | 'setup';
 
 export interface AppState {
   /** The kit playing now (null until the first kit has loaded). */
@@ -50,6 +53,12 @@ export interface AppState {
   keys: KeysState;
   /** Samples of the sampled instrument just picked: loading progress, or null when ready (src/keys/keys.ts). */
   keysLoad: { done: number; total: number; failed: boolean } | null;
+  /** Mixer strips and FX (changed only by src/mix/mix.ts). */
+  mix: MixState;
+  /** Latency calibration, offset and buffer mode (changed only by src/audio/latency.ts). */
+  latency: LatencyState;
+  /** Theme, pad colours and vibrate (changed only by src/ui/theme.ts). */
+  theme: ThemeState;
 }
 
 /** 'count' = count-in bar before recording starts. */
@@ -92,6 +101,9 @@ export const state: AppState = {
   learn: { on: false, armed: null, last: null },
   keys: { ...DEFAULT_KEYS, preset: { ...DEFAULT_KEYS.preset } },
   keysLoad: null,
+  mix: defaultMix(),
+  latency: loadLatency(),
+  theme: loadTheme(),
 };
 
 const listeners = new Set<Listener>();

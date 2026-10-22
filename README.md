@@ -54,17 +54,34 @@ Set `HTTP=1` to turn off HTTPS. This is only for desktop checks; phones need HTT
 
 ## Kits
 
-- Open **KITS** (or tap the kit name on the LCD) to switch between the 4 built-in kits.
-- Pick a pad, then use the **Volume, Pitch, Pan and Decay** sliders. **SWAP SAMPLE** puts any built-in sample on the pad.
+- Open **KITS** (or tap the kit name on the LCD) to switch between the 5 built-in kits (the fifth, Kalimba, has 16 kalimba notes on bank A).
+- Pick a pad, then use the **Volume, Pitch, Pan, Decay, Reverb send and Delay send** sliders. **SWAP SAMPLE** puts any built-in sample on the pad.
 - **SAVE** stores the kit under **My kits**. It stays in this browser (IndexedDB) and the last kit reloads on startup.
 - On a tablet, the right-hand knobs edit the selected pad too: drag up or down, or double-tap to reset.
 - To add a kit, edit `src/audio/kits.json`, then run `npm run fetch-samples`.
 
 ## Keys
 
-- Open **KEYS** for a keyboard. **SYNTH** has Warm Pad, Saw Lead, Sub Bass and Glass Pluck. **SAMPLED** has Grand Piano, FM Piano, Strings and Concert Harp (CC0 recordings, see CREDITS.md).
+- Open **KEYS** for a keyboard. **SYNTH** has Warm Pad, Saw Lead, Sub Bass and Glass Pluck. **SAMPLED** has Grand Piano, FM Piano, Strings, Concert Harp and Kalimba (CC0 recordings, see CREDITS.md).
 - Touch: slide across keys to play each one; press lower on a key to play harder. Octave −/+ covers C1–C7.
 - Computer keyboard on the KEYS tab: `A S D F G H J K L ;` are the white keys, `W E T Y U O P` the black keys, `Z` / `X` the octave. Space, Shift+R, Ctrl+Z and M still work.
 - **SNAP** keeps notes in a key and scale (set in SETUP → Auto-tune). **HOLD** latches notes. **ARP** toggles the arpeggiator; hold it for mode and rate. **PITCH** bends ±2 semitones.
 - Notes record into LOOP 1–4 with REC / DUB, beside the drums, and play back with the current KEYS sound.
 - MIDI: SETUP has a **Keys channel** (default 1). Keys notes and pitch bend go out on it; notes, pitch bend and sustain (CC 64) coming in on it play KEYS. Other channels still play pads.
+- The two **REVERB / DELAY** knobs on the KEYS tab send the keys to the effects (they start at 0).
+
+## Mix / FX
+
+- Open **MIX / FX**. Six strips (KICKS, SNARE, HATS, PERC, KEYS, MASTER) each have a fader, a level meter, a dB readout and a mute (M). Drag the fader, or touch the track to jump there; double-tap resets it. The OUT readout holds the master peak.
+- **REVERB, DELAY and FILTER** cards each have an on/off switch and three knobs (drag, arrow keys, or double-tap to reset). Reverb: SIZE, DECAY, MIX. Delay: TIME (tempo-synced), FDBK, MIX. Filter (on the whole master): TYPE, CUTOFF, RES.
+- Pads and keys only feed reverb and delay when their **send** is above 0: per pad on the KITS tab (and the tablet rail), and the two knobs on the KEYS tab. Every send starts at 0.
+- The metronome click skips the strips and effects but follows MASTER. Mixer and effect settings are saved in this browser.
+
+## Latency and theme (SETUP)
+
+- **Audio & Latency:** CALIBRATE asks for taps along to 8 clicks and stores the measured delay; the **offset** slider (−50 to +50 ms) fine-tunes it. Both shift where recorded hits land. **Low-latency mode** (default on) uses the smallest audio buffer; turn it off for fewer crackles on a slow phone. It applies after a reload.
+- **Theme:** Chassis, Chassis light or High contrast; pad colours by drum type or one colour; **Vibrate on hit** (touch hits only, off by default, not on iPhones).
+
+## MIDI Learn
+
+Turn on LEARN in SETUP, tap a control, then move a control on the MIDI device. Pads, transport buttons, the master volume, the KEYS buttons, the pad knobs, the mixer faders and mutes, the FX switches and knobs, and the KEYS send knobs can all be learned. A note presses a button; a CC moves a fader or knob, or presses a button when it rises past 64.

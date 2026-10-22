@@ -44,6 +44,7 @@ export function padTitle(index: number): string {
 /** `fromMidi` hits are not sent back out as MIDI. */
 export function hit(index: number, velocity: number, fromMidi = false): void {
   engine.play(index, velocity, !fromMidi); // audio first
+  if (!fromMidi && state.theme.vibrate) navigator.vibrate?.(8);
   if (!fromMidi) midiOut.hold(index);
   seq.recordHit(index, velocity);
   repeat.press(index, velocity, !fromMidi);

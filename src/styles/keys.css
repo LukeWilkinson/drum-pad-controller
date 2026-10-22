@@ -53,6 +53,9 @@
   min-width: 0;
 }
 .ky-preset[aria-pressed="true"] { background: var(--raised); border-color: var(--amber); }
+.ky-preset[hidden] { display: none; }
+/* SAMPLED's 5th preset (Kalimba) gets the full width under the 2 × 2 grid. */
+.ky-preset:nth-child(5) { grid-column: 1 / -1; }
 .ky-pname { font-size: 15px; font-weight: 700; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ky-pmeta { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
@@ -72,6 +75,14 @@
 .ky-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-bottom: 14px; }
 .ky-opt { min-height: 44px; }
 .ky-opt[aria-pressed="true"] { background: var(--amber); color: var(--body); }
+
+/* ---------- FX sends (small knobs) ---------- */
+
+.ky-sends { display: flex; align-items: center; gap: 10px; flex: none; }
+.ky-knob { flex: 1; min-width: 0; height: 44px; gap: 8px; justify-content: flex-start; padding: 0 6px; border-radius: 8px; background: var(--well); }
+.ky-knob-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.15; }
+.ky-knob-label { font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--text-muted); }
+.ky-knob-val { font-family: var(--font-mono); font-size: 12px; color: var(--text-strong); }
 
 /* ---------- Pitch and mod strips ---------- */
 
@@ -107,14 +118,14 @@
   flex: 1; min-width: 0;
   display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px;
   padding-bottom: 10px; border-radius: 0 0 6px 6px;
-  background: var(--text-strong); box-shadow: inset 0 -5px 0 rgba(0, 0, 0, .18);
+  background: var(--key-white); box-shadow: inset 0 -5px 0 rgba(0, 0, 0, .18);
 }
 .kb-root { width: 6px; height: 6px; border-radius: 3px; pointer-events: none; }
 .kb-label { font-family: var(--font-mono); font-size: 10px; color: var(--switch-off); pointer-events: none; }
 .kb-black {
   position: absolute; top: 6px; width: var(--bw); height: 58%;
   left: calc(6px + (100% - 12px) * var(--p) / var(--n) - var(--bw) / 2);
-  border-radius: 0 0 4px 4px; background: var(--edge); box-shadow: inset 0 -4px 0 rgba(255, 255, 255, .08);
+  border-radius: 0 0 4px 4px; background: var(--key-black); box-shadow: inset 0 -4px 0 rgba(255, 255, 255, .08);
 }
 .kb-key.down { background: var(--amber); }
 .kb-key.out { opacity: .45; } /* snap on: outside the scale */
@@ -134,8 +145,10 @@
   .ky-snap-text { display: none; }
   .ky-snap-short { display: inline; }
   .ky-src { order: 0; flex: 1 1 auto; }
-  .ky-presets { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+  /* One row: 4 synth or 5 sampled presets share the width. */
+  .ky-presets { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; }
   .ky-preset { height: 44px; padding: 0 6px; }
+  .ky-preset:nth-child(5) { grid-column: auto; }
   .ky-pname { font-size: 12px; }
   .ky-pmeta { display: none; }
   .ky-strips { flex-direction: row; }

@@ -1,5 +1,5 @@
 {
-  "about": "Sampled KEYS instruments. Files are fetched and converted by scripts/fetch-instruments.mjs into public/samples/instruments/<id>/<note>.flac. Notes are MIDI numbers (C4 = 60), the pitch each file really plays (VCSL piano and VSCO strings are named an octave low). Order matches PRESETS.sampled in src/keys/types.ts.",
+  "about": "Sampled KEYS instruments. Files are fetched and converted by scripts/fetch-instruments.mjs into public/samples/instruments/<id>/<note>.flac. Notes are MIDI numbers (C4 = 60), the pitch each file really plays (VCSL piano, kalimba and VSCO strings are named an octave low). A sample's `cents` is how sharp the recording is; fetch-instruments retunes it to the exact note. An instrument's `pads` are extra notes rendered as pad_<note>.flac (from the nearest sample) for a pad kit in kits.json. Order matches PRESETS.sampled in src/keys/types.ts.",
   "licence": "CC0 1.0 (public domain dedication)",
   "sources": {
     "vcsl": {
@@ -466,6 +466,183 @@
           "source": "vcsl",
           "file": "Chordophones/Composite Chordophones/Concert Harp/KSHarp_F7_f1.wav"
         }
+      ]
+    },
+    {
+      "id": "kalimba",
+      "name": "Kalimba",
+      "seconds": 4,
+      "release": 0.5,
+      "gain": -5,
+      "samples": [
+        {
+          "note": 43,
+          "cents": 62.5,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_G1_k12_50_100_rr2.wav"
+        },
+        {
+          "note": 44,
+          "cents": 7,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_G#1_k11_50_100_rr2.wav"
+        },
+        {
+          "note": 47,
+          "cents": -58.5,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_B1_k13_50_100_rr2.wav"
+        },
+        {
+          "note": 49,
+          "cents": -2,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_C#2_k10_50_100_rr2.wav"
+        },
+        {
+          "note": 51,
+          "cents": 33.5,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_D#2_k14_50_100_rr2.wav"
+        },
+        {
+          "note": 53,
+          "cents": 42.5,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_F2_k9alt_50_100_rr2.wav"
+        },
+        {
+          "note": 55,
+          "cents": 46.5,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_G2_k15_50_100_rr2.wav"
+        },
+        {
+          "note": 58,
+          "cents": 58,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_A#2_k8_50_100_rr2.wav"
+        },
+        {
+          "note": 61,
+          "cents": -45,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_C#3_k16_50_100_rr2.wav"
+        },
+        {
+          "note": 63,
+          "cents": 56.5,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_D#3_k7_50_100_rr2.wav"
+        },
+        {
+          "note": 65,
+          "cents": 39.5,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_F3_k17_50_100_rr2.wav"
+        },
+        {
+          "note": 67,
+          "cents": 16.5,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_G3_k6_50_100_rr2.wav"
+        },
+        {
+          "note": 70,
+          "cents": 50,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_A#3_k18_50_100_rr2.wav"
+        },
+        {
+          "note": 73,
+          "cents": 10,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_C#4_k5_50_100_rr2.wav"
+        },
+        {
+          "note": 74,
+          "cents": -49.5,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_D4_k19_50_100_rr2.wav"
+        },
+        {
+          "note": 75,
+          "cents": 16,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_D#4_k20_50_100_rr2.wav"
+        },
+        {
+          "note": 77,
+          "cents": 27.5,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_F4_k3_50_100_rr2.wav"
+        },
+        {
+          "note": 79,
+          "cents": 34,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_G4_k22_50_100_rr2.wav"
+        },
+        {
+          "note": 82,
+          "cents": 36.5,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_A#4_k2_50_100_rr2.wav"
+        },
+        {
+          "note": 83,
+          "cents": -42,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_B4_k23_50_100_rr2.wav"
+        },
+        {
+          "note": 85,
+          "cents": 35.5,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_C#5_k24_50_100_rr2.wav"
+        },
+        {
+          "note": 88,
+          "cents": -23,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_E5_k25_50_100_rr2.wav"
+        },
+        {
+          "note": 90,
+          "cents": -20,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_F#5_k1_50_100_rr2.wav"
+        },
+        {
+          "note": 92,
+          "cents": 13.5,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_G#5_k26_50_100_rr2.wav"
+        },
+        {
+          "note": 97,
+          "cents": 32,
+          "source": "vcsl",
+          "file": "Idiophones/Plucked Idiophones/Kalimba, Tanzania/MBira3_pluck_Main_C#6_k27_50_100_rr2.wav"
+        }
+      ],
+      "pads": [
+        48,
+        50,
+        52,
+        55,
+        57,
+        60,
+        62,
+        64,
+        67,
+        69,
+        72,
+        74,
+        76,
+        79,
+        81,
+        84
       ]
     }
   ]

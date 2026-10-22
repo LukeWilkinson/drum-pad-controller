@@ -66,7 +66,7 @@ export function setSource(source: KeysSource): void {
   if (source !== state.keys.source) set({ source });
 }
 
-/** Picks preset 0–3 on the current source. */
+/** Picks a preset on the current source (ignored if that source has no preset `index`). */
 export function selectPreset(index: number): void {
   const { source, preset } = state.keys;
   if (index === preset[source] || !PRESETS[source][index]) return;
@@ -118,6 +118,13 @@ export function setArpRate(arpRate: ArpRate): void {
   if (arpRate in ARP_RATES && arpRate !== state.keys.arpRate) set({ arpRate });
 }
 
+/** The KEYS bus's reverb or delay send, 0–1 (src/mix/mix.ts applies it to the mixer). */
+export function setSend(fx: 'reverb' | 'delay', amount: number): void {
+  const v = Math.min(1, Math.max(0, amount));
+  const key = fx === 'reverb' ? 'reverbSend' : 'delaySend';
+  if (v !== state.keys[key]) set({ [key]: v });
+}
+
 /** Restores the saved settings. Missing or out-of-range values keep their defaults. */
 async function loadKeys(): Promise<void> {
   const saved = await getPref<Partial<KeysState>>(PREF).catch(warn);
@@ -136,6 +143,10 @@ async function loadKeys(): Promise<void> {
   if (SCALE_IDS.includes(saved.scale as ScaleId)) patch.scale = saved.scale;
   if (ARP_MODES.includes(saved.arpMode as ArpMode)) patch.arpMode = saved.arpMode;
   if (typeof saved.arpRate === 'string' && saved.arpRate in ARP_RATES) patch.arpRate = saved.arpRate;
+  for (const key of ['reverbSend', 'delaySend'] as const) {
+    const v = saved[key];
+    if (typeof v === 'number' && v >= 0 && v <= 1) patch[key] = v;
+  }
   // HOLD and ARP start off: nothing is held at boot.
   set(patch, false);
 }

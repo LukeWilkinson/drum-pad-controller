@@ -1,7 +1,8 @@
-// KEYS panel (Keys.dc.html): the snap chip, SYNTH / SAMPLED, four presets, octave, HOLD / ARP, the
+// KEYS panel (Keys.dc.html): the snap chip, SYNTH / SAMPLED, the presets (4 or 5), octave, HOLD / ARP, the
 // pitch and mod strips, and the keyboard. Built once; render() updates it from the store. The keyboard
 // has 15 white keys (two octaves, C to C); phones show the first 10 (C to E), as in the design.
 // A dot marks the key's root on every octave; with snap on, keys outside the scale are dimmed.
+// The two small knobs send the KEYS bus to the REVERB and DELAY (src/mix/).
 // Controls marked data-todo are wired up in later M5 steps (or later milestones).
 
 import * as keys from '../keys/keys';
@@ -11,6 +12,7 @@ import {
   ARP_MODE_NAMES,
   ARP_RATES,
   PRESETS,
+  PRESET_SLOTS,
   cOf,
   noteName,
   type ArpMode,
@@ -19,6 +21,7 @@ import {
 } from '../keys/types';
 import { state, subscribe } from '../state';
 import { openDialog } from './dialog';
+import { bindKnob, knobSvg, setKnobArc } from './knob';
 
 const HOLD_MS = 500; // holding ARP this long opens its options
 const THUMB_W = 28; // px, the strip thumb
@@ -61,7 +64,7 @@ export function buildKeysPanel(app: HTMLElement, opts: KeysPanelOptions): HTMLEl
       <button class="ky-snap" data-learn="snap" aria-pressed="false"><span class="ky-snap-dot"></span><span class="ky-snap-text"></span><span class="ky-snap-short"></span></button>
     </header>
     <div class="ky-presets" role="group" aria-label="Presets">
-      ${[0, 1, 2, 3].map((i) => `<button class="ky-preset" data-i="${i}" data-learn="preset:${i}" aria-pressed="false"><span class="ky-pname"></span><span class="ky-pmeta"></span></button>`).join('')}
+      ${Array.from({ length: PRESET_SLOTS }, (_, i) => `<button class="ky-preset" data-i="${i}" data-learn="preset:${i}" aria-pressed="false"><span class="ky-pname"></span><span class="ky-pmeta"></span></button>`).join('')}
     </div>
     <div class="ky-oct">
       <span class="ky-label">OCTAVE</span>
@@ -71,6 +74,16 @@ export function buildKeysPanel(app: HTMLElement, opts: KeysPanelOptions): HTMLEl
       <span class="ky-spacer"></span>
       <button class="ky-toggle ky-hold" data-learn="hold" aria-pressed="false">HOLD</button>
       <button class="ky-toggle ky-arp" data-learn="arp" aria-pressed="false" aria-haspopup="dialog" title="Tap: on / off. Hold: options">ARP<span class="ky-arp-info"></span></button>
+    </div>
+    <div class="ky-sends" role="group" aria-label="Effect sends">
+      <span class="ky-label">SENDS</span>
+      ${(['reverb', 'delay'] as const)
+        .map(
+          (fx) => `<div class="knob ky-knob" data-fx="${fx}" data-learn="keys-send:${fx}" role="slider" tabindex="0" aria-label="KEYS ${fx} send" aria-valuemin="0" aria-valuemax="100">
+        ${knobSvg(36)}<span class="ky-knob-text"><span class="ky-knob-label">${fx.toUpperCase()}</span><span class="ky-knob-val"></span></span>
+      </div>`,
+        )
+        .join('')}
     </div>
     <div class="ky-strips">
       <div class="ky-strip ky-pitch" role="slider" aria-label="Pitch bend" aria-valuemin="-2" aria-valuemax="2" aria-valuenow="0">
@@ -106,16 +119,37 @@ export function buildKeysPanel(app: HTMLElement, opts: KeysPanelOptions): HTMLEl
   panel.querySelector('.ky-oct-down')!.addEventListener('click', () => keys.nudgeOctave(-1));
   panel.querySelector('.ky-oct-up')!.addEventListener('click', () => keys.nudgeOctave(1));
 
+  const sendKnobs = [...panel.querySelectorAll<HTMLElement>('.ky-knob')];
+  for (const el of sendKnobs) {
+    const fx = el.dataset.fx as 'reverb' | 'delay';
+    const key = fx === 'reverb' ? 'reverbSend' : 'delaySend';
+    bindKnob(el, {
+      get: () => state.keys[key],
+      set: (v) => keys.setSend(fx, Math.round(v * 100) / 100),
+      step: 0.02,
+      reset: () => keys.setSend(fx, 0),
+    });
+  }
+
   function render(): void {
     const k = state.keys;
+    for (const el of sendKnobs) {
+      const v = k[el.dataset.fx === 'reverb' ? 'reverbSend' : 'delaySend'];
+      setKnobArc(el, v);
+      el.querySelector('.ky-knob-val')!.textContent = `${Math.round(v * 100)}%`;
+      el.setAttribute('aria-valuenow', String(Math.round(v * 100)));
+    }
     for (const seg of segs) seg.setAttribute('aria-pressed', String(seg.dataset.src === k.source));
     const load = state.keysLoad;
-    PRESETS[k.source].forEach((p, i) => {
+    presets.forEach((btn, i) => {
+      const p = PRESETS[k.source][i];
+      btn.hidden = !p; // SYNTH has one preset fewer than SAMPLED
+      if (!p) return;
       const current = i === k.preset[k.source];
       const loading = current && load ? (load.failed ? "Couldn't load samples" : `Loading ${load.done}/${load.total}`) : '';
-      presets[i].querySelector('.ky-pname')!.textContent = p.name;
-      presets[i].querySelector('.ky-pmeta')!.textContent = loading || p.meta;
-      presets[i].setAttribute('aria-pressed', String(current));
+      btn.querySelector('.ky-pname')!.textContent = p.name;
+      btn.querySelector('.ky-pmeta')!.textContent = loading || p.meta;
+      btn.setAttribute('aria-pressed', String(current));
     });
     octVal.textContent = `C${k.octave}`;
     holdBtn.setAttribute('aria-pressed', String(k.hold));

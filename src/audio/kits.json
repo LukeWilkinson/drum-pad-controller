@@ -109,6 +109,32 @@
         { "name": "Zome Kick", "group": "kick", "hard": "bd_zome" },
         { "name": "Backspin", "group": "fx", "hard": "vinyl_backspin" }
       ]
+    },
+    {
+      "id": "kalimba",
+      "name": "Kalimba",
+      "category": "Acoustic",
+      "pads": [
+        { "name": "E5", "group": "perc", "hard": "instruments/kalimba/pad_76" },
+        { "name": "G5", "group": "perc", "hard": "instruments/kalimba/pad_79" },
+        { "name": "A5", "group": "perc", "hard": "instruments/kalimba/pad_81" },
+        { "name": "C6", "group": "perc", "hard": "instruments/kalimba/pad_84" },
+
+        { "name": "G4", "group": "perc", "hard": "instruments/kalimba/pad_67" },
+        { "name": "A4", "group": "perc", "hard": "instruments/kalimba/pad_69" },
+        { "name": "C5", "group": "perc", "hard": "instruments/kalimba/pad_72" },
+        { "name": "D5", "group": "perc", "hard": "instruments/kalimba/pad_74" },
+
+        { "name": "A3", "group": "perc", "hard": "instruments/kalimba/pad_57" },
+        { "name": "C4", "group": "perc", "hard": "instruments/kalimba/pad_60" },
+        { "name": "D4", "group": "perc", "hard": "instruments/kalimba/pad_62" },
+        { "name": "E4", "group": "perc", "hard": "instruments/kalimba/pad_64" },
+
+        { "name": "C3", "group": "perc", "hard": "instruments/kalimba/pad_48" },
+        { "name": "D3", "group": "perc", "hard": "instruments/kalimba/pad_50" },
+        { "name": "E3", "group": "perc", "hard": "instruments/kalimba/pad_52" },
+        { "name": "G3", "group": "perc", "hard": "instruments/kalimba/pad_55" }
+      ]
     }
   ],
   "banksNote": "Pad banks B-D, shared by every kit. A kit can replace any of them with its own \"banks\": { \"C\": [16 pads] }. Same screen order as pads (top row first).",

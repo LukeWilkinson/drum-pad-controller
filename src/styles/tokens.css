@@ -7,16 +7,24 @@
   --drawer: #232220;      /* tab bar / drawer */
   --edge: #191816;        /* borders, deep shadow */
   --pad-rubber: #45433F;  /* pad base under the colour tint */
+  --knob: #4A4844;        /* knob cap */
+  --fader-cap: #6A675F;   /* mixer fader cap */
+  --key-white: #ECE7DC;   /* KEYS piano white keys */
+  --key-black: #191816;   /* KEYS piano black keys */
 
   /* text */
   --text: #D6D1C6;
   --text-strong: #ECE7DC;
   --text-muted: #A8A399;
+  --label: #B8B2A6;       /* pad numbers */
+  --ink: #1B1A18;         /* dark text on a lit pad */
 
   /* LCD */
   --lcd-bg: #241A0C;
   --lcd-text: #FFB547;
   --lcd-dim: #C98A2E;
+  --lcd-line: #5A4120;    /* dashed rule inside the LCD */
+  --lcd-btn: #3A2A12;     /* BPM -/+ buttons */
 
   /* accents */
   --amber: #FFB547;       /* selected / active state, primary button */
@@ -32,6 +40,15 @@
   --cym: #5BC0EB;
   --perc: #B794F6;
   --fx: #F472B6;
+  /* what the pads use: the group colours, or one colour (data-pads="single") */
+  --pad-kick: var(--kick);
+  --pad-snare: var(--snare);
+  --pad-hat: var(--hat);
+  --pad-tom: var(--tom);
+  --pad-cym: var(--cym);
+  --pad-perc: var(--perc);
+  --pad-fx: var(--fx);
+  --pad-edge: 0px;        /* pad outline width (High contrast draws one) */
 
   /* type */
   --font-ui: 'Archivo Narrow', 'Arial Narrow', sans-serif;
@@ -39,4 +56,74 @@
 
   /* hardware key look */
   --key-shadow: inset 0 -3px 0 rgba(0, 0, 0, .35);
+}
+
+/* Themes: set on <html> by src/ui/theme.ts. Chassis is the default above. */
+:root[data-theme="light"] {
+  --body: #D9D5CB;
+  --raised: #EDEAE2;
+  --well: #C4C0B5;
+  --drawer: #CFCBC0;
+  --edge: #8F8A7E;
+  --pad-rubber: #E6E2D8;
+  --knob: #B9B5AA;
+  --fader-cap: #9A968B;
+  --key-white: #FBF9F3;
+  --key-black: #2B2A28;
+  --text: #2B2A28;
+  --text-strong: #14130F;
+  --text-muted: #5E5A52;
+  --label: #5E5A52;
+  --switch-off: #A8A399;
+  --amber: #B8700A;       /* darker so it reads on light surfaces */
+  --play: #3F8F25;
+  --rec: #D2331D;
+  --kick: #E0382D;
+  --snare: #D77F00;
+  --hat: #B89400;
+  --tom: #2E9F5D;
+  --cym: #2B8FC0;
+  --perc: #7C55D6;
+  --fx: #D13F8F;
+}
+:root[data-theme="contrast"] {
+  --body: #000000;
+  --raised: #1E1E1E;
+  --well: #000000;
+  --drawer: #000000;
+  --edge: #FFFFFF;
+  --pad-rubber: #1A1A1A;
+  --knob: #5A5A5A;
+  --fader-cap: #BDBDBD;
+  --key-white: #FFFFFF;
+  --key-black: #000000;
+  --text: #FFFFFF;
+  --text-strong: #FFFFFF;
+  --text-muted: #E0E0E0;
+  --label: #FFFFFF;
+  --lcd-bg: #000000;
+  --lcd-text: #FFD060;
+  --lcd-dim: #FFB547;
+  --lcd-line: #FFB547;
+  --switch-off: #808080;
+  --amber: #FFD060;
+  --play: #4DFF4D;
+  --rec: #FF5040;
+  --kick: #FF3B30;
+  --snare: #FF9500;
+  --hat: #FFEE00;
+  --tom: #30FF80;
+  --cym: #00D0FF;
+  --perc: #C79BFF;
+  --fx: #FF5CC8;
+  --pad-edge: 2px;
+}
+:root[data-pads="single"] {
+  --pad-kick: var(--amber);
+  --pad-snare: var(--amber);
+  --pad-hat: var(--amber);
+  --pad-tom: var(--amber);
+  --pad-cym: var(--amber);
+  --pad-perc: var(--amber);
+  --pad-fx: var(--amber);
 }

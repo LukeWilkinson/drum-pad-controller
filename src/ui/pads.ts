@@ -5,11 +5,6 @@ import { GROUP_COLOUR, PADS_PER_BANK, padLabel, padNumber, type PadDef } from '.
 
 const HOT_ABOVE = 75; // text turns dark above this velocity
 
-function rgba(hex: string, a: number): string {
-  const n = parseInt(hex.slice(1), 16);
-  return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
-}
-
 /** Creates the 16 pad buttons. Names and colours are filled in by applyKit(). */
 export function buildPads(well: HTMLElement): HTMLButtonElement[] {
   return Array.from({ length: 16 }, (_, i) => {
@@ -32,11 +27,8 @@ export function applyKit(els: HTMLElement[], pads: PadDef[], bank = 0): void {
   els.forEach((el, i) => {
     const index = bank * PADS_PER_BANK + i;
     const pad = pads[index];
-    const colour = GROUP_COLOUR[pad.group];
     el.setAttribute('aria-label', `Pad ${padLabel(index)}, ${pad.name}`);
-    el.style.setProperty('--c', colour);
-    el.style.setProperty('--c-tint', rgba(colour, 0.16));
-    el.style.setProperty('--c-glow', rgba(colour, 0.7));
+    el.style.setProperty('--c', GROUP_COLOUR[pad.group]);
     el.querySelector('.pad-name')!.textContent = pad.name;
   });
 }

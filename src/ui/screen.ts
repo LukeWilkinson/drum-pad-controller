@@ -1,6 +1,8 @@
 // Builds the pad screen DOM once. CSS (app.css) rearranges it for each layout.
 // Controls marked data-todo are styled per the design but wired up in later milestones.
 
+import { knobSvg } from './knob';
+
 const ICON = {
   chevron: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
   undo: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg>',
@@ -11,7 +13,7 @@ const ICON = {
   kits: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg>',
   seq: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h3M10 6h3M16 6h4M4 12h6M13 12h3M4 18h2M9 18h11"/></svg>',
   keys: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 4v10M12 4v16M16 4v10"/></svg>',
-  mix: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 4v16M12 4v16M18 4v16"/><circle cx="6" cy="14" r="2" fill="#232220"/><circle cx="12" cy="8" r="2" fill="#232220"/><circle cx="18" cy="16" r="2" fill="#232220"/></svg>',
+  mix: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 4v16M12 4v16M18 4v16"/><circle cx="6" cy="14" r="2" style="fill:var(--drawer)"/><circle cx="12" cy="8" r="2" style="fill:var(--drawer)"/><circle cx="18" cy="16" r="2" style="fill:var(--drawer)"/></svg>',
   setup: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9L7 7M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>',
 };
 
@@ -20,35 +22,25 @@ const TABS: [cls: string, icon: string, short: string, long: string, todo: strin
   ['kits', ICON.kits, 'KITS', 'KITS', ''],
   ['seq', ICON.seq, 'SEQ', 'SEQUENCER', ''],
   ['keys', ICON.keys, 'KEYS', 'KEYS', ''],
-  ['mix', ICON.mix, 'MIX/FX', 'MIX / FX', 'M6'],
+  ['mix', ICON.mix, 'MIX/FX', 'MIX / FX', ''],
   ['setup', ICON.setup, 'SETUP', 'SETUP', ''],
 ];
 
-// Selected-pad knobs on the tablet right rail. The first four are live (src/ui/rail.ts sets
-// their arc and readout from the store); the FX sends arrive in M6.
-const KNOBS: [label: string, key: string, todo: string][] = [
-  ['VOLUME', 'volumeDb', ''],
-  ['PITCH', 'pitch', ''],
-  ['PAN', 'pan', ''],
-  ['DECAY', 'decay', ''],
-  ['REVERB SEND', '', 'M6'],
-  ['DELAY SEND', '', 'M6'],
+// Selected-pad knobs on the tablet right rail (src/ui/rail.ts sets their arc and readout from the store).
+const KNOBS: [label: string, key: string][] = [
+  ['VOLUME', 'volumeDb'],
+  ['PITCH', 'pitch'],
+  ['PAN', 'pan'],
+  ['DECAY', 'decay'],
+  ['REVERB SEND', 'reverbSend'],
+  ['DELAY SEND', 'delaySend'],
 ];
 
-export const KNOB_ARC = 84.8; // 270° of a r=18 circle
-
-function knob([label, key, todo]: (typeof KNOBS)[number]): string {
-  const attrs = key
-    ? `data-key="${key}" data-learn="param:${key}" role="slider" tabindex="0" aria-label="${label}"`
-    : `data-todo="${todo}"`;
+function knob([label, key]: (typeof KNOBS)[number]): string {
   return `
-    <div class="knob" ${attrs}>
-      <svg width="52" height="52" viewBox="0 0 48 48" aria-hidden="true">
-        <circle cx="24" cy="24" r="18" fill="none" stroke="#191816" stroke-width="4" stroke-linecap="round" stroke-dasharray="${KNOB_ARC} 200" transform="rotate(135 24 24)"/>
-        <circle class="knob-arc" cx="24" cy="24" r="18" fill="none" stroke="#FFB547" stroke-width="4" stroke-linecap="round" stroke-dasharray="0 200" transform="rotate(135 24 24)"/>
-        <circle cx="24" cy="24" r="12" fill="#4A4844"/>
-      </svg>
-      <div class="knob-text"><span class="knob-label">${label}</span><span class="knob-val">${key ? '' : '0%'}</span></div>
+    <div class="knob" data-key="${key}" data-learn="param:${key}" role="slider" tabindex="0" aria-label="${label}">
+      ${knobSvg(52)}
+      <div class="knob-text"><span class="knob-label">${label}</span><span class="knob-val"></span></div>
     </div>`;
 }
 
@@ -153,7 +145,7 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
       </div>
       ${KNOBS.map(knob).join('')}
       <label class="master" data-learn="master">MASTER
-        <input type="range" min="0" max="100" value="82" aria-label="Master volume">
+        <input type="range" min="0" max="100" value="64" aria-label="Master volume">
       </label>
     </aside>
 
