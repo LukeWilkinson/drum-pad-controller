@@ -1,4 +1,6 @@
-import { defineConfig } from 'vite';
+import { appendFileSync, existsSync, readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import { defineConfig, type Plugin } from 'vite';
 import basicSsl from '@vitejs/plugin-basic-ssl';
 import { VitePWA } from 'vite-plugin-pwa';
 
@@ -7,11 +9,36 @@ import { VitePWA } from 'vite-plugin-pwa';
 // HTTP=1 turns it off for desktop-only checks (localhost is already a secure context).
 const useHttps = !process.env.HTTP;
 
+const LICENSE_FILE = 'third-party-licenses.md';
+
+// Vite's licence file only covers the main bundle. The service worker's Workbox runtime is
+// generated later by vite-plugin-pwa, so its licence (all Workbox packages share it) is added here.
+function workboxLicense(): Plugin {
+  let outDir = '';
+  return {
+    name: 'workbox-license',
+    apply: 'build',
+    configResolved(c) {
+      outDir = resolve(c.root, c.build.outDir);
+    },
+    closeBundle() {
+      const file = join(outDir, LICENSE_FILE);
+      if (!existsSync(file)) return;
+      const text = readFileSync('node_modules/workbox-core/LICENSE', 'utf8').trim();
+      appendFileSync(file, `\n## workbox (core, expiration, precaching, routing, strategies; in sw.js) (MIT)\n\n${text}\n`);
+    },
+  };
+}
+
 export default defineConfig({
   server: { host: true, port: 5173 },
   preview: { host: true, port: 4173 },
+  // The minified bundle drops the libraries' licence comments, so Vite writes their licences
+  // (Tone.js and its dependencies, workbox-window) to one file served beside the page.
+  build: { license: { fileName: LICENSE_FILE } },
   plugins: [
     useHttps && basicSsl(),
+    workboxLicense(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['icons/icon.svg'],

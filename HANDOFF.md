@@ -447,6 +447,11 @@ Open the live site or `npm run dev` Network address on the phone. Tap a pad firs
 - In the artifact: no Web MIDI, no install, no offline mode; kits and loops saved there are separate from the installed app.
 - Checked by Claude in the browser pane from `dist-artifact` (`artifact-preview` in launch.json): kit loads from WAVs, a pad hit shows on the LCD. Not checked on the live artifact or on the phone.
 
+## Licence (2026-10-22)
+- MIT `LICENSE` (Copyright 2026 Luke Wilkinson), `"license": "MIT"` in package.json, and a README "Licence" section.
+- The minified bundle had no licence comments in it. Now `build.license` in `vite.config.ts` writes `third-party-licenses.md` to the build output, covering Tone.js, standardized-audio-context, automation-events, @babel/runtime, tslib and workbox-window. A small `workboxLicense` plugin there adds the Workbox licence for `sw.js`. The Pages workflow and `build:artifact` use the same config.
+- Checked by running `npm run build`: all 7 entries are in `dist/third-party-licenses.md`. The artifact build and the live site have not been checked.
+
 ## Wishlist from Luke
 - **Kalimba sound (2026-10-21):** now M6 step 1 (KEYS preset + a "Kalimba" kit). See "M6" above.
 
@@ -455,4 +460,4 @@ Open the live site or `npm run dev` Network address on the phone. Tap a pad firs
 - In PowerShell, `npm` is blocked by the script policy; use `npm.cmd`.
 
 ## Next step
-M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above), building on `feat/m6-effects`. Steps 1 (Kalimba), 2 (audio graph), 3 (MIX / FX tab) 4 (Latency card) and 5 (Theme card) done; Luke's ear checks happen with the M6 phone test. Step 6 (MIDI Learn targets) and 7 (docs, checklist) done: M6 is built. **PC test passed (2026-10-22):** Luke checked it at localhost on the PC, all good; phone-only items (vibrate, touch feel, landscape, Low-latency buffer) not run yet. M6 merged into `main` locally (2026-10-22), not pushed. Next: push `main` when Luke says so, then plan M7 (SPEC milestone 7, stretch goals) in a fresh chat.
+M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above), building on `feat/m6-effects`. Steps 1 (Kalimba), 2 (audio graph), 3 (MIX / FX tab) 4 (Latency card) and 5 (Theme card) done; Luke's ear checks happen with the M6 phone test. Step 6 (MIDI Learn targets) and 7 (docs, checklist) done: M6 is built. **PC test passed (2026-10-22):** Luke checked it at localhost on the PC, all good; phone-only items (vibrate, touch feel, landscape, Low-latency buffer) not run yet. M6 merged into `main` and live on the Pages site (2026-10-22, 460a854; Pages needs a public repo and source = GitHub Actions). Next: plan M7 (SPEC milestone 7, stretch goals) in a fresh chat.

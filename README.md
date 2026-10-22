@@ -85,3 +85,7 @@ Set `HTTP=1` to turn off HTTPS. This is only for desktop checks; phones need HTT
 ## MIDI Learn
 
 Turn on LEARN in SETUP, tap a control, then move a control on the MIDI device. Pads, transport buttons, the master volume, the KEYS buttons, the pad knobs, the mixer faders and mutes, the FX switches and knobs, and the KEYS send knobs can all be learned. A note presses a button; a CC moves a fader or knob, or presses a button when it rises past 64.
+
+## Licence
+
+The code is under the MIT licence (see `LICENSE`): anyone may use, change and share it, and it comes with no warranty. The sounds are CC0 (see `CREDITS.md`). Each build writes the licences of the bundled libraries (Tone.js and its dependencies, Workbox) to `third-party-licenses.md` beside the page.

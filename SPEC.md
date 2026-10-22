@@ -24,6 +24,12 @@ A free, cross-platform drum pad and MIDI controller that runs on PC, phones and 
 5. **Instruments:** keyboard/melodic mode with synth presets (Tone.js synths), sampled instruments, scale snap (snap notes to a chosen key and scale), switchable on/off.
 6. **Effects and settings:** reverb, delay, filter, master volume, latency calibration, theme.
 7. **Later / stretch:** vocal pitch correction from the mic (on/off, key, scale, strength, speed), audio export (WAV), sample import, sharing presets.
+8. **Recording and custom layouts** (Luke's notes, 2026-10-22):
+   - **Record own sounds:** record from the mic on the fly and assign the take to any pad (trim, save with the kit).
+   - **Full customisation:** move pads and controls anywhere; free-floating placement or snap to a grid whose rows × columns the user sets. Bigger screens (tablet, monitor) can show many more pads; phones can pack in more, smaller pads.
+   - **Preset layouts:** a few good built-in layouts; add, remove and save your own.
+   - **Shareable layouts:** save a layout as a seed (short code/string) that others can load.
+   - **Design first:** the layout editor and preset layouts start in Claude Design. When M8 reaches that part, Claude prompts Luke to move to a design chat (or moves there) before building.
 
 ## Decisions (were open questions)
 - **Auto-tune:** both, as two separate on/off options. Scale snap is in milestone 5; vocal pitch correction from the mic is a stretch goal (milestone 7). The settings screen already has a card for each.
@@ -33,3 +39,4 @@ A free, cross-platform drum pad and MIDI controller that runs on PC, phones and 
 ## Workflow
 1. Claude Design: done. Canvas: https://claude.ai/artifact/79zk33hSLfaD9kSCcWdtTz (handoff notes in DESIGN.md).
 2. Claude Code: build milestone 1 first, test on a real phone, then continue in order.
+3. M8 layout work: Claude Design first (see milestone 8).
