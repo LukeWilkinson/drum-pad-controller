@@ -12,6 +12,7 @@
     "build:artifact": "tsc --noEmit && node scripts/build-artifact.mjs",
     "fetch-samples": "node scripts/fetch-samples.mjs",
     "fetch-instruments": "node scripts/fetch-instruments.mjs",
+    "check:vocal": "node scripts/vocal-check.mjs",
     "make-icons": "pwa-assets-generator --preset minimal-2023 public/icons/icon.svg"
   },
   "devDependencies": {
