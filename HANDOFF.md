@@ -519,6 +519,33 @@ Building on branch `feat/m7-stretch` from `main`. One commit per step; Luke chec
 - **Checked by script in the browser pane (`dev-http`, a fake mic: `getUserMedia` replaced by an oscillator stream on the engine's context):** mic constraints as planned; worklet hears 226.45 Hz, target A3, shift −0.40 st at strength 80 %; VOX meter live (−10.5 dB); REC OUT take at strength 100 % / speed 0 measured 219.997 Hz (−0.02 c), so the voice reaches the recorder; card controls (key, scale incl. Chromatic, MATCH SCALE SNAP KEY → D Dorian, 4 sliders and readouts); Learn targets set strength, speed, sends, VOX level and mute; switch off stops the mic tracks; unplugged track → "No mic"; NotAllowedError → "Mic blocked" + message; no `getUserMedia` → "Not available"; switching off while the browser asks lets the late mic go (track ended); settings restored after reload with the switch off; a damaged pref falls back or clamps per field. Layout at 390×844 (card and 7 strips: 47 px each, 44 px content, no overflow), 844×390 and 1280×800: no horizontal scroll, every card control ≥ 44 px. `npm run check:vocal` (19 cases, Chromatic added) passes. `tsc` and `npm run build` pass (precache 246 entries, 15.2 MB); the built `tune.worklet-*.js` is one self-contained file (no imports) and, loaded in an OfflineAudioContext, turns 226.4 Hz into 219.995 Hz. Test settings were reset afterwards.
 - **Not checked:** a real mic and voice (the browser pane can't give one), how it sounds, mic latency and CPU on the phone, the Android permission prompt, headphones vs speaker feedback, Bluetooth headsets.
 
+### Step 6, docs and checklist: done (2026-10-22)
+- README: Scripts row for `check:vocal`, new sections "Your own samples", "Sharing kits and songs", "Recording to WAV", "Vocal pitch correction"; Mix / FX now 7 strips; MIDI Learn lists the new targets. DESIGN: what M7 built beside the design (VOX strip, REC OUT, share / bounce buttons, vocal card differences). CREDITS: the vocal tuner's methods (YIN, TD-PSOLA), no third-party code. No new sounds, so no new sample credits.
+
+## Luke's phone and hardware checklist for M7
+Run `npm.cmd run dev` on the PC and open the Network address on the phone (HTTPS; the mic needs it), or push to `main` first for the live site (ask Claude). Tap a pad first to start audio. Wired headphones for section 4.
+1. Import (KITS → pick a pad → SWAP SAMPLE):
+   - [ ] IMPORT FILE… opens the Android picker; a sound from the phone (WAV / MP3 / M4A) loads onto the pad, named after the file. Leading silence is gone; level close to the other pads.
+   - [ ] A file over 30 s is refused with a message. MY SAMPLES lists it; preview plays; delete is refused while a saved kit uses it.
+   - [ ] SAVE the kit, close the app fully, reopen: the imported sound is still on the pad.
+2. Sharing (KITS → SHARE, SEQ → loop picker → SHARE):
+   - [ ] SHARE KIT with an imported sample opens the share sheet; send it to yourself (WhatsApp, Drive or email).
+   - [ ] Open the received `.drumpad.txt` with IMPORT FILE…: KIT ADDED → LOAD NOW plays the same kit, imported sample included. The PC browser can import the same file.
+   - [ ] SHARE SONG, then IMPORT it: asks first, then the 4 loops, tempo and swing come back.
+3. WAV export:
+   - [ ] REC OUT on MIX / FX: play pads and keys for ~20 s with the metronome on, STOP, SAVE: the WAV plays in another app, sounds right, and has no click.
+   - [ ] BOUNCE TO WAV… (SEQ loop picker) 2 × LOOP: the file starts on the downbeat, loops twice cleanly and keeps the reverb tail.
+   - [ ] A long take (a few minutes) on the phone doesn't stutter or crash.
+4. Vocal pitch correction (SETUP → Auto-tune, headphones on):
+   - [ ] Switch on: Android asks for the mic; the row shows "Mic on", the meter moves when you sing, and the note readout follows you.
+   - [ ] Strength 100 %, Speed 0: a held note snaps to the scale (robotic effect). Speed up to 200 ms: sounds natural and keeps vibrato. Strength 0: your own voice.
+   - [ ] Try a few keys and scales (and Chromatic); MATCH SCALE SNAP KEY copies the KEYS setting.
+   - [ ] Delay feel: is the voice in your headphones late enough to put you off? Any crackles while singing over a playing loop (phone CPU)?
+   - [ ] VOX strip fader, mute and meter work; the VOX reverb / delay sends add the effects; REC OUT records the voice.
+   - [ ] Switch to another app and back: the switch is off (by design). Block the mic in Chrome's site settings: the card says "Mic blocked".
+5. MIDI Learn (loopMIDI or a controller, with the open M5 section 5): learn REC OUT, the vocal switch, Strength, Speed, a VOX send, VOX level and mute.
+6. Known gaps: Claude couldn't hear anything or use a real mic. The tuner was checked with synthetic voices and a test tone; import, sharing and the share sheet were checked in the PC browser only.
+
 ### Checks (planned)
 - Per step: `tsc` + `npm run build`, scripted checks in the browser pane (`dev-http`), layout at 390×844, 844×390, 1280×800.
 - Independent: WAV re-decoded and header-parsed separately (`ffprobe` if on PATH); share export → import round trip (pads, params, sample hashes); damaged files rejected; offline renders for recorder timing and the pitch worklet.
@@ -553,4 +580,4 @@ Building on branch `feat/m7-stretch` from `main`. One commit per step; Luke chec
 - In PowerShell, `npm` is blocked by the script policy; use `npm.cmd`.
 
 ## Next step
-M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above), building on `feat/m6-effects`. Steps 1 (Kalimba), 2 (audio graph), 3 (MIX / FX tab) 4 (Latency card) and 5 (Theme card) done; Luke's ear checks happen with the M6 phone test. Step 6 (MIDI Learn targets) and 7 (docs, checklist) done: M6 is built. **PC test passed (2026-10-22):** Luke checked it at localhost on the PC, all good; phone-only items (vibrate, touch feel, landscape, Low-latency buffer) not run yet. M6 merged into `main` and live on the Pages site (2026-10-22, 460a854; Pages needs a public repo and source = GitHub Actions). M7 plan approved (2026-10-22, see "M7" above), building on `feat/m7-stretch`. Steps 1 (sample store and import), 2 (sharing kits and songs), 3 (recorder and WAV export), 4 (vocal DSP worklet) and 5 (vocal card and VOX strip) done. Next: M7 step 6 (docs and Luke's checklist).
+M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above), building on `feat/m6-effects`. Steps 1 (Kalimba), 2 (audio graph), 3 (MIX / FX tab) 4 (Latency card) and 5 (Theme card) done; Luke's ear checks happen with the M6 phone test. Step 6 (MIDI Learn targets) and 7 (docs, checklist) done: M6 is built. **PC test passed (2026-10-22):** Luke checked it at localhost on the PC, all good; phone-only items (vibrate, touch feel, landscape, Low-latency buffer) not run yet. M6 merged into `main` and live on the Pages site (2026-10-22, 460a854; Pages needs a public repo and source = GitHub Actions). M7 plan approved (2026-10-22, see "M7" above), building on `feat/m7-stretch`. Steps 1 (sample store and import), 2 (sharing kits and songs), 3 (recorder and WAV export), 4 (vocal DSP worklet), 5 (vocal card and VOX strip) and 6 (docs and checklist) done: **M7 is built**. Next: Luke's M7 phone test (checklist above), then merge `feat/m7-stretch` into `main` (pushing publishes the live site; ask Luke first).

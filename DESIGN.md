@@ -131,12 +131,15 @@ Keep the pad screen uncluttered. Everything else lives behind the tabs.
   - five channels plus master, each with a fader, meter, dB readout and mute button
   - Reverb, Delay and Filter cards, each with an on/off switch and three 270° arc knobs
   - built: 160 px faders (120 px on phone landscape, where the panel scrolls), meters from −54 to +6 dB, the OUT readout holds the peak 1.5 s, send-fed cards show a one-line hint until something sends to them; MIDI Learn outlines every fader, mute, switch and knob
+  - built (M7): seven strips, a VOX strip (colour `--fx`) between KEYS and MASTER, with 3 px gaps so each 44 px strip fits at 390 wide; REC OUT button in the header (red while recording) and a recording bar with STOP above the tab bar on every tab
+- **Kits and Seq (M7, not in the design):** KITS header SHARE button; the SEQ loop picker gets SHARE / IMPORT… and BOUNCE TO WAV…; SWAP SAMPLE starts with IMPORT FILE… and a MY SAMPLES group
 - **Settings:**
   - **MIDI:** output, input, channel, send clock, MIDI Learn (amber "listening" state) and a list of mappings
   - **Latency:** measured value shown in the LCD style, a calibrate button (tap along to 8 clicks), manual offset, low-latency mode
   - **Auto-tune:** two separate cards, each with its own on/off switch. Scale snap has key and scale. Vocal pitch correction has a mic status and level meter, a headphones note, key and scale, a "match scale snap key" button, strength and speed (hard to natural). When a card is off its controls dim to 45%.
   - **Theme:** Chassis, Chassis light, High contrast; pad colours (by drum type or a single colour); vibrate on hit
   - built: Latency and Theme cards are in SETUP; the KEYS tab gets a SENDS row (REVERB / DELAY knobs) and a fifth SAMPLED preset (Kalimba)
+  - built (M7): the vocal card as drawn, plus a "heard → target" note readout at the right of the mic row, Chromatic first in its SCALE list, VOX reverb / delay send sliders and a line saying the voice plays through VOX; Speed runs 0–200 ms (drawn 0–400); the mic row text is Mic off / Asking… / Mic on / Mic blocked / No mic / Not available, with a longer message under it when something is wrong
 
 ## Build note
 

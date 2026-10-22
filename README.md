@@ -42,6 +42,7 @@ Open the **Network** address it prints (port 4173) on the phone, then use Chrome
 | `npm run lan` | Build, then serve `dist/` over HTTPS on the network (PWA works here) |
 | `npm run fetch-samples` | Download the CC0 drum samples (skips files already present) |
 | `npm run fetch-instruments` | Download and convert the CC0 KEYS instrument samples (needs ffmpeg; skips files already present) |
+| `npm run check:vocal` | Render synthetic voices through the vocal tuner and measure the result (prints PASS / FAIL; `python scripts/vocal_check.py <folder>` re-measures its WAVs with numpy) |
 | `npm run make-icons` | Regenerate PWA icons from `public/icons/icon.svg` |
 
 Set `HTTP=1` to turn off HTTPS. This is only for desktop checks; phones need HTTPS.
@@ -60,6 +61,23 @@ Set `HTTP=1` to turn off HTTPS. This is only for desktop checks; phones need HTT
 - On a tablet, the right-hand knobs edit the selected pad too: drag up or down, or double-tap to reset.
 - To add a kit, edit `src/audio/kits.json`, then run `npm run fetch-samples`.
 
+## Your own samples
+
+- **SWAP SAMPLE → IMPORT FILE…** loads a sound file (WAV, MP3, M4A, FLAC, OGG; up to 30 s) onto the selected pad. Silence at the start and end is trimmed and the peak is set to −1 dBFS. The pad takes the file's name.
+- Imported sounds are listed under **MY SAMPLES** at the top of the dialog (preview, pick, delete). They stay in this browser. A sample can't be deleted while a saved kit uses it.
+
+## Sharing kits and songs
+
+- **KITS → SHARE**, or **SEQ → loop picker → SHARE**, opens one dialog: **SHARE KIT** (the kit playing now, with its imported samples inside the file), **SHARE SONG** (the 4 loops, tempo and settings) and **IMPORT FILE…**.
+- Files are named `<name>.drumpad.txt`. On Android the share sheet opens (WhatsApp, Drive, email…); on the PC the file downloads.
+- Importing a kit adds it to **My kits** (a name already used gets " 2"). Importing a song asks first, then replaces the 4 loops (this can't be undone).
+
+## Recording to WAV
+
+- **REC OUT** (MIX / FX header) records everything you hear except the metronome, up to 10 minutes. A bar at the bottom of every tab shows the time and a STOP button.
+- **SEQ → loop picker → BOUNCE TO WAV…** plays the current loop 1, 2 or 4 times from bar 1 and records it exactly, plus the reverb or delay tail.
+- When a take finishes, **RECORDING READY** offers **SAVE** (share sheet on Android, download on the PC) or **DISCARD**. Files are 16-bit stereo WAV.
+
 ## Keys
 
 - Open **KEYS** for a keyboard. **SYNTH** has Warm Pad, Saw Lead, Sub Bass and Glass Pluck. **SAMPLED** has Grand Piano, FM Piano, Strings, Concert Harp and Kalimba (CC0 recordings, see CREDITS.md).
@@ -72,9 +90,9 @@ Set `HTTP=1` to turn off HTTPS. This is only for desktop checks; phones need HTT
 
 ## Mix / FX
 
-- Open **MIX / FX**. Six strips (KICKS, SNARE, HATS, PERC, KEYS, MASTER) each have a fader, a level meter, a dB readout and a mute (M). Drag the fader, or touch the track to jump there; double-tap resets it. The OUT readout holds the master peak.
+- Open **MIX / FX**. Seven strips (KICKS, SNARE, HATS, PERC, KEYS, VOX, MASTER) each have a fader, a level meter, a dB readout and a mute (M). Drag the fader, or touch the track to jump there; double-tap resets it. The OUT readout holds the master peak.
 - **REVERB, DELAY and FILTER** cards each have an on/off switch and three knobs (drag, arrow keys, or double-tap to reset). Reverb: SIZE, DECAY, MIX. Delay: TIME (tempo-synced), FDBK, MIX. Filter (on the whole master): TYPE, CUTOFF, RES.
-- Pads and keys only feed reverb and delay when their **send** is above 0: per pad on the KITS tab (and the tablet rail), and the two knobs on the KEYS tab. Every send starts at 0.
+- Pads, keys and the voice only feed reverb and delay when their **send** is above 0: per pad on the KITS tab (and the tablet rail), the two knobs on the KEYS tab, and the VOX sends in SETUP. Every send starts at 0.
 - The metronome click skips the strips and effects but follows MASTER. Mixer and effect settings are saved in this browser.
 
 ## Latency and theme (SETUP)
@@ -82,9 +100,18 @@ Set `HTTP=1` to turn off HTTPS. This is only for desktop checks; phones need HTT
 - **Audio & Latency:** CALIBRATE asks for taps along to 8 clicks and stores the measured delay; the **offset** slider (−50 to +50 ms) fine-tunes it. Both shift where recorded hits land. **Low-latency mode** (default on) uses the smallest audio buffer; turn it off for fewer crackles on a slow phone. It applies after a reload.
 - **Theme:** Chassis, Chassis light or High contrast; pad colours by drum type or one colour; **Vibrate on hit** (touch hits only, off by default, not on iPhones).
 
+## Vocal pitch correction (SETUP → Auto-tune)
+
+- Plug in **headphones** first: the speaker would feed back into the mic.
+- Switch on **Vocal pitch correction**. The browser asks for the mic once. The mic row shows the input level and the note heard → the note it's pulled to.
+- **KEY** and **SCALE** set the notes it pulls to (**Chromatic** = the nearest semitone). **MATCH SCALE SNAP KEY** copies the KEYS snap settings.
+- **Strength** is how far it pulls (100 % = all the way). **Speed** is how fast: 0 ms is the hard, robotic effect; towards 200 ms it sounds natural and keeps vibrato.
+- The voice plays through the **VOX** strip on MIX / FX, with its own reverb and delay sends on the card, and REC OUT records it. It adds about 20–25 ms of delay.
+- The mic switches off when the app is hidden, and is always off when the app starts. The other settings are saved.
+
 ## MIDI Learn
 
-Turn on LEARN in SETUP, tap a control, then move a control on the MIDI device. Pads, transport buttons, the master volume, the KEYS buttons, the pad knobs, the mixer faders and mutes, the FX switches and knobs, and the KEYS send knobs can all be learned. A note presses a button; a CC moves a fader or knob, or presses a button when it rises past 64.
+Turn on LEARN in SETUP, tap a control, then move a control on the MIDI device. Pads, transport buttons, the master volume, the KEYS buttons, the pad knobs, the mixer faders and mutes, the FX switches and knobs, the KEYS send knobs, REC OUT, and the vocal switch, strength, speed and VOX sends can all be learned. A note presses a button; a CC moves a fader or knob, or presses a button when it rises past 64.
 
 ## Licence
 

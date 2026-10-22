@@ -185,6 +185,10 @@ Files used (in `public/samples/instruments/<id>/<note>.flac`; the full list of s
 
 CC0 does not require attribution. The credit is kept here anyway, as thanks and so the source can be traced.
 
+## Vocal pitch correction
+
+- No third-party code or recordings. The tuner (`src/vocal/`) is the app's own implementation of two published methods: YIN pitch detection (A. de Cheveigné and H. Kawahara, "YIN, a fundamental frequency estimator for speech and music", JASA 111(4), 2002) and TD-PSOLA pitch shifting (time-domain pitch-synchronous overlap-add; E. Moulines and F. Charpentier, Speech Communication 9, 1990).
+
 ## Fonts
 
 - Archivo Narrow and JetBrains Mono, loaded from Google Fonts. Both are under the SIL Open Font License 1.1.
