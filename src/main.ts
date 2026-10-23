@@ -6,6 +6,7 @@ import './styles/setup.css';
 import './styles/keys.css';
 import './styles/mix.css';
 import './styles/audio.css';
+import './styles/micPanel.css';
 import { registerSW } from 'virtual:pwa-register';
 import { AudioEngine } from './audio/engine';
 import * as clock from './audio/clock';

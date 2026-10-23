@@ -5,6 +5,7 @@
 // - silence after it is cut, keeping 10 ms with a 5 ms fade out
 // - the peak is raised or lowered to −1 dBFS
 // "Silence" is measured from the file's own peak, so a quiet recording is trimmed like a loud one.
+// The REC MIC panel shows findSound()'s bounds as trim handles and passes the moved ones back in.
 
 export const START_BELOW_PEAK_DB = -50;
 export const END_BELOW_PEAK_DB = -60;
@@ -23,16 +24,21 @@ export interface EditedSample {
   gainDb: number;
 }
 
+/** The part of a file to keep, in frames (`end` not included). */
+export interface Bounds {
+  start: number;
+  end: number;
+  /** Frames faded in from zero at the start; PRE_ROLL when left out. */
+  fadeIn?: number;
+}
+
 const db = (x: number) => Math.pow(10, x / 20);
 
-/** Trims and normalises; null when the file has no sound in it. */
-export function editSample(input: Float32Array[], sampleRate: number): EditedSample | null {
-  let chans = input.slice(0, 2);
-  if (chans.length === 2 && sameData(chans[0], chans[1])) chans = [chans[0]];
+/** Where the sound is (silence before and after cut, as described above); null when the file has no sound. */
+export function findSound(input: Float32Array[], sampleRate: number): Bounds | null {
+  const chans = input.slice(0, 2);
   const frames = chans[0]?.length ?? 0;
-
-  let peak = 0;
-  for (const c of chans) for (let i = 0; i < frames; i++) peak = Math.max(peak, Math.abs(c[i]));
+  const peak = peakOf(chans, 0, frames);
   if (peak < SILENT_PEAK) return null;
 
   const loud = (i: number, level: number) => chans.some((c) => Math.abs(c[i]) >= level);
@@ -43,11 +49,26 @@ export function editSample(input: Float32Array[], sampleRate: number): EditedSam
   let last = frames - 1;
   while (last > first && !loud(last, endLevel)) last--;
 
-  const pre = Math.round(PRE_ROLL * sampleRate);
-  const start = Math.max(0, first - pre);
+  const start = Math.max(0, first - Math.round(PRE_ROLL * sampleRate));
   const end = Math.min(frames, last + 1 + Math.round(POST_ROLL * sampleRate));
+  return { start, end, fadeIn: first - start };
+}
+
+/** Trims (to `bounds`, or to findSound()) and normalises; null when the kept part has no sound in it. */
+export function editSample(input: Float32Array[], sampleRate: number, bounds?: Bounds): EditedSample | null {
+  let chans = input.slice(0, 2);
+  if (chans.length === 2 && sameData(chans[0], chans[1])) chans = [chans[0]];
+  const frames = chans[0]?.length ?? 0;
+
+  const keep = bounds ?? findSound(chans, sampleRate);
+  if (!keep) return null;
+  const start = Math.max(0, Math.min(frames, Math.round(keep.start)));
+  const end = Math.max(start, Math.min(frames, Math.round(keep.end)));
+  const peak = peakOf(chans, start, end);
+  if (peak < SILENT_PEAK) return null;
+
   const gain = db(TARGET_PEAK_DB) / peak;
-  const fadeIn = first - start;
+  const fadeIn = Math.min(keep.fadeIn ?? Math.round(PRE_ROLL * sampleRate), end - start);
   const fadeOut = Math.min(Math.round(FADE_OUT * sampleRate), end - start);
 
   const out = chans.map((c) => {
@@ -59,6 +80,32 @@ export function editSample(input: Float32Array[], sampleRate: number): EditedSam
     return o;
   });
   return { channels: out, trimmedStart: start / sampleRate, gainDb: 20 * Math.log10(gain) };
+}
+
+/** For drawing a waveform: the lowest and highest sample in each of `buckets` equal slices (min, max, min, max…). */
+export function peaks(channel: Float32Array, buckets: number): Float32Array {
+  const out = new Float32Array(buckets * 2);
+  const n = channel.length;
+  for (let b = 0; b < buckets; b++) {
+    const from = Math.floor((b * n) / buckets);
+    const to = Math.max(from + 1, Math.floor(((b + 1) * n) / buckets));
+    let lo = 0;
+    let hi = 0;
+    for (let i = from; i < to && i < n; i++) {
+      if (channel[i] < lo) lo = channel[i];
+      if (channel[i] > hi) hi = channel[i];
+    }
+    out[b * 2] = lo;
+    out[b * 2 + 1] = hi;
+  }
+  return out;
+}
+
+/** The loudest sample in frames [from, to) of any channel. */
+export function peakOf(chans: Float32Array[], from: number, to: number): number {
+  let peak = 0;
+  for (const c of chans) for (let i = from; i < to; i++) peak = Math.max(peak, Math.abs(c[i]));
+  return peak;
 }
 
 function sameData(a: Float32Array, b: Float32Array): boolean {
