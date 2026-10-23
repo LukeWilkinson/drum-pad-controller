@@ -442,7 +442,7 @@ Building on branch `feat/m7-stretch` from `main`. One commit per step; Luke chec
 - **WAV export:** both BOUNCE LOOP and RECORD OUT on one shared recorder; metronome never recorded.
 - **Vocal route:** a new VOX strip in MIX (fader, meter, mute, reverb / delay sends), heard live in headphones and caught by RECORD OUT.
 - **Vocal engine:** Claude's own AudioWorklet: YIN pitch detection + TD-PSOLA pitch shift (no library).
-- **M8 "record own sounds"** stays in M8; M7 builds the sample store and mic access it plugs into.
+- **M8 "record own sounds"** stays in M8; M7 builds the sample store and mic access it plugs into. *(Changed 2026-10-23: Luke asked for it after the PC test; built as REC MIC in "M7 additions" below.)*
 
 ### Steps (approved 2026-10-22)
 1. **Sample store and import** (Opus, high). `db.ts` v2 with a `samples` store `{ id, name, wav: Blob, seconds, addedAt }`. New pure `src/audio/wav.ts` (Float32 → 16-bit WAV with TPDF dither; shared by import, sharing and export). New `src/audio/userSamples.ts` (only code that changes `state.userSamples`): decode → trim (first sample above −50 dBFS, minus 2 ms; trailing silence) → normalise peak to −1 dBFS → WAV blob → id `user:` + first 16 hex of SHA-256 (dedupes shared kits) → save; `navigator.storage.persist()` on first import; delete refused while a saved kit uses it. `engine.fetchSample()` loads `user:` names from IndexedDB; a missing one leaves the pad silent with an LCD note. SWAP SAMPLE dialog: "MY SAMPLES" group first with IMPORT FILE…, preview and delete; pad name = file name (12 chars).
@@ -553,6 +553,9 @@ Luke tested M7 on the PC (import works) and asked for three more things. Plan: `
 - Browser pane quirk seen again: the pane flips to hidden while not on screen, which (correctly) ends a mic take; scripted checks stubbed `document.visibilityState`.
 - Not checked: a real mic and real sounds, Android's permission prompt, the level and trim on real takes, latency between the tap and the take start.
 
+### Addition step 4, docs and checklist: done (2026-10-23)
+- README (Your own samples → record from the mic; Sharing → SHARE / SAVE FILE rows; Recording to WAV → AUDIO tab, chip, SAVE FILE; Vocal → AUDIO tab and VOX chip; Learn targets), DESIGN (SHARE dialog rows, AUDIO tab, tablet chips, REC MIC button, vocal card moved), SPEC (record own sounds built early in M7), and Luke's M7 checklist above (sections 2, 3, 4, 5 updated; 6 REC MIC and 7 AUDIO tab added). Not run on any device.
+
 ## Luke's phone and hardware checklist for M7
 Run `npm.cmd run dev` on the PC and open the Network address on the phone (HTTPS; the mic needs it), or push to `main` first for the live site (ask Claude). Tap a pad first to start audio. Wired headphones for section 4.
 1. Import (KITS → pick a pad → SWAP SAMPLE):
@@ -560,22 +563,34 @@ Run `npm.cmd run dev` on the PC and open the Network address on the phone (HTTPS
    - [ ] A file over 30 s is refused with a message. MY SAMPLES lists it; preview plays; delete is refused while a saved kit uses it.
    - [ ] SAVE the kit, close the app fully, reopen: the imported sound is still on the pad.
 2. Sharing (KITS → SHARE, SEQ → loop picker → SHARE):
-   - [ ] SHARE KIT with an imported sample opens the share sheet; send it to yourself (WhatsApp, Drive or email).
+   - [ ] KIT → SHARE with an imported sample opens the share sheet; send it to yourself (WhatsApp, Drive or email).
+   - [ ] KIT → SAVE FILE and SONG → SAVE FILE download straight away (no share sheet), on the phone and on the PC.
    - [ ] Open the received `.drumpad.txt` with IMPORT FILE…: KIT ADDED → LOAD NOW plays the same kit, imported sample included. The PC browser can import the same file.
    - [ ] SHARE SONG, then IMPORT it: asks first, then the 4 loops, tempo and swing come back.
 3. WAV export:
-   - [ ] REC OUT on MIX / FX: play pads and keys for ~20 s with the metronome on, STOP, SAVE: the WAV plays in another app, sounds right, and has no click.
-   - [ ] BOUNCE TO WAV… (SEQ loop picker) 2 × LOOP: the file starts on the downbeat, loops twice cleanly and keeps the reverb tail.
+   - [ ] REC OUT on the AUDIO tab: play pads and keys for ~20 s with the metronome on, STOP, SAVE FILE: the WAV plays in another app, sounds right, and has no click. SHARE opens the share sheet instead.
+   - [ ] BOUNCE… (AUDIO tab, or SEQ loop picker) 2 × LOOP: the file starts on the downbeat, loops twice cleanly and keeps the reverb tail.
+   - [ ] While recording, the AUDIO tab shows a red dot from every tab.
    - [ ] A long take (a few minutes) on the phone doesn't stutter or crash.
-4. Vocal pitch correction (SETUP → Auto-tune, headphones on):
+4. Vocal pitch correction (AUDIO tab, headphones on; SETUP → Auto-tune → OPEN AUDIO also gets there):
    - [ ] Switch on: Android asks for the mic; the row shows "Mic on", the meter moves when you sing, and the note readout follows you.
    - [ ] Strength 100 %, Speed 0: a held note snaps to the scale (robotic effect). Speed up to 200 ms: sounds natural and keeps vibrato. Strength 0: your own voice.
    - [ ] Try a few keys and scales (and Chromatic); MATCH SCALE SNAP KEY copies the KEYS setting.
    - [ ] Delay feel: is the voice in your headphones late enough to put you off? Any crackles while singing over a playing loop (phone CPU)?
    - [ ] VOX strip fader, mute and meter work; the VOX reverb / delay sends add the effects; REC OUT records the voice.
    - [ ] Switch to another app and back: the switch is off (by design). Block the mic in Chrome's site settings: the card says "Mic blocked".
-5. MIDI Learn (loopMIDI or a controller, with the open M5 section 5): learn REC OUT, the vocal switch, Strength, Speed, a VOX send, VOX level and mute.
-6. Known gaps: Claude couldn't hear anything or use a real mic. The tuner was checked with synthetic voices and a test tone; import, sharing and the share sheet were checked in the PC browser only.
+5. MIDI Learn (loopMIDI or a controller, with the open M5 section 5): learn REC OUT, the vocal switch, Strength, Speed, a VOX send, VOX level and mute, and the REC MIC button.
+6. REC MIC (PADS screen, headphones on):
+   - [ ] Tap the mic in the display: it blinks red, the pads get dashed outlines, the display says "TAP THE PAD TO RECORD ONTO". Tap it again: off.
+   - [ ] Arm, tap a pad: Android asks for the mic the first time; then the status bar shows "MIC → PAD …" with a timer. Clap or say something, tap the same pad: the MIC TAKE dialog shows "Mic 1 · x s".
+   - [ ] PLAY plays the take; the start isn't cut off and there's no long silence before it. RETRY records the same pad again; CANCEL keeps the old sound.
+   - [ ] USE ON PAD: the pad is now "Mic 1" and plays the take at a level close to the other pads. SAVE AS NEW KIT saves it; close and reopen the app: the kit and sound are still there. NOT NOW leaves the kit marked edited (*).
+   - [ ] Leaving the app during a take ends it and still offers the take. Block the mic in Chrome's site settings: REC MIC says the mic was blocked.
+   - [ ] Is the delay between tapping the pad and the recording starting short enough? Is the mic button easy to hit and is the shortened kit name OK?
+7. AUDIO tab and layout:
+   - [ ] The bottom bar has 7 tabs and the labels fit; AUDIO shows RECORD SOUND TO PAD, RECORD WAV, then the vocal card.
+   - [ ] On a tablet or the PC (1024 px or wider): REC OUT and VOX chips sit in the top bar and work like the buttons on AUDIO.
+8. Known gaps: Claude couldn't hear anything or use a real mic. The tuner was checked with synthetic voices and a test tone; REC MIC with a test tone; import, sharing and the share sheet were checked in the PC browser only (the share sheet was stubbed).
 
 ### Checks (planned)
 - Per step: `tsc` + `npm run build`, scripted checks in the browser pane (`dev-http`), layout at 390×844, 844×390, 1280×800.
@@ -611,4 +626,4 @@ Run `npm.cmd run dev` on the PC and open the Network address on the phone (HTTPS
 - In PowerShell, `npm` is blocked by the script policy; use `npm.cmd`.
 
 ## Next step
-M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above), building on `feat/m6-effects`. Steps 1 (Kalimba), 2 (audio graph), 3 (MIX / FX tab) 4 (Latency card) and 5 (Theme card) done; Luke's ear checks happen with the M6 phone test. Step 6 (MIDI Learn targets) and 7 (docs, checklist) done: M6 is built. **PC test passed (2026-10-22):** Luke checked it at localhost on the PC, all good; phone-only items (vibrate, touch feel, landscape, Low-latency buffer) not run yet. M6 merged into `main` and live on the Pages site (2026-10-22, 460a854; Pages needs a public repo and source = GitHub Actions). M7 plan approved (2026-10-22, see "M7" above), building on `feat/m7-stretch`. Steps 1 (sample store and import), 2 (sharing kits and songs), 3 (recorder and WAV export), 4 (vocal DSP worklet), 5 (vocal card and VOX strip) and 6 (docs and checklist) done: **M7 is built**. Next: Luke's M7 phone test (checklist above), then merge `feat/m7-stretch` into `main` (pushing publishes the live site; ask Luke first).
+M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above), building on `feat/m6-effects`. Steps 1 (Kalimba), 2 (audio graph), 3 (MIX / FX tab) 4 (Latency card) and 5 (Theme card) done; Luke's ear checks happen with the M6 phone test. Step 6 (MIDI Learn targets) and 7 (docs, checklist) done: M6 is built. **PC test passed (2026-10-22):** Luke checked it at localhost on the PC, all good; phone-only items (vibrate, touch feel, landscape, Low-latency buffer) not run yet. M6 merged into `main` and live on the Pages site (2026-10-22, 460a854; Pages needs a public repo and source = GitHub Actions). M7 plan approved (2026-10-22, see "M7" above), building on `feat/m7-stretch`. Steps 1 (sample store and import), 2 (sharing kits and songs), 3 (recorder and WAV export), 4 (vocal DSP worklet), 5 (vocal card and VOX strip) and 6 (docs and checklist) done: **M7 is built**. Luke's PC test (2026-10-23): import works; he asked for SAVE FILE, an AUDIO tab with header chips, and REC MIC. Those "M7 additions" steps 1–4 are done (2026-10-23, see above). Next: Luke's M7 phone test (checklist above, now with sections 6 REC MIC and 7 AUDIO tab), then merge `feat/m7-stretch` into `main` (pushing publishes the live site; ask Luke first).

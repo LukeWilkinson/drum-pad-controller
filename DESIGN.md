@@ -132,7 +132,10 @@ Keep the pad screen uncluttered. Everything else lives behind the tabs.
   - Reverb, Delay and Filter cards, each with an on/off switch and three 270° arc knobs
   - built: 160 px faders (120 px on phone landscape, where the panel scrolls), meters from −54 to +6 dB, the OUT readout holds the peak 1.5 s, send-fed cards show a one-line hint until something sends to them; MIDI Learn outlines every fader, mute, switch and knob
   - built (M7): seven strips, a VOX strip (colour `--fx`) between KEYS and MASTER, with 3 px gaps so each 44 px strip fits at 390 wide; REC OUT button in the header (red while recording) and a recording bar with STOP above the tab bar on every tab
-- **Kits and Seq (M7, not in the design):** KITS header SHARE button; the SEQ loop picker gets SHARE / IMPORT… and BOUNCE TO WAV…; SWAP SAMPLE starts with IMPORT FILE… and a MY SAMPLES group
+- **Kits and Seq (M7, not in the design):** KITS header SHARE button; the SEQ loop picker gets SHARE / IMPORT… and BOUNCE TO WAV…; SWAP SAMPLE starts with IMPORT FILE… and a MY SAMPLES group. The SHARE dialog has a KIT row and a SONG row, each with SHARE and SAVE FILE (SHARE is left out where the browser has no file share sheet); RECORDING READY has DISCARD / SHARE / SAVE FILE
+- **AUDIO tab (M7 additions, not in the design):** a 7th tab (waveform icon) between MIX/FX and SETUP, laid out like SETUP with `.su-*` cards: RECORD SOUND TO PAD (RECORD…), RECORD WAV (REC OUT and BOUNCE…, `.mx-rec` style buttons), then the vocal card moved from SETUP. A `--rec` dot on the tab while the vocal mic is on or anything records. Portrait tab bar is 7 columns (55 px each at 390)
+- **Tablet header (M7 additions):** REC OUT and VOX chips before the MIDI chip, styled like it (`--drawer`, mono 12 px). REC OUT turns `--rec` while recording; the VOX dot is amber when switched on, `--play` with the mic live, `--rec` on a mic error. The header row spans the pad and rail columns
+- **REC MIC (M7 additions):** a 44 px mic button in the LCD top line, between the kit name and BPM (`--lcd-dim`). Armed: `--rec`, blinking, and every pad gets a 2 px dashed `--rec` outline. Recording: solid `--rec` button and a 3 px solid outline on that pad. Long kit names end in "…" sooner on phones
 - **Settings:**
   - **MIDI:** output, input, channel, send clock, MIDI Learn (amber "listening" state) and a list of mappings
   - **Latency:** measured value shown in the LCD style, a calibrate button (tap along to 8 clicks), manual offset, low-latency mode
@@ -140,6 +143,7 @@ Keep the pad screen uncluttered. Everything else lives behind the tabs.
   - **Theme:** Chassis, Chassis light, High contrast; pad colours (by drum type or a single colour); vibrate on hit
   - built: Latency and Theme cards are in SETUP; the KEYS tab gets a SENDS row (REVERB / DELAY knobs) and a fifth SAMPLED preset (Kalimba)
   - built (M7): the vocal card as drawn, plus a "heard → target" note readout at the right of the mic row, Chromatic first in its SCALE list, VOX reverb / delay send sliders and a line saying the voice plays through VOX; Speed runs 0–200 ms (drawn 0–400); the mic row text is Mic off / Asking… / Mic on / Mic blocked / No mic / Not available, with a longer message under it when something is wrong
+  - moved (M7 additions): the vocal card lives on the AUDIO tab; SETUP's Auto-tune keeps Scale snap and a "Vocal pitch correction" row with an OPEN AUDIO button
 
 ## Build note
 
