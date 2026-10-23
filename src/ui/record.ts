@@ -1,12 +1,13 @@
 // WAV export controls: the REC OUT button (MIX header), the BOUNCE dialog (SEQ loop picker), the
 // status bar shown on every tab while recording (with STOP), and the dialog that saves a finished
-// take. SAVE is its own tap because the phone's share sheet only opens from one.
+// take. SHARE / SAVE FILE are their own taps because the phone's share sheet only opens from one.
 // The recording itself is src/audio/recorder.ts.
 
 import * as recorder from '../audio/recorder';
 import { deliver } from '../share/deliver';
 import { state, subscribe } from '../state';
 import { escapeHtml, openDialog } from './dialog';
+import { shareButtons } from './share';
 
 const PASSES = [1, 2, 4];
 
@@ -79,14 +80,14 @@ async function offerTake(take: recorder.Take): Promise<void> {
     <p class="sh-msg" role="status"></p>
     <div class="dlg-btns">
       <button value="cancel" class="kp-btn">DISCARD</button>
-      <button type="button" class="kp-btn primary rec-save">SAVE</button>
+      ${shareButtons('data-take', true)}
     </div>`,
     (btn) => {
-      if (!btn.classList.contains('rec-save')) return;
+      if (!btn.hasAttribute('data-take')) return;
       const dialog = btn.closest('dialog')!;
       const msg = dialog.querySelector<HTMLElement>('.sh-msg')!;
       btn.disabled = true;
-      deliver(take.blob, take.name)
+      deliver(take.blob, take.name, btn.dataset.how === 'download' ? 'download' : 'share')
         .then((how) => {
           if (how === 'cancelled') {
             btn.disabled = false;

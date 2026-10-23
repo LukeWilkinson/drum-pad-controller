@@ -522,6 +522,16 @@ Building on branch `feat/m7-stretch` from `main`. One commit per step; Luke chec
 ### Step 6, docs and checklist: done (2026-10-22)
 - README: Scripts row for `check:vocal`, new sections "Your own samples", "Sharing kits and songs", "Recording to WAV", "Vocal pitch correction"; Mix / FX now 7 strips; MIDI Learn lists the new targets. DESIGN: what M7 built beside the design (VOX strip, REC OUT, share / bounce buttons, vocal card differences). CREDITS: the vocal tuner's methods (YIN, TD-PSOLA), no third-party code. No new sounds, so no new sample credits.
 
+## M7 additions after Luke's PC test (plan approved 2026-10-23)
+Luke tested M7 on the PC (import works) and asked for three more things. Plan: `C:\Users\LukeW\.claude\plans\curried-baking-crescent.md`.
+- **Luke's picks:** SAVE FILE (always downloads) everywhere SHARE is; a new AUDIO tab *and* tablet header chips (REC OUT, VOX) for auto-tune and WAV export; the vocal card moves to AUDIO with a link left in SETUP; REC MIC = a mic icon in the LCD top line (phone rows are full at 390 px); a review dialog (PLAY / RETRY / CANCEL / USE ON PAD) before a mic take goes on the pad, then a SAVE AS NEW KIT offer. "Record own sounds" moves from M8 into M7.
+- **Steps:** 1 SAVE FILE → 2 AUDIO tab, chips, vocal card move → 3 REC MIC to a pad → 4 docs and checklist. One commit each; Luke checks in between.
+
+### Addition step 1, SAVE FILE: done (2026-10-23)
+- `deliver(blob, name, how)`: `'download'` never opens the share sheet. `canShareFiles()` probes `navigator.canShare`; where it is false the SHARE button is left out (it would only download too).
+- `src/ui/share.ts` `shareButtons()` / `deliveredText()`: the SHARE dialog has a KIT row and a SONG row, each SHARE + SAVE FILE; RECORDING READY has DISCARD / SHARE / SAVE FILE (primary).
+- Checked by script with stubbed `navigator.share` / `canShare` and anchor clicks: SHARE → share sheet, SAVE FILE → download, for kit, song and a REC OUT take; no-share browser shows SAVE FILE only; rows fit at 390 px with 44 px buttons. Not checked: the real Windows / Android share sheet.
+
 ## Luke's phone and hardware checklist for M7
 Run `npm.cmd run dev` on the PC and open the Network address on the phone (HTTPS; the mic needs it), or push to `main` first for the live site (ask Claude). Tap a pad first to start audio. Wired headphones for section 4.
 1. Import (KITS → pick a pad → SWAP SAMPLE):

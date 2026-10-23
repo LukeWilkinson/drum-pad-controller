@@ -137,7 +137,10 @@
 
 .dlg p.sh-hint { font-size: 13px; color: var(--text-muted); }
 .sh-list { display: flex; flex-direction: column; gap: 6px; }
-.sh-list .kp-btn { width: 100%; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sh-list > .kp-btn { width: 100%; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sh-row { display: flex; align-items: center; gap: 6px; }
+.sh-what { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sh-row .kp-btn { flex: none; }
 .dlg p.sh-msg { margin: 8px 0 10px; min-height: 1.4em; font-size: 12px; color: var(--text-muted); }
 
 /* ---------- Swap sample list ---------- */

@@ -2,7 +2,7 @@
 // now or the song as a file, or import a file someone sent. The work is in src/share/share.ts.
 
 import { selectKit } from '../kitControl';
-import type { Delivered } from '../share/deliver';
+import { canShareFiles, type Delivered } from '../share/deliver';
 import { ShareError, FILE_SUFFIX } from '../share/format';
 import { importKit, importSong, readShared, shareKit, shareSong } from '../share/share';
 import { state } from '../state';
@@ -28,14 +28,25 @@ function pickFile(): void {
   picker.click();
 }
 
+/** SHARE + SAVE FILE for one thing. SHARE is left out where the browser can't share files (it would only download too). */
+export function shareButtons(attrs: string, primary = false): string {
+  return `${canShareFiles() ? `<button type="button" class="kp-btn" ${attrs} data-how="share">SHARE</button>` : ''}
+    <button type="button" class="kp-btn${primary ? ' primary' : ''}" ${attrs} data-how="download">SAVE FILE</button>`;
+}
+
+/** What the status line says once a file has gone. */
+export function deliveredText(how: Delivered): string {
+  return how === 'shared' ? 'Sent.' : how === 'downloaded' ? 'Saved. Check the Downloads folder.' : '';
+}
+
 export async function openShareDialog(): Promise<void> {
   const kitName = state.kit ? state.kit.name.toUpperCase() : 'KIT';
   await openDialog(
     `<h2>SHARE</h2>
-    <p class="sh-hint">Send the kit or the song to another phone as a file, or open a file you were sent.</p>
+    <p class="sh-hint">Send the kit or the song to another phone as a file, save it as a file, or open a file you were sent.</p>
     <div class="sh-list">
-      <button type="button" class="kp-btn" data-share="kit">SHARE KIT · ${escapeHtml(kitName)}${state.edited ? ' *' : ''}</button>
-      <button type="button" class="kp-btn" data-share="song">SHARE SONG · 4 LOOPS</button>
+      <div class="sh-row"><span class="sh-what">KIT · ${escapeHtml(kitName)}${state.edited ? ' *' : ''}</span>${shareButtons('data-share="kit"')}</div>
+      <div class="sh-row"><span class="sh-what">SONG · 4 LOOPS</span>${shareButtons('data-share="song"')}</div>
       <button type="button" class="kp-btn" data-share="import">IMPORT FILE…</button>
     </div>
     <p class="sh-msg" role="status"></p>
@@ -44,11 +55,12 @@ export async function openShareDialog(): Promise<void> {
       const dialog = btn.closest('dialog')!;
       const msg = dialog.querySelector<HTMLElement>('.sh-msg')!;
       const what = btn.dataset.share;
+      const how = btn.dataset.how === 'download' ? 'download' : 'share';
       if (what === 'import') {
         pickFile();
         dialog.close('cancel'); // the import shows its own dialogs
       } else if (what === 'kit' || what === 'song') {
-        void send(what === 'kit' ? shareKit : shareSong, btn, msg);
+        void send(() => (what === 'kit' ? shareKit(how) : shareSong(how)), btn, msg);
       }
     },
   );
@@ -58,8 +70,7 @@ async function send(make: () => Promise<Delivered>, btn: HTMLButtonElement, msg:
   btn.disabled = true;
   msg.textContent = 'PREPARING…';
   try {
-    const how = await make();
-    msg.textContent = how === 'shared' ? 'Sent.' : how === 'downloaded' ? 'Saved to the Downloads folder.' : '';
+    msg.textContent = deliveredText(await make());
   } catch (err) {
     if (!(err instanceof ShareError)) console.error(err);
     msg.textContent = err instanceof ShareError ? err.message : "That couldn't be shared.";

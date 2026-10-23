@@ -7,25 +7,25 @@ import { addShared, isUserSample, wavsOf } from '../audio/userSamples';
 import { addKit } from '../kitControl';
 import { applySong, currentSong } from '../seq/sequencer';
 import { state } from '../state';
-import { deliver, type Delivered } from './deliver';
+import { deliver, type DeliverHow, type Delivered } from './deliver';
 import { FILE_TYPE, ShareError, fileName, kitFileText, parseFile, songFileText, type Shared } from './format';
 
 /** A kit with 64 imported 30 s samples is about 330 MB; files over this are refused unread. */
 const MAX_FILE_BYTES = 120 * 1024 * 1024;
 
-/** Shares the kit playing now, unsaved changes and imported samples included. */
-export async function shareKit(): Promise<Delivered> {
+/** Shares (or with 'download' saves) the kit playing now, unsaved changes and imported samples included. */
+export async function shareKit(how: DeliverHow = 'share'): Promise<Delivered> {
   const kit = state.kit;
   if (!kit) throw new ShareError('No kit is loaded yet.');
   const samples = await wavsOf(sampleNamesOf(kit.pads).filter(isUserSample));
   const text = kitFileText({ name: kit.name, baseKitId: kit.baseKitId, pads: kit.pads, params: kit.params }, samples);
-  return deliver(new Blob([text], { type: FILE_TYPE }), fileName(kit.name));
+  return deliver(new Blob([text], { type: FILE_TYPE }), fileName(kit.name), how);
 }
 
-/** Shares the 4 loops with tempo, swing, quantise and the other song settings. */
-export function shareSong(): Promise<Delivered> {
+/** Shares (or saves) the 4 loops with tempo, swing, quantise and the other song settings. */
+export function shareSong(how: DeliverHow = 'share'): Promise<Delivered> {
   const date = new Date().toISOString().slice(0, 10);
-  return deliver(new Blob([songFileText(currentSong())], { type: FILE_TYPE }), fileName(`song ${state.bpm}bpm ${date}`));
+  return deliver(new Blob([songFileText(currentSong())], { type: FILE_TYPE }), fileName(`song ${state.bpm}bpm ${date}`), how);
 }
 
 export async function readShared(file: File): Promise<Shared> {
