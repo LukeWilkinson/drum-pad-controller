@@ -1,6 +1,6 @@
 // Mixer and FX settings. This is the only code that changes state.mix (as kitControl.ts is for kits).
 // It keeps the engine's MixGraph in step with the store, follows the tempo for the delay and the
-// KEYS sends (state.keys), and saves everything as one global `mix` pref, 500 ms after the last change.
+// KEYS and VOX sends (state.keys, state.vocal), and saves everything as one global `mix` pref, 500 ms after the last change.
 // Master volume used to be its own `master` pref (a gain 0–1); it is read once if there is no `mix` pref.
 
 import type { AudioEngine } from '../audio/engine';
@@ -37,7 +37,8 @@ export function initMix(e: AudioEngine): Promise<void> {
   applyAll(state.mix);
   subscribe((s, changed) => {
     if (changed.has('bpm')) applyDelay(s.mix.delay);
-    if (changed.has('keys')) engine.mix.setKeysSends(s.keys.reverbSend, s.keys.delaySend);
+    if (changed.has('keys')) engine.mix.setSends('keys', s.keys.reverbSend, s.keys.delaySend);
+    if (changed.has('vocal')) engine.mix.setSends('vox', s.vocal.reverbSend, s.vocal.delaySend);
   });
   // A phone may close the app without warning once it's hidden: save a pending change now.
   document.addEventListener('visibilitychange', () => {
@@ -128,7 +129,8 @@ function applyAll(mix: MixState): void {
   applyReverb(mix.reverb);
   applyDelay(mix.delay);
   applyFilter(mix.filter);
-  engine.mix.setKeysSends(state.keys.reverbSend, state.keys.delaySend);
+  engine.mix.setSends('keys', state.keys.reverbSend, state.keys.delaySend);
+  engine.mix.setSends('vox', state.vocal.reverbSend, state.vocal.delaySend);
 }
 
 // ---------- Checking values (from the UI, MIDI or an old save; a bad value keeps the fallback) ----------

@@ -4,13 +4,16 @@
 
 import type { ActiveKit, UserKit } from './audio/kit';
 import { loadLatency, type LatencyState } from './audio/latencyTypes';
+import type { UserSampleInfo } from './audio/userSamples';
+import type { RecorderState } from './audio/recorder';
 import { loadTheme, type ThemeState } from './ui/themeTypes';
 import { DEFAULT_KEYS, type KeysState } from './keys/types';
 import { DEFAULT_CHANNEL, DEFAULT_KEYS_CHANNEL, type LearnState, type MidiState } from './midi/types';
 import { defaultMix, type MixState } from './mix/types';
 import { PATTERN_COUNT, emptyPattern, type Pattern, type Quant } from './seq/pattern';
+import { DEFAULT_VOCAL, type VocalState } from './vocal/types';
 
-export type View = 'pads' | 'kits' | 'seq' | 'keys' | 'mix' | 'setup';
+export type View = 'pads' | 'kits' | 'seq' | 'keys' | 'mix' | 'audio' | 'setup';
 
 export interface AppState {
   /** The kit playing now (null until the first kit has loaded). */
@@ -24,6 +27,8 @@ export interface AppState {
   view: View;
   /** Saved kits, newest first. */
   userKits: UserKit[];
+  /** Imported samples, oldest first (changed only by src/audio/userSamples.ts). */
+  userSamples: UserSampleInfo[];
   /** Transport (changed only by src/audio/clock.ts). */
   playing: boolean;
   bpm: number;
@@ -59,6 +64,12 @@ export interface AppState {
   latency: LatencyState;
   /** Theme, pad colours and vibrate (changed only by src/ui/theme.ts). */
   theme: ThemeState;
+  /** WAV export: RECORD OUT or a BOUNCE running (changed only by src/audio/recorder.ts). */
+  recorder: RecorderState;
+  /** Vocal pitch correction from the mic (changed only by src/vocal/vocal.ts). */
+  vocal: VocalState;
+  /** REC MIC armed: the next pad tapped records the mic for that pad (changed only by src/ui/micRec.ts). */
+  micArm: boolean;
 }
 
 /** 'count' = count-in bar before recording starts. */
@@ -74,6 +85,7 @@ export const state: AppState = {
   selectedPad: 12, // Kick
   view: 'pads',
   userKits: [],
+  userSamples: [],
   playing: false,
   bpm: 120,
   click: true,
@@ -104,6 +116,9 @@ export const state: AppState = {
   mix: defaultMix(),
   latency: loadLatency(),
   theme: loadTheme(),
+  recorder: { mode: 'off', since: 0, label: '' },
+  vocal: { ...DEFAULT_VOCAL },
+  micArm: false,
 };
 
 const listeners = new Set<Listener>();

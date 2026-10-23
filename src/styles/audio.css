@@ -1,0 +1,55 @@
+/* AUDIO panel (vocal pitch correction and WAV recording), the tablet header's REC OUT and VOX chips,
+   and the AUDIO tab's live dot. Loaded after setup.css: the cards reuse its .su-* styles.
+   .app[data-view="audio"] hides the pad grid and shows the panel, placed like the SETUP panel. */
+
+.audio-panel {
+  grid-area: pads;
+  display: none;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  padding-bottom: 12px;
+}
+.app[data-view="audio"] .audio-panel { display: flex; }
+.app[data-view="audio"] .padwell { display: none; }
+
+.app[data-view="audio"] { grid-template-areas: "pads" "pads" "tabs"; }
+.app[data-view="audio"] .controls { display: none; }
+
+@media (orientation: landscape) and (max-height: 540px) {
+  .app[data-view="audio"] { grid-template-areas: "controls pads" ". pads" "tabs pads"; }
+  .app[data-view="audio"] .controls { display: flex; }
+  .audio-panel { width: var(--pad-size); padding-bottom: 0; }
+}
+
+@media (min-width: 1024px) and (min-height: 600px) {
+  .app[data-view="audio"] { grid-template-areas: "tabs tabs status" "controls pads right"; }
+  .app[data-view="audio"] .controls { display: flex; }
+  .audio-panel { width: var(--pad-size); padding-bottom: 0; }
+}
+
+.audio-panel .mx-rec { min-width: 104px; justify-content: center; }
+
+/* AUDIO tab: a red dot while the mic is on or a recording runs. */
+.tab.audio { position: relative; }
+.tab.audio[data-live]::after {
+  content: ''; position: absolute; top: 6px; right: 8px;
+  width: 8px; height: 8px; border-radius: 50%; background: var(--rec);
+}
+
+/* Tablet header chips (the .status bar only shows on tablet / desktop). */
+.hdr-chip {
+  flex: none; height: 44px; padding: 0 14px; border-radius: 8px; background: var(--drawer);
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--font-mono); font-size: 12px; color: var(--text); white-space: nowrap;
+}
+.rec-chip[aria-pressed="true"] { background: var(--rec); color: var(--text-strong); }
+.rec-chip[aria-pressed="true"] .rec-dot { background: var(--text-strong); }
+.vox-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--switch-off); flex: none; }
+.vox-chip[aria-checked="true"] .vox-dot { background: var(--amber); }
+.vox-chip[data-mic="on"] .vox-dot { background: var(--play); }
+.vox-chip[data-mic="denied"] .vox-dot, .vox-chip[data-mic="nomic"] .vox-dot, .vox-chip[data-mic="error"] .vox-dot { background: var(--rec); }

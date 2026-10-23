@@ -63,13 +63,16 @@ export function setParam(index: number, key: ParamKey, value: number): void {
   update({ edited: true }, 'params');
 }
 
-/** Puts a different sample on a pad. The soft layer is dropped, since it belonged to the old sample. */
-export async function swapSample(index: number, sample: string): Promise<void> {
+/**
+ * Puts a different sample on a pad. The soft layer is dropped, since it belonged to the old sample.
+ * `name` renames the pad (an imported sample gives the pad its own name).
+ */
+export async function swapSample(index: number, sample: string, name?: string): Promise<void> {
   const kit = state.kit;
   if (!kit) return;
   await engine.loadSamples([sample]);
   const { soft: _soft, ...rest } = kit.pads[index];
-  kit.pads[index] = { ...rest, hard: sample };
+  kit.pads[index] = { ...rest, hard: sample, ...(name ? { name } : {}) };
   update({ edited: true }, 'pads');
 }
 
@@ -93,6 +96,20 @@ export async function saveKit(name?: string): Promise<void> {
   Object.assign(kit, { id: saved.id, name: saved.name, user: true });
   update({ kit, edited: false, userKits: await listUserKits() });
   setPref('lastKit', saved.id).catch(ignore);
+}
+
+/**
+ * Adds a kit from a shared file to the saved kits (not loaded). A name already used by a built-in
+ * or saved kit gets a number: "Boom Bap 2". Returns the new kit.
+ */
+export async function addKit(shared: Pick<UserKit, 'name' | 'baseKitId' | 'pads' | 'params'>): Promise<UserKit> {
+  const used = new Set([...KITS.map((k) => k.name), ...state.userKits.map((u) => u.name)]);
+  let name = shared.name;
+  for (let n = 2; used.has(name); n++) name = `${shared.name} ${n}`;
+  const kit: UserKit = { ...structuredClone(shared), id: `user-${Date.now().toString(36)}`, name, savedAt: Date.now() };
+  await saveUserKit(kit);
+  update({ userKits: await listUserKits() });
+  return kit;
 }
 
 /** Deletes a saved kit. If it is the one playing, it keeps playing as unsaved changes to its base kit. */

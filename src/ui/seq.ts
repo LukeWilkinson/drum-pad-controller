@@ -11,6 +11,8 @@ import * as seq from '../seq/sequencer';
 import { state, subscribe, type Change } from '../state';
 import { selectBank } from '../kitControl';
 import { openDialog } from './dialog';
+import { openBounceDialog } from './record';
+import { openShareDialog } from './share';
 import { onFrame } from './transport';
 
 /** Screen indexes of the pads on each row page: the design's 8 rows first, then the other 8 pads. */
@@ -160,7 +162,13 @@ export function buildSeqPanel(app: HTMLElement, engine: AudioEngine): void {
             LOOP ${i + 1} · ${hasHits(p) ? `${p.bars} BAR${p.bars > 1 ? 'S' : ''}` : 'EMPTY'}
           </button>`).join('')}
       </div>
-      <div class="dlg-btns"><button value="cancel" class="kp-btn">CANCEL</button></div>`);
+      <div class="dlg-btns">
+        <button value="bounce" class="kp-btn">BOUNCE TO WAV…</button>
+        <button value="share" class="kp-btn">SHARE / IMPORT…</button>
+        <button value="cancel" class="kp-btn">CANCEL</button>
+      </div>`);
+    if (res.value === 'share') return openShareDialog();
+    if (res.value === 'bounce') return openBounceDialog();
     const i = Number(res.value);
     if (res.value !== 'cancel' && Number.isInteger(i)) seq.selectPattern(i);
   }

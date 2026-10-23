@@ -1,7 +1,7 @@
-// SETUP panel (Settings.dc.html): the MIDI card and the Scale snap card (AUTO-TUNE; the vocal card
-// is M7). Built once; render() updates it from the store. Also drives the tablet header's MIDI chip.
-// The MIDI code does the work (src/midi/midi.ts, and src/midi/learn.ts for the MIDI LEARN button and
-// the mappings list); src/keys/keys.ts owns the snap settings.
+// SETUP panel (Settings.dc.html): the MIDI, latency, AUTO-TUNE (Scale snap, and a link to the vocal card,
+// which lives on the AUDIO tab: src/ui/audio.ts) and theme cards. Built once; render() updates it from the
+// store. Also drives the tablet header's MIDI chip. The MIDI code does the work (src/midi/midi.ts, and
+// src/midi/learn.ts for the MIDI LEARN button and the mappings list); src/keys/keys.ts owns the snap settings.
 
 import * as latency from '../audio/latency';
 import * as theme from './theme';
@@ -13,7 +13,7 @@ import { toggleLearn } from '../midi/learn';
 import * as midi from '../midi/midi';
 import { messageLabel, targetLabel } from '../midi/targets';
 import type { MidiState } from '../midi/types';
-import { state, subscribe } from '../state';
+import { state, subscribe, update } from '../state';
 import { escapeHtml } from './dialog';
 import type { ScreenRefs } from './screen';
 
@@ -99,6 +99,12 @@ export function buildSetupPanel(app: HTMLElement, ui: ScreenRefs): void {
         <div class="su-pair">
           <label>KEY<select class="su-key">${KEY_NAMES.map((n, i) => `<option value="${i}">${n}</option>`).join('')}</select></label>
           <label>SCALE<select class="su-scale">${SCALE_IDS.map((id) => `<option value="${id}">${SCALES[id].name}</option>`).join('')}</select></label>
+        </div>
+      </div>
+      <div class="su-card">
+        <div class="su-row">
+          <div class="su-title"><span class="su-name">Vocal pitch correction</span><span class="su-sub">Now on the AUDIO tab, with WAV recording</span></div>
+          <button class="su-opt su-to-audio">OPEN AUDIO</button>
         </div>
       </div>
     </section>
@@ -205,6 +211,8 @@ export function buildSetupPanel(app: HTMLElement, ui: ScreenRefs): void {
     vibSw.disabled = true;
     q<HTMLElement>('.su-vib-sub').textContent = 'Not supported by this browser (iPhones cannot vibrate)';
   }
+
+  q<HTMLButtonElement>('.su-to-audio').addEventListener('click', () => update({ view: 'audio' }));
 
   snapSw.addEventListener('click', keys.toggleSnap);
   keySel.addEventListener('change', () => keys.setKey(Number(keySel.value)));

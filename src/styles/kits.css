@@ -133,6 +133,16 @@
 .dlg-field input:focus { outline: none; border-color: var(--amber); }
 .dlg-btns { display: flex; justify-content: flex-end; gap: 6px; flex-wrap: wrap; }
 
+/* ---------- Share dialog (src/ui/share.ts) ---------- */
+
+.dlg p.sh-hint { font-size: 13px; color: var(--text-muted); }
+.sh-list { display: flex; flex-direction: column; gap: 6px; }
+.sh-list > .kp-btn { width: 100%; text-align: left; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sh-row { display: flex; align-items: center; gap: 6px; }
+.sh-what { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; letter-spacing: .04em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sh-row .kp-btn { flex: none; }
+.dlg p.sh-msg { margin: 8px 0 10px; min-height: 1.4em; font-size: 12px; color: var(--text-muted); }
+
 /* ---------- Swap sample list ---------- */
 
 .sw-list { max-height: min(60vh, 480px); overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; margin: 0 -4px 12px; }
@@ -142,6 +152,17 @@
 .sw-play { width: 44px; height: 44px; flex: none; border-radius: 6px; background: none; color: var(--amber); display: grid; place-items: center; }
 .sw-pick { flex: 1; height: 44px; text-align: left; padding: 0 8px; background: none; color: var(--text); font: 13px var(--font-mono); }
 .sw-row.current .sw-pick { color: var(--amber); }
+.sw-pick { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sw-len { color: var(--text-muted); font-size: 11px; }
+.sw-del { width: 44px; height: 44px; flex: none; border-radius: 6px; background: none; color: var(--text-muted); display: grid; place-items: center; }
+.sw-top { display: flex; flex-direction: column; gap: 6px; margin-bottom: 4px; }
+.sw-import { height: 44px; }
+.dlg p.sw-msg { margin: 0; font-size: 12px; line-height: 1.35; color: var(--text-muted); min-height: 2.7em; }
+.dlg p.sw-empty { margin: 2px 4px 4px; font-size: 12px; color: var(--text-muted); }
+/* Phone landscape: the list gives way so the dialog's buttons stay on screen. */
+@media (max-height: 540px) {
+  .sw-list { max-height: calc(100dvh - 250px); }
+}
 
 .knob[data-key] { touch-action: none; cursor: ns-resize; border-radius: 8px; }
 .knob[data-key]:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }

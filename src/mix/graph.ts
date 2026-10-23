@@ -4,19 +4,21 @@
 //              ├→ reverb send (pad amount) ──→ strip rv  (fader × mute) ─┼→ reverb in
 //              └→ delay send (pad amount) ───→ strip dl  (fader × mute) ─┼→ delay in
 //   KEYS bus ──→ keys fader ─┬→ meter, master sum                       │
-//                            ├→ keys reverb send ──────────────────────┘
-//                            └→ keys delay send
+//   VOX (mic) ─→ vox fader  ─┤  (each bus has its own fader and sends)  │
+//                            ├→ reverb send ───────────────────────────┘
+//                            └→ delay send
 //   strips dry ─→ master sum ←─ reverb return (MIX × on) ← convolver ← reverb in
 //                     │      ←─ delay return  (MIX × on) ← delay line (+ feedback) ← delay in
 //                     ├→ bypass gain ────┐
-//                     └→ filter → filter gain ─┴→ master fader (× mute) → meter → speakers
-//   metronome click ──────────────────────────→ master fader (skips strips and FX)
+//                     └→ filter → filter gain ─┴→ master fader (× mute) ─┬→ meter, speakers
+//                                                                        └→ recorder tap (src/audio/recorder.ts)
+//   metronome click ──→ click fader (follows MASTER) ──→ meter, speakers (skips strips, FX and the recorder)
 //
 // Sends are post-fader, so pulling a strip down or muting it also quietens its reverb and delay.
 // This file only builds and sets nodes; src/mix/mix.ts decides the values.
 
 import { generateImpulse } from './impulse';
-import { FILTER_TYPES, STRIPS, faderGain, type PadStrip, type StripId } from './types';
+import { FILTER_TYPES, STRIPS, faderGain, type BusStrip, type PadStrip, type StripId } from './types';
 
 const RAMP = 0.015; // seconds; smoothing for level changes so they never click
 const DELAY_MAX = 4; // seconds; 1/2 note at 40 BPM is 3 s
@@ -29,24 +31,34 @@ interface PadStripNodes {
   dl: GainNode;
 }
 
+interface BusNodes {
+  input: GainNode;
+  fader: GainNode;
+  rv: GainNode;
+  dl: GainNode;
+}
+
 export class MixGraph {
   /** Where pad voices go, per strip. */
   readonly pads: Record<PadStrip, PadStripNodes>;
   /** Where the KEYS instrument connects. */
   readonly keysIn: GainNode;
-  /** Where the metronome click connects: the master fader, after the strips and FX. */
+  /** Where the tuned mic connects (src/vocal/vocal.ts). */
+  readonly voxIn: GainNode;
+  /** Where the metronome click connects: its own fader that follows MASTER, so it is heard but never recorded. */
   readonly clickIn: AudioNode;
+  /** Everything after the MASTER fader except the click: what WAV export records. */
+  readonly recordTap: AudioNode;
   /** Plays straight into the master sum (sample previews in the Kits panel). */
   readonly previewIn: AudioNode;
 
-  private keysFader: GainNode;
-  private keysRv: GainNode;
-  private keysDl: GainNode;
+  private buses: Record<BusStrip, BusNodes>;
   private sum: GainNode;
   private bypass: GainNode;
   private filter: BiquadFilterNode;
   private filterGain: GainNode;
   private master: GainNode;
+  private clickFader: GainNode;
   private meters = new Map<StripId, AnalyserNode>();
   /** About 43 ms at 48 kHz: longer than a screen frame, so a meter read each frame misses no peak. */
   private meterData = new Float32Array(2048);
@@ -75,7 +87,11 @@ export class MixGraph {
     const masterMeter = this.meter('master');
     this.master.connect(masterMeter);
     this.master.connect(ctx.destination);
-    this.clickIn = this.master;
+    this.recordTap = this.master;
+    this.clickFader = gain();
+    this.clickFader.connect(masterMeter);
+    this.clickFader.connect(ctx.destination);
+    this.clickIn = this.clickFader;
 
     this.sum = gain();
     this.previewIn = this.sum;
@@ -111,29 +127,35 @@ export class MixGraph {
     }
     this.pads = pads;
 
-    this.keysIn = gain();
-    this.keysFader = gain();
-    this.keysRv = gain(0);
-    this.keysDl = gain(0);
-    this.keysIn.connect(this.keysFader);
-    this.keysFader.connect(this.meter('keys'));
-    this.keysFader.connect(this.sum);
-    this.keysFader.connect(this.keysRv).connect(this.reverbIn);
-    this.keysFader.connect(this.keysDl).connect(this.delayIn);
+    const bus = (id: BusStrip): BusNodes => {
+      const nodes = { input: gain(), fader: gain(), rv: gain(0), dl: gain(0) };
+      nodes.input.connect(nodes.fader);
+      nodes.fader.connect(this.meter(id));
+      nodes.fader.connect(this.sum);
+      nodes.fader.connect(nodes.rv).connect(this.reverbIn);
+      nodes.fader.connect(nodes.dl).connect(this.delayIn);
+      return nodes;
+    };
+    this.buses = { keys: bus('keys'), vox: bus('vox') };
+    this.keysIn = this.buses.keys.input;
+    this.voxIn = this.buses.vox.input;
   }
 
   /** A strip's fader and mute. */
   setStrip(id: StripId, level: number, mute: boolean): void {
     const g = mute ? 0 : faderGain(level);
-    if (id === 'master') this.ramp(this.master.gain, g);
-    else if (id === 'keys') this.ramp(this.keysFader.gain, g);
+    if (id === 'master') {
+      this.ramp(this.master.gain, g);
+      this.ramp(this.clickFader.gain, g);
+    }
+    else if (id === 'keys' || id === 'vox') this.ramp(this.buses[id].fader.gain, g);
     else for (const node of Object.values(this.pads[id])) this.ramp(node.gain, g);
   }
 
-  /** The KEYS bus's reverb and delay send amounts, 0–1. */
-  setKeysSends(reverb: number, delay: number): void {
-    this.ramp(this.keysRv.gain, reverb);
-    this.ramp(this.keysDl.gain, delay);
+  /** The KEYS or VOX bus's reverb and delay send amounts, 0–1. */
+  setSends(id: BusStrip, reverb: number, delay: number): void {
+    this.ramp(this.buses[id].rv.gain, reverb);
+    this.ramp(this.buses[id].dl.gain, delay);
   }
 
   /**

@@ -7,6 +7,7 @@
 // presses a button when it rises past 64. The BPM readout has both: tap tempo, or BPM from a CC.
 
 import * as clock from '../audio/clock';
+import * as recorder from '../audio/recorder';
 import { BANK_NAMES, PADS_PER_BANK, PAD_COUNT, PARAM_RANGE, padLabel, type ParamKey } from '../audio/kit';
 import * as keys from '../keys/keys';
 import { PRESET_SLOTS } from '../keys/types';
@@ -20,6 +21,9 @@ import * as repeat from '../seq/repeat';
 import * as seq from '../seq/sequencer';
 import { state } from '../state';
 import { PARAM_LABEL } from '../ui/format';
+import { toggleMic } from '../ui/micRec';
+import { SPEED_MAX } from '../vocal/types';
+import * as vocal from '../vocal/vocal';
 import type { Mapping } from './types';
 
 export interface Target {
@@ -46,6 +50,8 @@ const FIXED: Record<string, Target> = {
   'full-level': { label: 'FULL LEVEL', press: toggleFullLevel },
   swing: { label: 'SWING', set: (v) => seq.setSwing(between(SWING_MIN, SWING_MAX, v)) },
   master: { label: 'MASTER', set: (v) => mix.setLevel('master', v) },
+  'rec-out': { label: 'REC OUT', press: () => void recorder.toggleRecordOut().catch(console.warn) },
+  'rec-mic': { label: 'REC MIC', press: toggleMic },
   'oct-down': { label: 'KEYS OCTAVE −', press: () => keys.nudgeOctave(-1) },
   'oct-up': { label: 'KEYS OCTAVE +', press: () => keys.nudgeOctave(1) },
   hold: { label: 'KEYS HOLD', press: keys.toggleHold },
@@ -53,6 +59,9 @@ const FIXED: Record<string, Target> = {
   snap: { label: 'KEYS SNAP', press: keys.toggleSnap },
   'src:synth': { label: 'KEYS SYNTH', press: () => keys.setSource('synth') },
   'src:sampled': { label: 'KEYS SAMPLED', press: () => keys.setSource('sampled') },
+  vocal: { label: 'VOCAL ON / OFF', press: () => vocal.toggleVocal() },
+  'vocal-strength': { label: 'VOCAL STRENGTH', set: (v) => vocal.setStrength(v) },
+  'vocal-speed': { label: 'VOCAL SPEED', set: (v) => vocal.setSpeed(v * SPEED_MAX) },
 };
 
 /** The target for an id, or null if the id is unknown (e.g. from an older save). */
@@ -78,6 +87,9 @@ export function findTarget(id: string): Target | null {
   }
   if (kind === 'keys-send' && (arg === 'reverb' || arg === 'delay')) {
     return { label: `KEYS ${arg.toUpperCase()} SEND`, set: (v) => keys.setSend(arg, Math.round(v * 100) / 100) };
+  }
+  if (kind === 'vox-send' && (arg === 'reverb' || arg === 'delay')) {
+    return { label: `VOX ${arg.toUpperCase()} SEND`, set: (v) => vocal.setSend(arg, v) };
   }
   if (kind === 'param' && arg in PARAM_RANGE) {
     const key = arg as ParamKey;

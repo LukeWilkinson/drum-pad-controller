@@ -71,6 +71,16 @@ svg { display: block; }
   color: var(--lcd-text);
 }
 .lcd-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.lcd-kit { display: flex; align-items: center; gap: 4px; min-width: 0; flex: 1; }
+/* REC MIC (src/ui/micRec.ts): armed = red and blinking; recording = solid red. */
+.mic-btn {
+  flex: none; width: 44px; height: 44px; border-radius: 6px; margin-left: auto;
+  background: none; color: var(--lcd-dim); display: grid; place-items: center;
+}
+.mic-btn[aria-pressed="true"] { color: var(--rec); animation: blink 1s steps(2, jump-none) infinite; }
+.mic-btn.recording { background: var(--rec); color: var(--lcd-bg); animation: none; }
+.app[data-mic-arm] .pad { outline: 2px dashed var(--rec); outline-offset: -5px; }
+.pad.mic-rec { outline: 3px solid var(--rec); outline-offset: -5px; }
 .kit-btn {
   display: flex; align-items: center; gap: 6px;
   background: none; padding: 0; min-height: 44px;
@@ -143,7 +153,7 @@ svg { display: block; }
 .loop.recording .loop-bar::after { background: var(--rec); }
 
 @keyframes blink { 50% { opacity: .45; } }
-@media (prefers-reduced-motion: reduce) { .loop.queued, .rec.counting { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .loop.queued, .rec.counting, .mic-btn[aria-pressed="true"] { animation: none; } }
 
 /* ---------- Banks + toggles ---------- */
 
@@ -232,7 +242,7 @@ svg { display: block; }
   display: flex; flex-direction: column; align-items: center; gap: 2px;
 }
 .tabs-handle { width: 36px; height: 4px; border-radius: 2px; background: var(--switch-off); }
-.tabs-list { width: 100%; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.tabs-list { width: 100%; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
 .tab {
   height: 48px; background: none; color: var(--text-muted);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
@@ -339,11 +349,14 @@ svg { display: block; }
   .tab { height: 44px; padding: 0 18px; border-radius: 8px; font-size: 13px; }
   .tab[aria-current="page"] { background: var(--raised); }
 
-  .status { grid-area: status; display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+  /* The header row right of the tabs: REC OUT and VOX chips (audio.css), MIDI chip, gear. It spans
+     the pad and rail columns (the tabs only fill the left part of theirs), so the chips fit at 1024 px. */
+  .status { grid-row: 1; grid-column: 2 / -1; display: flex; align-items: center; justify-content: flex-end; gap: 8px; pointer-events: none; }
+  .status > * { pointer-events: auto; } /* its empty left part lies over the tabs */
   .midi-chip {
     height: 44px; padding: 0 14px; border-radius: 8px; background: var(--drawer);
     display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: 12px;
-    color: var(--text); max-width: 260px;
+    color: var(--text); max-width: 200px;
   }
   .midi-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .icon-btn { color: var(--text); }
@@ -396,6 +409,33 @@ svg { display: block; }
   font-family: var(--font-mono); font-size: 12px; font-weight: 600;
 }
 .learn-bar[hidden] { display: none; }
+
+/* ---------- Recording status bar (src/ui/record.ts) ---------- */
+
+/* Same place as the learn bar; above it when both show. The app makes room for whichever are up. */
+.app[data-rec-on] { --learn-h: calc(60px + env(safe-area-inset-bottom)); }
+.app[data-rec-on][data-learn-on] { --learn-h: calc(120px + env(safe-area-inset-bottom)); }
+.rec-bar {
+  position: fixed; z-index: 21; left: 50%; transform: translateX(-50%);
+  bottom: calc(6px + env(safe-area-inset-bottom));
+  width: min(520px, calc(100% - 32px));
+  display: flex; align-items: center; gap: 10px;
+  padding: 4px 4px 4px 14px; border-radius: 10px;
+  background: var(--drawer); color: var(--text-strong); border: 2px solid var(--rec);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .45);
+  font-family: var(--font-mono); font-size: 12px; font-weight: 600;
+}
+.app[data-learn-on] .rec-bar { bottom: calc(66px + env(safe-area-inset-bottom)); }
+.rec-bar[hidden] { display: none; }
+.rec-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rec-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--rec); flex: none; }
+.rec-bar .rec-dot { animation: rec-blink 1s steps(2, start) infinite; }
+@keyframes rec-blink { to { visibility: hidden; } }
+.rec-stop {
+  flex: none; height: 44px; padding: 0 16px; border-radius: 8px;
+  background: var(--rec); color: var(--text-strong); font: 700 13px var(--font-ui); letter-spacing: .08em;
+}
+.dlg p.rec-file { font-family: var(--font-mono); font-size: 12px; word-break: break-all; }
 .learn-text { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .learn-done {
   flex: none; height: 44px; padding: 0 16px; border-radius: 8px;

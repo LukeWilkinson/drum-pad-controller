@@ -4,10 +4,13 @@
 import type { AudioEngine } from '../audio/engine';
 import { GROUP_COLOUR, PADS_PER_BANK, PARAM_RANGE, padLabel, type PadDef, type ParamKey } from '../audio/kit';
 import { CATEGORIES, KITS, allPads, findKit } from '../audio/kits';
-import { defaultSaveName, deleteKit, saveKit, selectKit, setParam, swapSample } from '../kitControl';
+import { ImportError, MAX_SECONDS, importFile, isUserSample, removeSample, sampleLabel, type UserSampleInfo } from '../audio/userSamples';
+import { deleteKit, selectKit, setParam, swapSample } from '../kitControl';
 import { state, subscribe, update, type Change } from '../state';
 import { PARAM_LABEL, formatParam } from './format';
 import { escapeHtml, openDialog } from './dialog';
+import { openSaveKitDialog } from './saveKit';
+import { openShareDialog } from './share';
 
 type Category = 'All' | (typeof CATEGORIES)[number] | 'My kits';
 const CHIPS: Category[] = ['All', ...CATEGORIES, 'My kits'];
@@ -16,6 +19,8 @@ const PARAMS: ParamKey[] = ['volumeDb', 'pitch', 'pan', 'decay', 'reverbSend', '
 const PLAY = '<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor"/></svg>';
 const TRASH =
   '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>';
+
+const NO_SAMPLES = 'No imported samples yet. Tap IMPORT FILE to add one from the phone or PC.';
 
 interface Row {
   id: string;
@@ -33,6 +38,7 @@ export function buildKitsPanel(app: HTMLElement, engine: AudioEngine): void {
     <header class="kp-head">
       <h1>KITS</h1>
       <div class="kp-actions">
+        <button class="kp-btn kp-share">SHARE</button>
         <button class="kp-btn kp-load">LOAD PRESET</button>
         <button class="kp-btn primary kp-save">SAVE</button>
       </div>
@@ -62,6 +68,18 @@ export function buildKitsPanel(app: HTMLElement, engine: AudioEngine): void {
       </div>
     </section>`;
   app.appendChild(panel);
+
+  // One hidden file picker for IMPORT FILE (opened from the swap dialog).
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = 'audio/*,.wav,.mp3,.flac,.ogg,.oga,.opus,.m4a,.aac';
+  fileInput.hidden = true;
+  panel.appendChild(fileInput);
+  let onFile: ((file: File) => void) | null = null;
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files?.[0];
+    if (file) onFile?.(file);
+  });
 
   const $ = <T extends Element>(sel: string) => panel.querySelector(sel) as T;
   const list = $<HTMLElement>('.kp-list');
@@ -139,7 +157,9 @@ export function buildKitsPanel(app: HTMLElement, engine: AudioEngine): void {
       c.setAttribute('aria-pressed', String(index === i));
     });
     $('.kp-title').textContent = `PAD ${padLabel(i)} · ${pad.name.toUpperCase()}`;
-    $('.kp-sample').textContent = pad.hard;
+    $('.kp-sample').textContent = isUserSample(pad.hard)
+      ? `MY SAMPLE · ${sampleLabel(pad.hard)}${engine.padMissing(i) ? ' (MISSING)' : ''}`
+      : pad.hard;
     const seconds = engine.sampleDuration(pad.hard);
     for (const input of inputs) {
       const key = input.dataset.key as ParamKey;
@@ -170,7 +190,9 @@ export function buildKitsPanel(app: HTMLElement, engine: AudioEngine): void {
     } else if (t.classList.contains('kp-swap')) {
       await askSwap();
     } else if (t.classList.contains('kp-save')) {
-      await askSave();
+      await openSaveKitDialog();
+    } else if (t.classList.contains('kp-share')) {
+      await openShareDialog();
     } else if (t.classList.contains('kp-load')) {
       category = 'My kits';
       renderChips();
@@ -204,26 +226,12 @@ export function buildKitsPanel(app: HTMLElement, engine: AudioEngine): void {
 
   // ---------- dialogs ----------
 
-  async function askSave(): Promise<void> {
-    const kit = state.kit;
-    if (!kit) return;
-    const name = kit.user ? kit.name : defaultSaveName();
-    const res = await openDialog(`
-      <h2>SAVE KIT</h2>
-      <label class="dlg-field">NAME<input name="name" maxlength="32" value="${escapeHtml(name)}" autocomplete="off"></label>
-      <div class="dlg-btns">
-        <button value="cancel" class="kp-btn">CANCEL</button>
-        ${kit.user ? '<button value="new" class="kp-btn">SAVE AS NEW</button>' : ''}
-        <button value="save" class="kp-btn primary">${kit.user ? 'UPDATE' : 'SAVE'}</button>
-      </div>`);
-    const newName = (res.fields.name ?? '').trim() || name;
-    if (res.value === 'new') await saveKit(newName);
-    else if (res.value === 'save') {
-      if (kit.user) {
-        kit.name = newName;
-        await saveKit();
-      } else await saveKit(newName);
-    }
+  function userRow(s: UserSampleInfo, current: string): string {
+    return `<div class="sw-row${s.id === current ? ' current' : ''}" data-row="${s.id}">
+      <button type="button" class="sw-play" data-preview="${s.id}" aria-label="Preview ${escapeHtml(s.name)}">${PLAY}</button>
+      <button value="pick:${s.id}" class="sw-pick">${escapeHtml(s.name)} <span class="sw-len">${s.seconds.toFixed(1)} s</span></button>
+      <button type="button" class="sw-del" data-del-sample="${s.id}" aria-label="Delete ${escapeHtml(s.name)}">${TRASH}</button>
+    </div>`;
   }
 
   async function askSwap(): Promise<void> {
@@ -231,6 +239,9 @@ export function buildKitsPanel(app: HTMLElement, engine: AudioEngine): void {
     if (!kit) return;
     const index = state.selectedPad;
     const current = kit.pads[index].hard;
+    const mine = state.userSamples.length
+      ? state.userSamples.map((s) => userRow(s, current)).join('')
+      : `<p class="sw-empty">${NO_SAMPLES}</p>`;
     const seen = new Set<string>();
     // Every built-in sample, grouped by the kit (bank A) or shared bank it comes from.
     const sources: [title: string, pads: PadDef[]][] = [
@@ -256,15 +267,62 @@ export function buildKitsPanel(app: HTMLElement, engine: AudioEngine): void {
     }).join('');
     const res = await openDialog(
       `<h2>SWAP SAMPLE · ${escapeHtml(kit.pads[index].name.toUpperCase())}</h2>
-      <div class="sw-list">${groups}</div>
+      <div class="sw-top">
+        <button type="button" class="kp-btn sw-import">IMPORT FILE…</button>
+        <p class="sw-msg" role="status">WAV, MP3, FLAC, OGG or M4A, up to ${MAX_SECONDS} s. Silence is trimmed and the level evened out.</p>
+      </div>
+      <div class="sw-list">
+        <div class="sw-kit">MY SAMPLES</div>
+        <div class="sw-mine">${mine}</div>
+        ${groups}
+      </div>
       <div class="dlg-btns"><button value="cancel" class="kp-btn">CANCEL</button></div>`,
       (btn) => {
+        const dialog = btn.closest('dialog')!;
+        const msg = dialog.querySelector<HTMLElement>('.sw-msg')!;
         if (btn.dataset.preview) engine.preview(btn.dataset.preview).catch(console.error);
+        else if (btn.dataset.delSample) void removeMine(btn.dataset.delSample, dialog, msg);
+        else if (btn.classList.contains('sw-import')) {
+          // The file picker answers later, through the input's change event.
+          onFile = (file) => void importInto(file, btn, dialog, msg);
+          fileInput.value = '';
+          fileInput.click();
+        }
       },
     );
+    onFile = null;
     if (res.value.startsWith('pick:')) {
-      await swapSample(index, res.value.slice(5));
+      const sample = res.value.slice(5);
+      await swapSample(index, sample, isUserSample(sample) ? sampleLabel(sample) : undefined);
       engine.play(index, 100);
+    }
+  }
+
+  /** Imports a file chosen in the swap dialog, then puts it straight on the pad. */
+  async function importInto(file: File, btn: HTMLButtonElement, dialog: HTMLDialogElement, msg: HTMLElement): Promise<void> {
+    btn.disabled = true;
+    msg.textContent = `IMPORTING ${file.name}…`;
+    try {
+      const added = await importFile(file);
+      if (dialog.open) dialog.close(`pick:${added.id}`);
+    } catch (err) {
+      if (!(err instanceof ImportError)) console.error(err);
+      msg.textContent = err instanceof ImportError ? err.message : "That file couldn't be imported.";
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  async function removeMine(id: string, dialog: HTMLDialogElement, msg: HTMLElement): Promise<void> {
+    const name = sampleLabel(id);
+    const users = await removeSample(id).catch((err: unknown) => (console.error(err), null));
+    if (users === null) msg.textContent = `“${name}” couldn't be deleted.`;
+    else if (users.length) msg.textContent = `“${name}” is used by ${users.join(', ')}. Swap it off ${users.length > 1 ? 'those kits' : 'that kit'} first.`;
+    else {
+      dialog.querySelector(`[data-row="${id}"]`)?.remove();
+      const box = dialog.querySelector('.sw-mine')!;
+      if (!box.children.length) box.innerHTML = `<p class="sw-empty">${NO_SAMPLES}</p>`;
+      msg.textContent = `Deleted “${name}”.`;
     }
   }
 
@@ -294,7 +352,7 @@ export function buildKitsPanel(app: HTMLElement, engine: AudioEngine): void {
 
   subscribe((_s, changed: ReadonlySet<Change>) => {
     if (changed.has('kit') || changed.has('edited') || changed.has('userKits')) renderList();
-    if (changed.has('kit') || changed.has('params') || changed.has('pads') || changed.has('selectedPad') || changed.has('bank')) renderPad();
+    if (['kit', 'params', 'pads', 'selectedPad', 'bank', 'userSamples'].some((c) => changed.has(c as Change))) renderPad();
   });
   renderChips();
   renderList();

@@ -3,8 +3,9 @@
 // listener on the window stops the tap before the control sees it. The next note-on or CC from the
 // input (src/midi/in.ts calls capture()) is saved as a mapping. Learn mode stays on for the next
 // control until DONE, the SETUP button, or MIDI going off.
-// The tabs, the learn bar, the SETUP panel and the tablet header still work, so Luke can move
-// between screens; every other tap is swallowed while learning.
+// The tabs, the learn bar, the SETUP panel and the tablet header's MIDI chip and gear still work, so
+// Luke can move between screens; every other tap (the header's REC OUT and VOX chips too) is
+// swallowed or arms a control while learning.
 
 import { state, subscribe, update } from '../state';
 import type { ScreenRefs } from '../ui/screen';
@@ -13,7 +14,7 @@ import { idOf, messageLabel, targetLabel } from './targets';
 import type { LearnState, Mapping } from './types';
 
 /** Taps here pass through while learning. */
-const PASS = '.tabs, .learn-bar, .setup-panel, .status, dialog';
+const PASS = '.tabs, .learn-bar, .rec-bar, .setup-panel, .midi-chip, .status .icon-btn, dialog';
 /** Events a control could act on (range inputs move on mousedown/touchstart). pointerdown arms; the rest are only stopped. */
 const STOPPED = ['pointerdown', 'pointerup', 'mousedown', 'touchstart', 'click', 'dblclick'] as const;
 

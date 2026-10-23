@@ -5,10 +5,15 @@ import './styles/seq.css';
 import './styles/setup.css';
 import './styles/keys.css';
 import './styles/mix.css';
+import './styles/audio.css';
 import { registerSW } from 'virtual:pwa-register';
 import { AudioEngine } from './audio/engine';
 import * as clock from './audio/clock';
 import * as latency from './audio/latency';
+import * as userSamples from './audio/userSamples';
+import * as recorder from './audio/recorder';
+import * as vocal from './vocal/vocal';
+import { initRecordUi } from './ui/record';
 import * as seq from './seq/sequencer';
 import * as repeat from './seq/repeat';
 import * as midi from './midi/midi';
@@ -33,6 +38,8 @@ import { state, subscribe } from './state';
 import { applyKit, buildPads } from './ui/pads';
 import { buildKitsPanel } from './ui/kits';
 import { buildMixPanel } from './ui/mix';
+import { buildAudioPanel } from './ui/audio';
+import { initMicRec } from './ui/micRec';
 import { buildScreen } from './ui/screen';
 import { buildSeqPanel } from './ui/seq';
 import { buildSetupPanel } from './ui/setup';
@@ -48,6 +55,7 @@ const ui = buildScreen(document.getElementById('app')!);
 const padEls = buildPads(ui.padwell);
 const engine = new AudioEngine();
 void mix.initMix(engine); // the saved mixer and FX settings
+void userSamples.initUserSamples(engine); // the imported samples list (kits load their audio themselves)
 clock.initClock(engine);
 latency.initLatency(engine);
 seq.initSequencer(engine);
@@ -59,12 +67,17 @@ buildKitsPanel(ui.app, engine);
 buildSeqPanel(ui.app, engine);
 buildSetupPanel(ui.app, ui);
 buildMixPanel(ui.app, engine);
+buildAudioPanel(ui.app);
+recorder.initRecorder(engine);
+vocal.initVocal(engine); // the saved vocal settings; the mic stays off until its switch
+initRecordUi(ui.app); // after the MIX and AUDIO panels: it wires their REC OUT buttons
 const keysBoard = buildKeysPanel(ui.app, { onBend: notes.bend });
 const instrument = keys.initKeys(engine); // after initClock: Tone runs on the engine's context
 seq.attachKeys(instrument); // loops play their KEYS notes on it
 notes.initNotes(instrument);
 arp.initArp(engine, instrument);
 initHits(engine, ui, padEls);
+initMicRec(engine, ui); // REC MIC can take pad hits, so after initHits
 midiOut.initOut(engine, instrument);
 midiClock.initMidiClock(engine);
 midiIn.initIn(ui);
@@ -159,4 +172,4 @@ bootKits(engine, (done, total) => hits.setLast(`LOADING KIT ${done}/${total}`, `
 registerSW({ immediate: true });
 
 // Dev-only handle for checking the engine and store from the browser console.
-if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, latency, seq, repeat, midi, learn, state, KITS, factoryKit, keys, notes, arp, instrument, mix, ...kitControl } });
+if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, latency, seq, repeat, midi, learn, state, KITS, factoryKit, keys, notes, arp, instrument, mix, userSamples, recorder, vocal, ...kitControl } });

@@ -3,10 +3,12 @@
 
 import type { PadGroup } from '../audio/kit';
 
-export const STRIPS = ['kicks', 'snare', 'hats', 'perc', 'keys', 'master'] as const;
+export const STRIPS = ['kicks', 'snare', 'hats', 'perc', 'keys', 'vox', 'master'] as const;
 export type StripId = (typeof STRIPS)[number];
-/** The strips pads play through (the KEYS bus and MASTER are the other two). */
-export type PadStrip = Exclude<StripId, 'keys' | 'master'>;
+/** The strips with their own input and sends: the KEYS instrument and the VOX mic (src/vocal/vocal.ts). */
+export type BusStrip = 'keys' | 'vox';
+/** The strips pads play through. */
+export type PadStrip = Exclude<StripId, BusStrip | 'master'>;
 
 export const STRIP_LABEL: Record<StripId, string> = {
   kicks: 'KICKS',
@@ -14,6 +16,7 @@ export const STRIP_LABEL: Record<StripId, string> = {
   hats: 'HATS',
   perc: 'PERC',
   keys: 'KEYS',
+  vox: 'VOX',
   master: 'MASTER',
 };
 
@@ -132,6 +135,7 @@ export const DEFAULT_MIX: MixState = {
     hats: { level: UNITY, mute: false },
     perc: { level: UNITY, mute: false },
     keys: { level: UNITY, mute: false },
+    vox: { level: UNITY, mute: false },
     master: { level: faderLevel(0.82), mute: false },
   },
   reverb: { on: true, size: 2, decay: 1.8, mix: 0.25 },
