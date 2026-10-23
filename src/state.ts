@@ -13,7 +13,7 @@ import { defaultMix, type MixState } from './mix/types';
 import { PATTERN_COUNT, emptyPattern, type Pattern, type Quant } from './seq/pattern';
 import { DEFAULT_VOCAL, type VocalState } from './vocal/types';
 
-export type View = 'pads' | 'kits' | 'seq' | 'keys' | 'mix' | 'setup';
+export type View = 'pads' | 'kits' | 'seq' | 'keys' | 'mix' | 'audio' | 'setup';
 
 export interface AppState {
   /** The kit playing now (null until the first kit has loaded). */

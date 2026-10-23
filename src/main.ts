@@ -5,6 +5,7 @@ import './styles/seq.css';
 import './styles/setup.css';
 import './styles/keys.css';
 import './styles/mix.css';
+import './styles/audio.css';
 import { registerSW } from 'virtual:pwa-register';
 import { AudioEngine } from './audio/engine';
 import * as clock from './audio/clock';
@@ -37,6 +38,7 @@ import { state, subscribe } from './state';
 import { applyKit, buildPads } from './ui/pads';
 import { buildKitsPanel } from './ui/kits';
 import { buildMixPanel } from './ui/mix';
+import { buildAudioPanel } from './ui/audio';
 import { buildScreen } from './ui/screen';
 import { buildSeqPanel } from './ui/seq';
 import { buildSetupPanel } from './ui/setup';
@@ -64,9 +66,10 @@ buildKitsPanel(ui.app, engine);
 buildSeqPanel(ui.app, engine);
 buildSetupPanel(ui.app, ui);
 buildMixPanel(ui.app, engine);
+buildAudioPanel(ui.app);
 recorder.initRecorder(engine);
 vocal.initVocal(engine); // the saved vocal settings; the mic stays off until its switch
-initRecordUi(ui.app); // after the MIX panel: it wires that panel's REC OUT button
+initRecordUi(ui.app); // after the MIX and AUDIO panels: it wires their REC OUT buttons
 const keysBoard = buildKeysPanel(ui.app, { onBend: notes.bend });
 const instrument = keys.initKeys(engine); // after initClock: Tone runs on the engine's context
 seq.attachKeys(instrument); // loops play their KEYS notes on it

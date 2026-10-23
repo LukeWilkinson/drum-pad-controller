@@ -532,6 +532,16 @@ Luke tested M7 on the PC (import works) and asked for three more things. Plan: `
 - `src/ui/share.ts` `shareButtons()` / `deliveredText()`: the SHARE dialog has a KIT row and a SONG row, each SHARE + SAVE FILE; RECORDING READY has DISCARD / SHARE / SAVE FILE (primary).
 - Checked by script with stubbed `navigator.share` / `canShare` and anchor clicks: SHARE → share sheet, SAVE FILE → download, for kit, song and a REC OUT take; no-share browser shows SAVE FILE only; rows fit at 390 px with 44 px buttons. Not checked: the real Windows / Android share sheet.
 
+### Addition step 2, AUDIO tab, header chips, vocal card move: done (2026-10-23)
+- `View` has `'audio'`; 7th tab AUDIO (waveform icon) between MIX/FX and SETUP. Portrait tab grid is 7 columns (55 px each at 390).
+- `src/ui/audio.ts` + `src/styles/audio.css`: RECORD WAV card first (REC OUT, BOUNCE… → the existing bounce dialog), then the vocal card moved as-is from SETUP (`MIC_TEXT` is exported from here now; the meter runs on the AUDIO view). SETUP's AUTO-TUNE keeps Scale snap plus a "Vocal pitch correction" row with OPEN AUDIO.
+- Tablet header: REC OUT and VOX chips before the MIDI chip. `.status` now spans the pad and rail columns (with `pointer-events` only on its children, since its empty part lies over the tabs); the MIDI chip max width is 200 px. At 1024 px the chips start 49 px right of the tabs.
+- Red dot on the AUDIO tab while the vocal mic is on or any recording runs.
+- `record.ts` wires every `button[data-learn="rec-out"]` (MIX header, AUDIO, chip).
+- Learn: `learn.ts` used to let the whole `.status` header and `.setup-panel` pass through, so the vocal card was never tap-learnable in SETUP. Now only the MIDI chip and gear pass; the chips and the vocal card (on AUDIO) arm like other controls.
+- Checked by script: tab switch, vocal on/off with a fake mic (meter, "A3→A3" readout), chip ↔ switch in step, strength slider, REC OUT from AUDIO and chip (all 3 buttons pressed, RECORDING READY on stop), BOUNCE dialog, SETUP link, tab dot; Learn with `?fakemidi`: chips arm `vocal` / `rec-out`, mapped CCs toggle both, MIDI chip and gear still pass. Layout at 390×844, 844×390, 1024×768 and 1280×800 (no sideways overflow; tab labels fit). Not checked: a real mic, touch on a phone.
+- Restarted `dev-http` once: Vite served a stale `learn.ts` (the known Windows watcher miss).
+
 ## Luke's phone and hardware checklist for M7
 Run `npm.cmd run dev` on the PC and open the Network address on the phone (HTTPS; the mic needs it), or push to `main` first for the live site (ask Claude). Tap a pad first to start audio. Wired headphones for section 4.
 1. Import (KITS → pick a pad → SWAP SAMPLE):

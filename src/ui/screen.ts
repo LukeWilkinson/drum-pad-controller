@@ -14,6 +14,7 @@ const ICON = {
   seq: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h3M10 6h3M16 6h4M4 12h6M13 12h3M4 18h2M9 18h11"/></svg>',
   keys: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 4v10M12 4v16M16 4v10"/></svg>',
   mix: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 4v16M12 4v16M18 4v16"/><circle cx="6" cy="14" r="2" style="fill:var(--drawer)"/><circle cx="12" cy="8" r="2" style="fill:var(--drawer)"/><circle cx="18" cy="16" r="2" style="fill:var(--drawer)"/></svg>',
+  audio: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 12h1M7 8v8M11 4v16M15 7v10M19 10v4"/></svg>',
   setup: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9L7 7M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>',
 };
 
@@ -23,6 +24,7 @@ const TABS: [cls: string, icon: string, short: string, long: string, todo: strin
   ['seq', ICON.seq, 'SEQ', 'SEQUENCER', ''],
   ['keys', ICON.keys, 'KEYS', 'KEYS', ''],
   ['mix', ICON.mix, 'MIX/FX', 'MIX / FX', ''],
+  ['audio', ICON.audio, 'AUDIO', 'AUDIO', ''],
   ['setup', ICON.setup, 'SETUP', 'SETUP', ''],
 ];
 
@@ -134,6 +136,8 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
     </nav>
 
     <div class="status">
+      <button class="hdr-chip rec-chip" data-learn="rec-out" aria-pressed="false" aria-label="Record the output to a WAV file"><span class="rec-dot" aria-hidden="true"></span>REC OUT</button>
+      <button class="hdr-chip vox-chip" data-learn="vocal" role="switch" aria-checked="false" aria-label="Vocal pitch correction"><span class="vox-dot" aria-hidden="true"></span><span class="vox-text">VOX OFF</span></button>
       <button class="midi-chip" aria-label="MIDI settings"><span class="midi-dot"></span><span class="midi-text">MIDI OFF</span></button>
       <button class="icon-btn" aria-label="Setup">${ICON.setup}</button>
     </div>

@@ -1,4 +1,4 @@
-// WAV export controls: the REC OUT button (MIX header), the BOUNCE dialog (SEQ loop picker), the
+// WAV export controls: the REC OUT buttons (MIX header, AUDIO tab, tablet header), the BOUNCE dialog (SEQ loop picker and AUDIO), the
 // status bar shown on every tab while recording (with STOP), and the dialog that saves a finished
 // take. SHARE / SAVE FILE are their own taps because the phone's share sheet only opens from one.
 // The recording itself is src/audio/recorder.ts.
@@ -21,8 +21,9 @@ export function initRecordUi(app: HTMLElement): void {
   const text = bar.querySelector<HTMLElement>('.rec-text')!;
   bar.querySelector('.rec-stop')!.addEventListener('click', recorder.stopRecording);
 
-  const outBtn = app.querySelector<HTMLButtonElement>('.mx-rec');
-  outBtn?.addEventListener('click', () => void run(recorder.toggleRecordOut));
+  // Every REC OUT button: MIX / FX header, AUDIO tab and the tablet header chip.
+  const outBtns = [...app.querySelectorAll<HTMLButtonElement>('button[data-learn="rec-out"]')];
+  for (const b of outBtns) b.addEventListener('click', () => void run(recorder.toggleRecordOut));
 
   let timer = 0;
   const showTime = () => {
@@ -34,7 +35,7 @@ export function initRecordUi(app: HTMLElement): void {
     const on = s.recorder.mode !== 'off';
     bar.hidden = !on;
     app.toggleAttribute('data-rec-on', on);
-    outBtn?.setAttribute('aria-pressed', String(s.recorder.mode === 'out'));
+    for (const b of outBtns) b.setAttribute('aria-pressed', String(s.recorder.mode === 'out'));
     clearInterval(timer);
     if (on) {
       showTime();
