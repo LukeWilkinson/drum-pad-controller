@@ -1,25 +1,18 @@
-// AUDIO panel: the vocal pitch correction card (moved here from SETUP) and the WAV recording
-// buttons (REC OUT and BOUNCE LOOP, the same as on MIX / FX and SEQ). Also drives the tablet
+// AUDIO panel: RECORD SOUND TO PAD (src/ui/micRec.ts), the WAV recording buttons (REC OUT and
+// BOUNCE LOOP, the same as on MIX / FX and SEQ) and the vocal pitch correction card (moved here
+// from SETUP). Also drives the tablet
 // header's VOX chip and the dot on the AUDIO tab while the mic is on or a recording runs.
 // src/vocal/vocal.ts does the vocal work; src/ui/record.ts wires every REC OUT button.
 
 import { KEY_NAMES } from '../keys/scales';
 import { state, subscribe } from '../state';
 import { hzToMidi, type VocalScale } from '../vocal/pitch';
-import { SPEED_MAX, VOCAL_SCALES, vocalScaleName, type MicStatus } from '../vocal/types';
+import { SPEED_MAX, VOCAL_SCALES, vocalScaleName } from '../vocal/types';
 import * as vocal from '../vocal/vocal';
+import { MIC_TEXT } from '../audio/mic';
+import { armMic } from './micRec';
 import { openBounceDialog } from './record';
 
-/** The vocal card's mic row text, and a longer note under it when something is wrong. */
-export const MIC_TEXT: Record<MicStatus, [string, string]> = {
-  off: ['Mic off', ''],
-  asking: ['Asking for the mic…', ''],
-  on: ['Mic on', ''],
-  denied: ['Mic blocked', 'The mic was blocked. Allow the microphone for this site in the browser settings, then switch this on again.'],
-  nomic: ['No mic', 'No microphone was found, or another app is using it.'],
-  unsupported: ['Not available', "This browser can't use the mic here."],
-  error: ['Mic error', "The mic couldn't start. Switch it off and on again."],
-};
 const METER_FLOOR = -60; // dB at the left of the mic meter; the right is 0 dBFS
 
 export function buildAudioPanel(app: HTMLElement): void {
@@ -28,6 +21,16 @@ export function buildAudioPanel(app: HTMLElement): void {
   panel.setAttribute('aria-label', 'Audio');
   panel.innerHTML = `
     <header class="su-head"><h1>AUDIO</h1></header>
+    <section class="su-section" aria-labelledby="au-mic-h">
+      <h2 id="au-mic-h">RECORD SOUND TO PAD</h2>
+      <div class="su-card">
+        <div class="su-row">
+          <div class="su-title"><span class="su-name">Record from the mic</span><span class="su-sub">Tap a pad, make the sound, tap STOP. Up to 30 s.</span></div>
+          <button class="mx-rec au-mic" data-learn="rec-mic"><span class="rec-dot" aria-hidden="true"></span>RECORD…</button>
+        </div>
+        <p class="su-hint">Same as the mic button on the pad screen's display. Silence is trimmed and the level evened out.</p>
+      </div>
+    </section>
     <section class="su-section" aria-labelledby="au-wav-h">
       <h2 id="au-wav-h">RECORD WAV</h2>
       <div class="su-card">
@@ -88,6 +91,7 @@ export function buildAudioPanel(app: HTMLElement): void {
 
   const q = <T extends Element>(sel: string) => panel.querySelector(sel) as T;
   q<HTMLButtonElement>('.au-bounce').addEventListener('click', () => void openBounceDialog());
+  q<HTMLButtonElement>('.au-mic').addEventListener('click', () => armMic(true));
 
   // ---------- vocal card ----------
 

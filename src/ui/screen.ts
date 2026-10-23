@@ -14,6 +14,7 @@ const ICON = {
   seq: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h3M10 6h3M16 6h4M4 12h6M13 12h3M4 18h2M9 18h11"/></svg>',
   keys: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 4v10M12 4v16M16 4v10"/></svg>',
   mix: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 4v16M12 4v16M18 4v16"/><circle cx="6" cy="14" r="2" style="fill:var(--drawer)"/><circle cx="12" cy="8" r="2" style="fill:var(--drawer)"/><circle cx="18" cy="16" r="2" style="fill:var(--drawer)"/></svg>',
+  mic: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>',
   audio: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 12h1M7 8v8M11 4v16M15 7v10M19 10v4"/></svg>',
   setup: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9L7 7M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg>',
 };
@@ -51,6 +52,8 @@ export interface ScreenRefs {
   padwell: HTMLElement;
   kitBtn: HTMLButtonElement;
   kitName: HTMLElement;
+  /** REC MIC button in the LCD (src/ui/micRec.ts). */
+  micBtn: HTMLButtonElement;
   lastLine: HTMLElement;
   lastInline: HTMLElement;
   fullLevel: HTMLButtonElement;
@@ -86,7 +89,10 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
     <div class="controls">
       <section class="lcd" aria-label="Display">
         <div class="lcd-top">
-          <button class="kit-btn" aria-label="Choose kit"><span class="kit-name">LOADING…</span>${ICON.chevron}</button>
+          <div class="lcd-kit">
+            <button class="kit-btn" aria-label="Choose kit"><span class="kit-name">LOADING…</span>${ICON.chevron}</button>
+            <button class="mic-btn" data-learn="rec-mic" aria-pressed="false" aria-label="Record a sound from the mic onto a pad">${ICON.mic}</button>
+          </div>
           <div class="bpm">
             <button class="bpm-down" data-learn="bpm-down" aria-label="Tempo down">−</button>
             <button class="bpm-tap" data-learn="tap" aria-label="Tempo 120 BPM. Tap repeatedly to set the tempo"><span class="bpm-num">120.0</span> <span class="bpm-unit">BPM</span></button>
@@ -164,6 +170,7 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
     padwell: q('.padwell'),
     kitBtn: q('.kit-btn'),
     kitName: q('.kit-name'),
+    micBtn: q('.mic-btn'),
     lastLine: q('.lcd-last'),
     lastInline: q('.last-inline'),
     fullLevel: q('.full-level'),

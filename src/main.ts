@@ -39,6 +39,7 @@ import { applyKit, buildPads } from './ui/pads';
 import { buildKitsPanel } from './ui/kits';
 import { buildMixPanel } from './ui/mix';
 import { buildAudioPanel } from './ui/audio';
+import { initMicRec } from './ui/micRec';
 import { buildScreen } from './ui/screen';
 import { buildSeqPanel } from './ui/seq';
 import { buildSetupPanel } from './ui/setup';
@@ -76,6 +77,7 @@ seq.attachKeys(instrument); // loops play their KEYS notes on it
 notes.initNotes(instrument);
 arp.initArp(engine, instrument);
 initHits(engine, ui, padEls);
+initMicRec(engine, ui); // REC MIC can take pad hits, so after initHits
 midiOut.initOut(engine, instrument);
 midiClock.initMidiClock(engine);
 midiIn.initIn(ui);

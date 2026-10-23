@@ -1,6 +1,5 @@
 // Vocal pitch correction from the mic. This is the only code that changes state.vocal (as mix.ts
-// is for state.mix). Switching it on asks for the mic (echo cancelling, noise suppression and auto
-// gain off, so the tuner hears the raw voice), runs it through the tune worklet (src/vocal/
+// is for state.mix). Switching it on asks for the mic (src/audio/mic.ts: the raw voice), runs it through the tune worklet (src/vocal/
 // tune.worklet.ts) into the VOX strip, and switching it off stops the mic. The settings (not the
 // switch) are saved as the `vocal` pref, 500 ms after the last change.
 //
@@ -8,6 +7,7 @@
 //                  └→ tune worklet ─→ VOX strip (engine.mix.voxIn)
 
 import type { AudioEngine } from '../audio/engine';
+import { micStatusOf, micSupported, openMic } from '../audio/mic';
 import { KEY_NAMES } from '../keys/scales';
 import { state, update } from '../state';
 import { getPref, setPref } from '../store/db';
@@ -77,7 +77,7 @@ export function toggleVocal(): void {
 }
 
 async function start(): Promise<void> {
-  if (!navigator.mediaDevices?.getUserMedia || !engine.ctx.audioWorklet) {
+  if (!micSupported() || !engine.ctx.audioWorklet) {
     set({ on: false, mic: 'unsupported' }, false);
     return;
   }
@@ -88,13 +88,7 @@ async function start(): Promise<void> {
       moduleReady = null;
       throw err;
     });
-    const [stream] = await Promise.all([
-      navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false, channelCount: 1 },
-      }),
-      moduleReady,
-      engine.unlock(),
-    ]);
+    const [stream] = await Promise.all([openMic(), moduleReady, engine.unlock()]);
     if (mine !== token) {
       for (const t of stream.getTracks()) t.stop();
       return;
@@ -122,15 +116,8 @@ async function start(): Promise<void> {
     set({ mic: 'on' }, false);
   } catch (err) {
     if (mine !== token) return;
-    const name = (err as { name?: string })?.name;
     warn(err);
-    stop(
-      name === 'NotAllowedError' || name === 'SecurityError'
-        ? 'denied'
-        : name === 'NotFoundError' || name === 'OverconstrainedError' || name === 'NotReadableError'
-          ? 'nomic'
-          : 'error',
-    );
+    stop(micStatusOf(err));
   }
 }
 

@@ -71,6 +71,16 @@ svg { display: block; }
   color: var(--lcd-text);
 }
 .lcd-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.lcd-kit { display: flex; align-items: center; gap: 4px; min-width: 0; flex: 1; }
+/* REC MIC (src/ui/micRec.ts): armed = red and blinking; recording = solid red. */
+.mic-btn {
+  flex: none; width: 44px; height: 44px; border-radius: 6px; margin-left: auto;
+  background: none; color: var(--lcd-dim); display: grid; place-items: center;
+}
+.mic-btn[aria-pressed="true"] { color: var(--rec); animation: blink 1s steps(2, jump-none) infinite; }
+.mic-btn.recording { background: var(--rec); color: var(--lcd-bg); animation: none; }
+.app[data-mic-arm] .pad { outline: 2px dashed var(--rec); outline-offset: -5px; }
+.pad.mic-rec { outline: 3px solid var(--rec); outline-offset: -5px; }
 .kit-btn {
   display: flex; align-items: center; gap: 6px;
   background: none; padding: 0; min-height: 44px;
@@ -143,7 +153,7 @@ svg { display: block; }
 .loop.recording .loop-bar::after { background: var(--rec); }
 
 @keyframes blink { 50% { opacity: .45; } }
-@media (prefers-reduced-motion: reduce) { .loop.queued, .rec.counting { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .loop.queued, .rec.counting, .mic-btn[aria-pressed="true"] { animation: none; } }
 
 /* ---------- Banks + toggles ---------- */
 

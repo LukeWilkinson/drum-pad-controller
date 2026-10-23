@@ -1,5 +1,5 @@
-// Imported samples: the only code that changes `state.userSamples` and the `samples` store.
-// A file is decoded, cleaned up (src/audio/sampleEdit.ts), stored as a WAV blob and named
+// Imported samples and REC MIC takes: the only code that changes `state.userSamples` and the
+// `samples` store. A file (or a mic take) is decoded, cleaned up (src/audio/sampleEdit.ts), stored as a WAV blob and named
 // "user:<hash>", so the engine and kits treat it like any other sample name.
 
 import type { AudioEngine } from './engine';
@@ -61,13 +61,47 @@ export async function importFile(file: File): Promise<UserSampleInfo> {
   const edited = editSample(channels, decoded.sampleRate);
   if (!edited) throw new ImportError('That file is silent.');
 
-  const stored: StoredSample = {
+  return store({
     id,
     name: sampleName(file.name),
     wav: new Blob([encodeWav(edited.channels, decoded.sampleRate)], { type: 'audio/wav' }),
     seconds: edited.channels[0].length / decoded.sampleRate,
     addedAt: Date.now(),
-  };
+  });
+}
+
+/**
+ * Stores a REC MIC take (src/audio/recorder.ts) as "Mic 1", "Mic 2"… after trimming and levelling
+ * it like an import. `added` is false when the very same sound was already stored.
+ * Throws ImportError when nothing was heard or it can't be stored.
+ */
+export async function addRecording(channels: Float32Array[], rate: number): Promise<{ sample: UserSampleInfo; added: boolean }> {
+  const edited = editSample(channels, rate);
+  if (!edited) throw new ImportError('Nothing was heard. Check the mic, get closer and try again.');
+  const wav = encodeWav(edited.channels, rate);
+  const id = USER_PREFIX + (await hash(wav));
+  const known = state.userSamples.find((s) => s.id === id);
+  if (known) return { sample: known, added: false };
+  const sample = await store({
+    id,
+    name: micName(),
+    wav: new Blob([wav], { type: 'audio/wav' }),
+    seconds: edited.channels[0].length / rate,
+    addedAt: Date.now(),
+  });
+  return { sample, added: true };
+}
+
+/** "Mic 1", or the next number no stored sample uses. */
+function micName(): string {
+  const used = new Set(state.userSamples.map((s) => s.name));
+  let n = 1;
+  while (used.has(`Mic ${n}`)) n++;
+  return `Mic ${n}`;
+}
+
+/** Saves a new sample and lists it. Throws ImportError with a message for Luke when storage fails. */
+async function store(stored: StoredSample): Promise<UserSampleInfo> {
   try {
     await saveSample(stored);
   } catch (err) {

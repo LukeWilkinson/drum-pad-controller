@@ -7,16 +7,21 @@
 // RECORD OUT: records whatever is heard, from the tap until STOP (at most MAX_OUT_SECONDS).
 // BOUNCE LOOP: stops the transport, plays the current loop from bar 1 for 1, 2 or 4 passes on the
 // exact frames, then keeps recording until the reverb and delay tails have died away.
+// REC MIC: records the mic (not the output) with a second node of the same worklet, for a pad's
+// sample (src/ui/micRec.ts). The take is handed over as float samples, not a WAV.
 
 import * as clock from './clock';
 import type { AudioEngine } from './engine';
+import { padLabel } from './kit';
+import { MIC_TEXT, micStatusOf, micSupported, openMic } from './mic';
+import { MAX_SECONDS } from './userSamples';
 import { wavHeader, toPcm16 } from './wav';
 import workletUrl from './recorder.worklet.ts?worker&url';
 import { BEATS_PER_BAR, hasHits } from '../seq/pattern';
 import * as seq from '../seq/sequencer';
 import { state, subscribe, update } from '../state';
 
-export type RecorderMode = 'off' | 'out' | 'bounce';
+export type RecorderMode = 'off' | 'out' | 'bounce' | 'mic';
 
 export interface RecorderState {
   mode: RecorderMode;
@@ -24,6 +29,8 @@ export interface RecorderState {
   since: number;
   /** What the status bar says before the time, e.g. "REC OUT" or "BOUNCE LOOP 1". */
   label: string;
+  /** REC MIC only: the pad (0–63) the take is for. */
+  pad?: number;
 }
 
 /** A finished recording, ready to save. */
@@ -31,6 +38,13 @@ export interface Take {
   blob: Blob;
   name: string;
   seconds: number;
+}
+
+/** A finished REC MIC take: mono float samples for src/audio/userSamples.ts addRecording(). */
+export interface MicTake {
+  channels: Float32Array[];
+  rate: number;
+  pad: number;
 }
 
 export class RecordError extends Error {}
@@ -44,8 +58,23 @@ const CHANNELS = 2;
 const STOP_AFTER_MS = 50; // the transport stops this long after a bounce's last pass (timers aren't exact)
 
 let engine: AudioEngine;
+let moduleReady: Promise<void> | null = null;
 let node: Promise<AudioWorkletNode> | null = null;
 const takeListeners: ((take: Take) => void)[] = [];
+const micListeners: ((take: MicTake) => void)[] = [];
+
+/** The REC MIC take being recorded. */
+let micTake: {
+  stream: MediaStream;
+  source: MediaStreamAudioSourceNode;
+  node: AudioWorkletNode;
+  parts: Float32Array[];
+  frames: number;
+  pad: number;
+  stopping: boolean;
+} | null = null;
+/** Counts REC MIC starts, so a mic that arrives after STOP (pressed while the browser asked) is let go. */
+let micAsk = 0;
 
 /** The take being recorded. */
 let take: {
@@ -72,6 +101,10 @@ export function initRecorder(e: AudioEngine): void {
     if (engine.ctx.currentTime >= t.bounce.end - 0.005) t.playFrames = t.bounce.frames;
     else cancel();
   });
+  // A hidden phone app shouldn't keep listening: a mic take ends (and is kept) when the page hides.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && micTake) finishMic();
+  });
 }
 
 /** Called with every finished take (src/ui/record.ts offers SAVE). */
@@ -79,9 +112,23 @@ export function onTake(fn: (take: Take) => void): void {
   takeListeners.push(fn);
 }
 
+/** Called with every finished REC MIC take (src/ui/micRec.ts). */
+export function onMicTake(fn: (take: MicTake) => void): void {
+  micListeners.push(fn);
+}
+
+function loadModule(): Promise<void> {
+  moduleReady ??= engine.ctx.audioWorklet.addModule(workletUrl).catch((err: unknown) => {
+    moduleReady = null;
+    console.error('[recorder]', err);
+    throw new RecordError("Recording isn't available in this browser.");
+  });
+  return moduleReady;
+}
+
 function worklet(): Promise<AudioWorkletNode> {
   node ??= (async () => {
-    await engine.ctx.audioWorklet.addModule(workletUrl);
+    await loadModule();
     const n = new AudioWorkletNode(engine.ctx, 'drumpad-recorder', {
       numberOfInputs: 1,
       numberOfOutputs: 0,
@@ -97,16 +144,19 @@ function worklet(): Promise<AudioWorkletNode> {
     return n;
   })().catch((err: unknown) => {
     node = null;
+    if (err instanceof RecordError) throw err;
     console.error('[recorder]', err);
     throw new RecordError("Recording isn't available in this browser.");
   });
   return node;
 }
 
+const BUSY = 'A recording is already running. Stop it first.';
+
 /** RECORD OUT on/off. Off finishes the take (it is offered for saving). */
 export async function toggleRecordOut(): Promise<void> {
   if (state.recorder.mode === 'out') return finish();
-  if (state.recorder.mode !== 'off') return;
+  if (state.recorder.mode !== 'off') throw new RecordError(BUSY);
   const n = await worklet();
   begin(n, 'out', 'REC OUT', engine.ctx.currentTime, `drumpad-rec-${stamp(true)}.wav`);
 }
@@ -116,7 +166,7 @@ export async function toggleRecordOut(): Promise<void> {
  * Throws RecordError when the loop is empty or a recording is already running.
  */
 export async function bounceLoop(passes: number): Promise<void> {
-  if (state.recorder.mode !== 'off') throw new RecordError('A recording is already running. Stop it first.');
+  if (state.recorder.mode !== 'off') throw new RecordError(BUSY);
   const p = state.patterns[state.pattern];
   const loop = state.pattern + 1;
   if (!hasHits(p)) throw new RecordError(`Loop ${loop} is empty. Record or step in some hits first.`);
@@ -133,10 +183,91 @@ export async function bounceLoop(passes: number): Promise<void> {
   window.setTimeout(() => take === t && clock.stop(), (end - engine.ctx.currentTime) * 1000 + STOP_AFTER_MS);
 }
 
-/** STOP on the status bar: RECORD OUT is finished and kept; a bounce is dropped. */
+/** STOP on the status bar: RECORD OUT and REC MIC are finished and kept; a bounce is dropped. */
 export function stopRecording(): void {
   if (state.recorder.mode === 'out') void finish();
   else if (state.recorder.mode === 'bounce') cancel();
+  else if (state.recorder.mode === 'mic') finishMic();
+}
+
+/**
+ * REC MIC: records the mic for pad `pad` until stopRecording() (or MAX_SECONDS, or the page hiding).
+ * Asks for the mic first; throws RecordError with a message for Luke when it can't start.
+ */
+export async function recordMic(pad: number): Promise<void> {
+  if (state.recorder.mode !== 'off') throw new RecordError(BUSY);
+  if (!micSupported() || !engine.ctx.audioWorklet) throw new RecordError(MIC_TEXT.unsupported[1]);
+  const mine = ++micAsk;
+  update({ recorder: { mode: 'mic', since: performance.now(), label: `MIC → PAD ${padLabel(pad)} · ASKING`, pad } });
+  let stream: MediaStream;
+  try {
+    [stream] = await Promise.all([openMic(), loadModule(), engine.unlock()]);
+  } catch (err) {
+    if (mine !== micAsk) return; // stopped while asking
+    micAsk++;
+    update({ recorder: { mode: 'off', since: 0, label: '' } });
+    if (err instanceof RecordError) throw err;
+    console.warn('[recorder]', err);
+    throw new RecordError(MIC_TEXT[micStatusOf(err)][1]);
+  }
+  if (mine !== micAsk) {
+    // STOP was pressed while the browser was asking for the mic: nothing is recorded.
+    for (const track of stream.getTracks()) track.stop();
+    return;
+  }
+  micAsk++;
+  const ctx = engine.ctx;
+  const n = new AudioWorkletNode(ctx, 'drumpad-recorder', {
+    numberOfInputs: 1,
+    numberOfOutputs: 0,
+    channelCount: 1,
+    channelCountMode: 'explicit',
+  });
+  const source = ctx.createMediaStreamSource(stream);
+  source.connect(n); // nothing goes to the speakers
+  const t = { stream, source, node: n, parts: [] as Float32Array[], frames: 0, pad, stopping: false };
+  micTake = t;
+  n.port.onmessage = (e: MessageEvent<{ type: 'data'; chans: Float32Array[] } | { type: 'done' }>) => {
+    if (e.data.type === 'data') {
+      t.parts.push(e.data.chans[0]);
+      t.frames += e.data.chans[0].length;
+      if (t.frames >= MAX_SECONDS * ctx.sampleRate) finishMic();
+    } else onMicDone(t);
+  };
+  // The mic unplugged, or taken by another app: keep what was recorded.
+  for (const track of stream.getAudioTracks()) track.addEventListener('ended', () => micTake === t && finishMic());
+  n.port.postMessage({ type: 'start', frame: Math.round(ctx.currentTime * ctx.sampleRate) });
+  update({ recorder: { mode: 'mic', since: performance.now(), label: `MIC → PAD ${padLabel(pad)}`, pad } });
+}
+
+function finishMic(): void {
+  const t = micTake;
+  if (!t && state.recorder.mode === 'mic') {
+    // Still asking for the mic: drop the take before it starts.
+    micAsk++;
+    update({ recorder: { mode: 'off', since: 0, label: '' } });
+    return;
+  }
+  if (!t || t.stopping) return;
+  t.stopping = true;
+  for (const track of t.stream.getTracks()) track.stop(); // the browser's mic light goes off now
+  t.node.port.postMessage({ type: 'stop', frame: Math.round(engine.ctx.currentTime * engine.ctx.sampleRate) });
+}
+
+function onMicDone(t: NonNullable<typeof micTake>): void {
+  t.source.disconnect();
+  t.node.port.onmessage = null;
+  if (micTake === t) micTake = null;
+  update({ recorder: { mode: 'off', since: 0, label: '' } });
+  if (!t.frames) return;
+  const mono = new Float32Array(t.frames);
+  let at = 0;
+  for (const p of t.parts) {
+    mono.set(p, at);
+    at += p.length;
+  }
+  const done: MicTake = { channels: [mono], rate: engine.ctx.sampleRate, pad: t.pad };
+  for (const fn of micListeners) fn(done);
 }
 
 function begin(n: AudioWorkletNode, mode: RecorderMode, label: string, at: number, name: string): void {

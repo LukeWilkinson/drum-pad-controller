@@ -68,6 +68,8 @@ export interface AppState {
   recorder: RecorderState;
   /** Vocal pitch correction from the mic (changed only by src/vocal/vocal.ts). */
   vocal: VocalState;
+  /** REC MIC armed: the next pad tapped records the mic for that pad (changed only by src/ui/micRec.ts). */
+  micArm: boolean;
 }
 
 /** 'count' = count-in bar before recording starts. */
@@ -116,6 +118,7 @@ export const state: AppState = {
   theme: loadTheme(),
   recorder: { mode: 'off', since: 0, label: '' },
   vocal: { ...DEFAULT_VOCAL },
+  micArm: false,
 };
 
 const listeners = new Set<Listener>();

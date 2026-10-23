@@ -1,5 +1,6 @@
 // A pad hit, whatever its source: touch and keyboard (src/main.ts) or MIDI input (src/midi/in.ts).
 // Audio first, then the recording, Note Repeat and visuals. Pads are indexes 0–63 (bank × 16 + screen index).
+// While REC MIC is armed or recording, a touch / key hit may be taken by it instead (setClaim()).
 
 import type { AudioEngine } from '../audio/engine';
 import { PADS_PER_BANK, padLabel } from '../audio/kit';
@@ -14,6 +15,13 @@ let engine: AudioEngine;
 let ui: ScreenRefs;
 let padEls: HTMLElement[];
 let anyHit = false;
+/** REC MIC (src/ui/micRec.ts) can take a touch / key hit instead of it playing. True = taken. */
+let claim: ((index: number) => boolean) | null = null;
+const claimed = new Set<number>();
+
+export function setClaim(fn: (index: number) => boolean): void {
+  claim = fn;
+}
 
 export function initHits(e: AudioEngine, refs: ScreenRefs, els: HTMLElement[]): void {
   engine = e;
@@ -43,6 +51,10 @@ export function padTitle(index: number): string {
 
 /** `fromMidi` hits are not sent back out as MIDI. */
 export function hit(index: number, velocity: number, fromMidi = false): void {
+  if (!fromMidi && claim?.(index)) {
+    claimed.add(index);
+    return;
+  }
   engine.play(index, velocity, !fromMidi); // audio first
   if (!fromMidi && state.theme.vibrate) navigator.vibrate?.(8);
   if (!fromMidi) midiOut.hold(index);
@@ -57,6 +69,7 @@ export function hit(index: number, velocity: number, fromMidi = false): void {
 }
 
 export function release(index: number, fromMidi = false): void {
+  if (!fromMidi && claimed.delete(index)) return; // never played, so nothing to end
   repeat.release(index);
   if (!fromMidi) midiOut.release(index);
   showRelease(padEls[index % PADS_PER_BANK]);

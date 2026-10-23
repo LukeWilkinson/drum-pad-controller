@@ -21,6 +21,7 @@ import * as repeat from '../seq/repeat';
 import * as seq from '../seq/sequencer';
 import { state } from '../state';
 import { PARAM_LABEL } from '../ui/format';
+import { toggleMic } from '../ui/micRec';
 import { SPEED_MAX } from '../vocal/types';
 import * as vocal from '../vocal/vocal';
 import type { Mapping } from './types';
@@ -50,6 +51,7 @@ const FIXED: Record<string, Target> = {
   swing: { label: 'SWING', set: (v) => seq.setSwing(between(SWING_MIN, SWING_MAX, v)) },
   master: { label: 'MASTER', set: (v) => mix.setLevel('master', v) },
   'rec-out': { label: 'REC OUT', press: () => void recorder.toggleRecordOut().catch(console.warn) },
+  'rec-mic': { label: 'REC MIC', press: toggleMic },
   'oct-down': { label: 'KEYS OCTAVE −', press: () => keys.nudgeOctave(-1) },
   'oct-up': { label: 'KEYS OCTAVE +', press: () => keys.nudgeOctave(1) },
   hold: { label: 'KEYS HOLD', press: keys.toggleHold },

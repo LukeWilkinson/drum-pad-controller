@@ -5,10 +5,11 @@ import type { AudioEngine } from '../audio/engine';
 import { GROUP_COLOUR, PADS_PER_BANK, PARAM_RANGE, padLabel, type PadDef, type ParamKey } from '../audio/kit';
 import { CATEGORIES, KITS, allPads, findKit } from '../audio/kits';
 import { ImportError, MAX_SECONDS, importFile, isUserSample, removeSample, sampleLabel, type UserSampleInfo } from '../audio/userSamples';
-import { defaultSaveName, deleteKit, saveKit, selectKit, setParam, swapSample } from '../kitControl';
+import { deleteKit, selectKit, setParam, swapSample } from '../kitControl';
 import { state, subscribe, update, type Change } from '../state';
 import { PARAM_LABEL, formatParam } from './format';
 import { escapeHtml, openDialog } from './dialog';
+import { openSaveKitDialog } from './saveKit';
 import { openShareDialog } from './share';
 
 type Category = 'All' | (typeof CATEGORIES)[number] | 'My kits';
@@ -189,7 +190,7 @@ export function buildKitsPanel(app: HTMLElement, engine: AudioEngine): void {
     } else if (t.classList.contains('kp-swap')) {
       await askSwap();
     } else if (t.classList.contains('kp-save')) {
-      await askSave();
+      await openSaveKitDialog();
     } else if (t.classList.contains('kp-share')) {
       await openShareDialog();
     } else if (t.classList.contains('kp-load')) {
@@ -224,28 +225,6 @@ export function buildKitsPanel(app: HTMLElement, engine: AudioEngine): void {
   }
 
   // ---------- dialogs ----------
-
-  async function askSave(): Promise<void> {
-    const kit = state.kit;
-    if (!kit) return;
-    const name = kit.user ? kit.name : defaultSaveName();
-    const res = await openDialog(`
-      <h2>SAVE KIT</h2>
-      <label class="dlg-field">NAME<input name="name" maxlength="32" value="${escapeHtml(name)}" autocomplete="off"></label>
-      <div class="dlg-btns">
-        <button value="cancel" class="kp-btn">CANCEL</button>
-        ${kit.user ? '<button value="new" class="kp-btn">SAVE AS NEW</button>' : ''}
-        <button value="save" class="kp-btn primary">${kit.user ? 'UPDATE' : 'SAVE'}</button>
-      </div>`);
-    const newName = (res.fields.name ?? '').trim() || name;
-    if (res.value === 'new') await saveKit(newName);
-    else if (res.value === 'save') {
-      if (kit.user) {
-        kit.name = newName;
-        await saveKit();
-      } else await saveKit(newName);
-    }
-  }
 
   function userRow(s: UserSampleInfo, current: string): string {
     return `<div class="sw-row${s.id === current ? ' current' : ''}" data-row="${s.id}">
