@@ -618,6 +618,7 @@ Luke asked for clearer recording: after the pad tap a panel opens with RECORD (a
 - Independent check: the stored WAV read straight from IndexedDB and decoded by the browser's own decoder: 28,800 frames (exactly 0.60 s at 48 kHz), peak −1.000 dBFS, both ends ≈ 0 (fades).
 - Layout at 390×844, 844×390 and 1280×800: panel fits with no scrolling, smallest target 44 px. `npm run build` clean.
 - Not checked: a real mic, the Android permission prompt, finger-drag feel, and the playhead moving smoothly (the pane runs about 1 animation frame per 500 ms; the playhead moved 0 → 2% when a frame ran). Test data went to the 5181 origin only (`Mic 1` on pad A14 there), not Luke's 5180 or the live site.
+- **Merged into `main` and pushed (2026-10-24, 52b930c)** at Luke's request, for the phone test. The Pages run succeeded (checked through the GitHub API; `gh` isn't installed) and the live JS bundle contains the panel. Luke's phone test: M7 checklist section 6.
 
 ## Live site: GitHub Pages (2026-10-18)
 - **https://lukewilkinson.github.io/drum-pad-controller/** from the public repo https://github.com/LukeWilkinson/drum-pad-controller (remote `origin`). Luke chose a public repo (code and commit email visible) after Netlify suspended the new account.
