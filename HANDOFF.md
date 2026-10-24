@@ -582,11 +582,12 @@ Run `npm.cmd run dev` on the PC and open the Network address on the phone (HTTPS
 5. MIDI Learn (loopMIDI or a controller, with the open M5 section 5): learn REC OUT, the vocal switch, Strength, Speed, a VOX send, VOX level and mute, and the REC MIC button.
 6. REC MIC (PADS screen, headphones on):
    - [ ] Tap the mic in the display: it blinks red, the pads get dashed outlines, the display says "TAP THE PAD TO RECORD ONTO". Tap it again: off.
-   - [ ] Arm, tap a pad: Android asks for the mic the first time; then the status bar shows "MIC → PAD …" with a timer. Clap or say something, tap the same pad: the MIC TAKE dialog shows "Mic 1 · x s".
-   - [ ] PLAY plays the take; the start isn't cut off and there's no long silence before it. RETRY records the same pad again; CANCEL keeps the old sound.
-   - [ ] USE ON PAD: the pad is now "Mic 1" and plays the take at a level close to the other pads. SAVE AS NEW KIT saves it; close and reopen the app: the kit and sound are still there. NOT NOW leaves the kit marked edited (*).
-   - [ ] Leaving the app during a take ends it and still offers the take. Block the mic in Chrome's site settings: REC MIC says the mic was blocked.
-   - [ ] Is the delay between tapping the pad and the recording starting short enough? Is the mic button easy to hit and is the shortened kit name OK?
+   - [ ] Arm, tap a pad: the record panel opens and nothing records yet (no mic light). Press RECORD: Android asks for the mic the first time; then the button is a pulsing red STOP, the REC badge blinks, the timer runs and the waveform grows as you clap or talk. Press STOP.
+   - [ ] The waveform shows the take with amber handles at the start and end of the sound. Drag each handle with a finger: easy to grab, follows the finger, can't cross the other one.
+   - [ ] PLAY plays only the part between the handles, with a moving white line; the start isn't cut off. RECORD AGAIN drops it and records a new take. CANCEL keeps the old pad sound and stores nothing.
+   - [ ] SAVE TO PAD: the pad is now "Mic 1" and plays the trimmed take at a level close to the other pads. SAVE AS NEW KIT saves it; close and reopen the app: the kit and sound are still there. NOT NOW leaves the kit marked edited (*).
+   - [ ] Leaving the app during a take ends it and the panel shows the take on return. Record silence: "Nothing was heard". Block the mic in Chrome's site settings: the panel says the mic was blocked.
+   - [ ] Does the panel fit in phone portrait and landscape? Is it clear when it's recording and when it isn't?
 7. AUDIO tab and layout:
    - [ ] The bottom bar has 7 tabs and the labels fit; AUDIO shows RECORD SOUND TO PAD, RECORD WAV, then the vocal card.
    - [ ] On a tablet or the PC (1024 px or wider): REC OUT and VOX chips sit in the top bar and work like the buttons on AUDIO.
@@ -596,7 +597,27 @@ Run `npm.cmd run dev` on the PC and open the Network address on the phone (HTTPS
 - Per step: `tsc` + `npm run build`, scripted checks in the browser pane (`dev-http`), layout at 390×844, 844×390, 1280×800.
 - Independent: WAV re-decoded and header-parsed separately (`ffprobe` if on PATH); share export → import round trip (pads, params, sample hashes); damaged files rejected; offline renders for recorder timing and the pitch worklet.
 - Luke's checks: how imports and auto-tune sound, mic latency on the phone, Android share sheet, storage eviction.
-- Flagged, not planned: full backup file, waveform trim editor (M8), vocals recorded into loops as audio.
+- Flagged, not planned: full backup file, vocals recorded into loops as audio. (The waveform trim editor was built 2026-10-24 as the REC MIC record panel.)
+
+## REC MIC record panel (plan approved 2026-10-24)
+Luke asked for clearer recording: after the pad tap a panel opens with RECORD (also re-record), PLAY, a waveform and drag trim handles, then SAVE TO PAD. Recording starts only on RECORD. Luke's picks: tap the pad first; auto-trim shown as handles; built in Code (no Claude Design). Branch `feat/mic-panel`. Steps: 1 pure parts and hooks, 2 panel UI and wiring, 3 browser check, docs, commit.
+
+### Step 1, pure parts and hooks: done (2026-10-24)
+- `sampleEdit.ts`: `findSound()` gives the auto-trim bounds; `editSample(input, rate, bounds?)` keeps exactly the given range (2 ms fade-in, 5 ms fade-out when cut, −1 dBFS from the range's peak); `peaks()` for drawing; `peakOf()` exported.
+- `userSamples.addRecording(channels, rate, bounds?)`; `recorder.onMicData()` gets each mic block during a take; an empty take now reaches `onMicTake` listeners too; `engine.previewBuffer()` plays part of a buffer on the preview path.
+- Checked by `tsc` and a Node script (scratchpad, not kept) comparing the old and new `editSample` on 6 synthetic takes: identical samples, start and gain; manual bounds keep the exact length at −1 dBFS; silence and empty ranges return null; `peaks` min/max.
+
+### Step 2, panel UI and wiring: done (2026-10-24)
+- `src/ui/micPanel.ts` (new): phases idle / asking / recording / ready / saving; RECORD ↔ STOP button (red, pulsing), REC badge and timer, live waveform (red, squeezes after 3 s), LCD-coloured waveform with amber trim handles (44 px grab zones, Pointer Events, arrow keys 10 ms / Shift 100 ms, Home / End), PLAY / STOP with a playhead at the save level, SAVE TO PAD, messages in the panel (nothing heard, mic refused). Nothing is stored before SAVE; CANCEL / Esc / backdrop mid-take stops and drops it.
+- `src/ui/micRec.ts`: the pad tap opens the panel; the old review dialog and RETRY are gone. `src/styles/micPanel.css` (tokens only; shorter in phone landscape; reduced motion stops the pulse).
+- Smoke-checked in the browser pane (port 5181; another chat held 5180) with a fake mic tone at 0.40–1.00 s: panel opens with nothing recording; RECORD → STOP, badge, timer, recorder on; STOP → handles at 0.40 / 1.01 s, RECORD AGAIN, SAVE enabled; CANCEL stores nothing; no console errors. Full checks are step 3.
+
+### Step 3, checks, docs and commit: done (2026-10-24)
+- Fixes from the checks: handle drags track their own pointer id (pointer capture is tried, not required); the playhead is placed at once on PLAY; `overflow-x: clip` on the panel dialog (an end handle at 100% made it scroll sideways in phone landscape).
+- Checked by script in the browser pane with a fake mic (tone at 0.40–1.00 s): auto handles 0.41 / 1.02 s; drag to 50% of the wave; start can't pass end − 20 ms and end can't pass start + 20 ms; Home / End / arrows (10 ms) / Shift+arrows (100 ms); RECORD AGAIN hides the handles and replaces the take; PLAY → STOP, playhead shown, ends by itself; SAVE trimmed to 0.30–0.90 s stored "Mic 1" on the pad and opened SAVE AS NEW KIT; Esc mid-take: recorder off, mic tracks ended, nothing stored; silence → "Nothing was heard"; NotAllowedError → blocked message; backdrop tap closes.
+- Independent check: the stored WAV read straight from IndexedDB and decoded by the browser's own decoder: 28,800 frames (exactly 0.60 s at 48 kHz), peak −1.000 dBFS, both ends ≈ 0 (fades).
+- Layout at 390×844, 844×390 and 1280×800: panel fits with no scrolling, smallest target 44 px. `npm run build` clean.
+- Not checked: a real mic, the Android permission prompt, finger-drag feel, and the playhead moving smoothly (the pane runs about 1 animation frame per 500 ms; the playhead moved 0 → 2% when a frame ran). Test data went to the 5181 origin only (`Mic 1` on pad A14 there), not Luke's 5180 or the live site.
 
 ## Live site: GitHub Pages (2026-10-18)
 - **https://lukewilkinson.github.io/drum-pad-controller/** from the public repo https://github.com/LukeWilkinson/drum-pad-controller (remote `origin`). Luke chose a public repo (code and commit email visible) after Netlify suspended the new account.

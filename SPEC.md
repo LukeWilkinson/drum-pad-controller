@@ -25,7 +25,7 @@ A free, cross-platform drum pad and MIDI controller that runs on PC, phones and 
 6. **Effects and settings:** reverb, delay, filter, master volume, latency calibration, theme.
 7. **Later / stretch:** vocal pitch correction from the mic (on/off, key, scale, strength, speed), audio export (WAV), sample import, sharing presets. Added after Luke's PC test (2026-10-23): SAVE FILE beside SHARE, an AUDIO tab and tablet REC OUT / VOX chips, REC MIC (from M8).
 8. **Recording and custom layouts** (Luke's notes, 2026-10-22):
-   - **Record own sounds:** record from the mic on the fly and assign the take to any pad (trim, save with the kit). *Built early, in M7 (2026-10-23): REC MIC.* A waveform trim editor is still open.
+   - **Record own sounds:** record from the mic on the fly and assign the take to any pad (trim, save with the kit). *Built early, in M7 (2026-10-23): REC MIC.* Record panel with waveform trim added 2026-10-24.
    - **Full customisation:** move pads and controls anywhere; free-floating placement or snap to a grid whose rows × columns the user sets. Bigger screens (tablet, monitor) can show many more pads; phones can pack in more, smaller pads.
    - **Preset layouts:** a few good built-in layouts; add, remove and save your own.
    - **Shareable layouts:** save a layout as a seed (short code/string) that others can load.

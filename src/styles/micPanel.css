@@ -1,0 +1,78 @@
+/* ---------- REC MIC panel (src/ui/micPanel.ts) ---------- */
+
+/* overflow-x: an end handle at 100% reaches 6px past the dialog's padding; clip it, no sideways scroll. */
+.dlg:has(.mp) { width: min(480px, calc(100vw - 32px)); overflow-x: clip; }
+
+.mp-top { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+.mp-top h2 { margin: 0; flex: 1; min-width: 0; }
+.mp-badge {
+  display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; border-radius: 4px;
+  background: var(--rec); color: var(--text-strong); font: 700 12px var(--font-ui); letter-spacing: .1em;
+}
+.mp-badge[hidden] { display: none; }
+.mp-badge .rec-dot { width: 8px; height: 8px; background: var(--text-strong); animation: rec-blink 1s steps(2, start) infinite; }
+.mp-time { font-family: var(--font-mono); font-size: 14px; color: var(--text-strong); }
+.dlg p.mp-pad { margin: 0 0 10px; font-size: 12px; color: var(--text-muted); letter-spacing: .06em; }
+
+/* The waveform screen: LCD colours, trim handles over it, the kept part between --trim-a and --trim-b. */
+.mp-wave {
+  position: relative; height: 120px; margin: 0 0 8px; border-radius: 8px;
+  background: var(--lcd-bg); box-shadow: inset 0 2px 6px rgba(0, 0, 0, .5);
+  touch-action: none;
+}
+.mp-wave canvas { position: absolute; inset: 8px 0; width: 100%; height: calc(100% - 16px); display: block; }
+.dlg p.mp-empty {
+  position: absolute; inset: 0; margin: 0; display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: 12px; color: var(--lcd-dim); text-align: center; padding: 0 12px;
+}
+.dlg p.mp-empty[hidden] { display: none; }
+.mp[data-phase="ready"] .mp-wave::before, .mp[data-phase="saving"] .mp-wave::before {
+  content: ''; position: absolute; top: 0; bottom: 0; left: var(--trim-a); right: calc(100% - var(--trim-b));
+  border-top: 2px solid var(--amber); border-bottom: 2px solid var(--amber); pointer-events: none;
+}
+
+/* Each handle is a 44px grab zone centred on its line; the line and tab are drawn inside it. */
+.mp-h {
+  position: absolute; top: -6px; bottom: -6px; width: 44px; margin-left: -22px;
+  cursor: ew-resize; touch-action: none; z-index: 1;
+}
+.mp-h[hidden] { display: none; }
+.mp-h::before { content: ''; position: absolute; top: 6px; bottom: 6px; left: 21px; width: 2px; background: var(--amber); }
+.mp-h::after {
+  content: ''; position: absolute; top: 50%; left: 14px; width: 16px; height: 32px; margin-top: -16px;
+  border-radius: 4px; background: var(--amber); box-shadow: 0 1px 4px rgba(0, 0, 0, .5);
+}
+.mp-h:focus-visible { outline: none; }
+.mp-h:focus-visible::after, .mp-h.drag::after { background: var(--text-strong); }
+.mp-head { position: absolute; top: 0; bottom: 0; width: 2px; margin-left: -1px; background: var(--text-strong); pointer-events: none; }
+.mp-head[hidden] { display: none; }
+
+.dlg p.mp-info { margin: 0 0 4px; min-height: 1.4em; font-family: var(--font-mono); font-size: 12px; color: var(--text); }
+.dlg p.mp-msg { margin: 0 0 6px; min-height: 1.4em; font-size: 13px; color: var(--rec); }
+.dlg p.mp-msg:empty { min-height: 0; }
+
+.mp-ctrls { display: flex; align-items: center; justify-content: center; gap: 14px; margin: 4px 0 12px; }
+.mp-rec {
+  display: inline-flex; align-items: center; gap: 10px; height: 56px; padding: 0 22px 0 16px; border-radius: 28px;
+  background: var(--raised); color: var(--text-strong); font: 700 14px var(--font-ui); letter-spacing: .08em;
+  box-shadow: var(--key-shadow);
+}
+.mp-rec-dot { width: 22px; height: 22px; border-radius: 50%; background: var(--rec); flex: none; }
+.mp-rec.on { background: var(--rec); animation: mp-pulse 1.2s ease-in-out infinite; }
+.mp-rec.on .mp-rec-dot { border-radius: 3px; width: 18px; height: 18px; background: var(--text-strong); }
+.mp-rec:disabled { opacity: .5; }
+@keyframes mp-pulse { 50% { box-shadow: 0 0 0 6px rgba(0, 0, 0, .25); filter: brightness(1.15); } }
+.mp-play { display: inline-flex; align-items: center; gap: 6px; height: 56px; padding: 0 18px; }
+.mp-play.on { background: var(--play); color: var(--ink); }
+.mp-play:disabled, .mp-save:disabled { opacity: .45; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mp-rec.on, .mp-badge .rec-dot { animation: none; }
+}
+
+/* Phone landscape: shorter waveform so the whole panel fits. */
+@media (max-height: 540px) {
+  .mp-wave { height: 80px; }
+  .mp-rec, .mp-play { height: 48px; }
+  .mp-ctrls { margin-bottom: 8px; }
+}

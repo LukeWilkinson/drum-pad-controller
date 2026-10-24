@@ -62,6 +62,7 @@ let moduleReady: Promise<void> | null = null;
 let node: Promise<AudioWorkletNode> | null = null;
 const takeListeners: ((take: Take) => void)[] = [];
 const micListeners: ((take: MicTake) => void)[] = [];
+const micDataListeners: ((chunk: Float32Array, rate: number) => void)[] = [];
 
 /** The REC MIC take being recorded. */
 let micTake: {
@@ -112,9 +113,14 @@ export function onTake(fn: (take: Take) => void): void {
   takeListeners.push(fn);
 }
 
-/** Called with every finished REC MIC take (src/ui/micRec.ts). */
+/** Called with every finished REC MIC take (src/ui/micRec.ts), an empty one too. */
 export function onMicTake(fn: (take: MicTake) => void): void {
   micListeners.push(fn);
+}
+
+/** Called with each block of mic samples while a REC MIC take records (the panel's live waveform). */
+export function onMicData(fn: (chunk: Float32Array, rate: number) => void): void {
+  micDataListeners.push(fn);
 }
 
 function loadModule(): Promise<void> {
@@ -231,6 +237,7 @@ export async function recordMic(pad: number): Promise<void> {
     if (e.data.type === 'data') {
       t.parts.push(e.data.chans[0]);
       t.frames += e.data.chans[0].length;
+      for (const fn of micDataListeners) fn(e.data.chans[0], ctx.sampleRate);
       if (t.frames >= MAX_SECONDS * ctx.sampleRate) finishMic();
     } else onMicDone(t);
   };
@@ -259,7 +266,6 @@ function onMicDone(t: NonNullable<typeof micTake>): void {
   t.node.port.onmessage = null;
   if (micTake === t) micTake = null;
   update({ recorder: { mode: 'off', since: 0, label: '' } });
-  if (!t.frames) return;
   const mono = new Float32Array(t.frames);
   let at = 0;
   for (const p of t.parts) {

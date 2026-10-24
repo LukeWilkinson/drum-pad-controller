@@ -4,7 +4,7 @@
 
 import type { AudioEngine } from './engine';
 import { sampleNamesOf } from './kit';
-import { editSample } from './sampleEdit';
+import { type Bounds, editSample } from './sampleEdit';
 import { encodeWav } from './wav';
 import { deleteSample, getSample, listSamples, saveSample, type StoredSample } from '../store/db';
 import { state, update } from '../state';
@@ -72,11 +72,16 @@ export async function importFile(file: File): Promise<UserSampleInfo> {
 
 /**
  * Stores a REC MIC take (src/audio/recorder.ts) as "Mic 1", "Mic 2"… after trimming and levelling
- * it like an import. `added` is false when the very same sound was already stored.
+ * it like an import (to `bounds` when given: the REC MIC panel's trim handles). `added` is false when
+ * the very same sound was already stored.
  * Throws ImportError when nothing was heard or it can't be stored.
  */
-export async function addRecording(channels: Float32Array[], rate: number): Promise<{ sample: UserSampleInfo; added: boolean }> {
-  const edited = editSample(channels, rate);
+export async function addRecording(
+  channels: Float32Array[],
+  rate: number,
+  bounds?: Bounds,
+): Promise<{ sample: UserSampleInfo; added: boolean }> {
+  const edited = editSample(channels, rate, bounds);
   if (!edited) throw new ImportError('Nothing was heard. Check the mic, get closer and try again.');
   const wav = encodeWav(edited.channels, rate);
   const id = USER_PREFIX + (await hash(wav));

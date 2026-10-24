@@ -202,6 +202,30 @@ export class AudioEngine {
     if (buffer) this.startVoice(buffer, 0.8, DEFAULT_PARAMS, 0);
   }
 
+  /**
+   * Plays `duration` seconds of `buffer` from `offset` at `gain`, on the preview path (the REC MIC
+   * panel's PLAY). Returns a stop function; `onEnd` runs once it ends or is stopped.
+   */
+  previewBuffer(buffer: AudioBuffer, offset: number, duration: number, gain: number, onEnd?: () => void): () => void {
+    const src = this.ctx.createBufferSource();
+    src.buffer = buffer;
+    const g = this.ctx.createGain();
+    g.gain.value = gain;
+    src.connect(g).connect(this.mix.previewIn);
+    src.onended = () => {
+      g.disconnect();
+      onEnd?.();
+    };
+    src.start(0, offset, duration);
+    return () => {
+      try {
+        src.stop();
+      } catch {
+        // already ended
+      }
+    };
+  }
+
   /** `when` 0 means now: the source starts with start(0), the lowest-latency path. */
   private hit(index: number, velocity: number, when: number): Voice | undefined {
     const pad = this.kit?.pads[index];
