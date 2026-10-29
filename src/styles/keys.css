@@ -45,17 +45,21 @@
 
 /* ---------- Presets ---------- */
 
-.ky-presets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; flex: none; }
+/* Two rows that scroll sideways (6 synth, 9 sampled presets); a part of the next column shows. */
+.ky-presets {
+  display: grid; grid-auto-flow: column; grid-template-rows: repeat(2, 52px);
+  grid-auto-columns: calc((100% - 6px) / 2.25); gap: 6px; flex: none;
+  overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: none;
+}
+.ky-presets::-webkit-scrollbar { display: none; }
 .ky-preset {
   height: 52px; padding: 0 12px; border-radius: 8px; text-align: left;
   display: flex; flex-direction: column; justify-content: center; gap: 2px;
   background: color-mix(in srgb, var(--raised) 55%, var(--body)); border: 2px solid transparent;
-  min-width: 0;
+  min-width: 0; scroll-snap-align: start;
 }
 .ky-preset[aria-pressed="true"] { background: var(--raised); border-color: var(--amber); }
 .ky-preset[hidden] { display: none; }
-/* SAMPLED's 5th preset (Kalimba) gets the full width under the 2 × 2 grid. */
-.ky-preset:nth-child(5) { grid-column: 1 / -1; }
 .ky-pname { font-size: 15px; font-weight: 700; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ky-pmeta { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
@@ -69,12 +73,20 @@
 .ky-toggle { height: 44px; padding: 0 10px; border-radius: 6px; background: var(--raised); color: var(--text); font-weight: 700; font-size: 12px; letter-spacing: .06em; }
 .ky-toggle[aria-pressed="true"] { background: var(--amber); color: var(--body); }
 .ky-arp-info { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0; white-space: nowrap; }
+.ky-oct .ky-btn, .ky-oct .ky-toggle { flex: none; min-width: 44px; } /* never under 44px */
+/* Phones (portrait and landscape): OCTAVE, CHORD, HOLD and ARP only just fit, so the ARP / CHORD details go (the
+   options dialogs and the LCD still show them). */
+@media (max-width: 420px), (orientation: landscape) and (max-height: 540px) {
+  .ky-oct { gap: 4px; }
+  .ky-oct .ky-arp-info { display: none; }
+}
 
 /* ARP options dialog */
 .ky-opt-label { margin: 0 0 6px !important; font-size: 11px !important; font-weight: 700; letter-spacing: .08em; color: var(--text-muted); }
 .ky-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-bottom: 14px; }
 .ky-opt { min-height: 44px; }
 .ky-opt[aria-pressed="true"] { background: var(--amber); color: var(--body); }
+.ky-opt-note { margin: 0 0 14px !important; font-size: 12px !important; color: var(--text-muted); }
 
 /* ---------- FX sends (small knobs) ---------- */
 
@@ -145,10 +157,9 @@
   .ky-snap-text { display: none; }
   .ky-snap-short { display: inline; }
   .ky-src { order: 0; flex: 1 1 auto; }
-  /* One row: 4 synth or 5 sampled presets share the width. */
-  .ky-presets { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 4px; }
+  /* One row that scrolls sideways, about 3½ presets in view so the names fit. */
+  .ky-presets { grid-template-rows: 44px; grid-auto-columns: calc((100% - 12px) / 3.5); gap: 4px; }
   .ky-preset { height: 44px; padding: 0 6px; }
-  .ky-preset:nth-child(5) { grid-column: auto; }
   .ky-pname { font-size: 12px; }
   .ky-pmeta { display: none; }
   .ky-strips { flex-direction: row; }

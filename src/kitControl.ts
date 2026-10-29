@@ -127,10 +127,18 @@ export async function deleteKit(id: string): Promise<void> {
   }
 }
 
-/** Shows pad bank `bank` (0–3). The selected pad moves to the same spot in the new bank. */
+/** Shows pad bank `bank` (0–3), leaving the CH bank. The selected pad moves to the same spot in the new bank. */
 export function selectBank(bank: number): void {
-  if (bank === state.bank) return;
-  update({ bank, selectedPad: bank * PADS_PER_BANK + (state.selectedPad % PADS_PER_BANK) });
+  if (bank === state.bank) {
+    if (state.chordPads) update({ chordPads: false });
+    return;
+  }
+  update({ bank, chordPads: false, selectedPad: bank * PADS_PER_BANK + (state.selectedPad % PADS_PER_BANK) });
+}
+
+/** Shows the CH bank: the pads play KEYS chords (src/pads/chordPads.ts). `state.bank` is kept for coming back. */
+export function selectChordPads(): void {
+  if (!state.chordPads) update({ chordPads: true });
 }
 
 /** "My Neon Electronic 2" etc., numbered past any saved kit already using the name. */

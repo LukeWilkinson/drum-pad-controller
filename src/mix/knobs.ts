@@ -4,32 +4,8 @@
 
 import { state } from '../state';
 import * as mix from './mix';
+import { linear, list, log, type Scale } from './scale';
 import { DEFAULT_MIX, DELAY_TIMES, FILTER_TYPES, FX_RANGE, REVERB_SIZES, type FxId } from './types';
-
-/** How a knob's value maps onto its 0–1 turn. */
-export interface Scale {
-  to(v: number): number;
-  from(n: number): number;
-  /** One arrow-key step as a fraction of the turn. */
-  step: number;
-}
-
-export const linear = (min: number, max: number): Scale => ({
-  to: (v) => (v - min) / (max - min),
-  from: (n) => min + n * (max - min),
-  step: 0.02,
-});
-export const log = (min: number, max: number): Scale => ({
-  to: (v) => Math.log(v / min) / Math.log(max / min),
-  from: (n) => min * Math.pow(max / min, n),
-  step: 0.02,
-});
-/** `count` values 0 … count − 1. */
-export const list = (count: number): Scale => ({
-  to: (v) => v / (count - 1),
-  from: (n) => Math.round(n * (count - 1)),
-  step: 1 / (count - 1),
-});
 
 export interface KnobDef {
   label: string;

@@ -1,6 +1,7 @@
-// KEYS types, preset names and note helpers. This file imports only a type from scales.ts (which
-// imports nothing), so state.ts, the audio code and the UI can all use it.
+// KEYS types, preset names and note helpers. This file imports only types from scales.ts and
+// chords.ts (which import nothing else), so state.ts, the audio code and the UI can all use it.
 
+import type { ChordType, ChordVoicing } from './chords';
 import type { ScaleId } from './scales';
 
 export type KeysSource = 'synth' | 'sampled';
@@ -11,13 +12,16 @@ export interface PresetInfo {
   meta: string;
 }
 
-/** Presets per source, in screen order (Keys.dc.html): 4 synth, 5 sampled (Kalimba was added). */
+/** Presets per source, in screen order (Keys.dc.html had 4 synth and 4 sampled; M6 added Kalimba,
+ *  M9a E-Piano, Air Pad and the 4 FreePats instruments). */
 export const PRESETS: Record<KeysSource, PresetInfo[]> = {
   synth: [
     { name: 'Warm Pad', meta: 'Poly · slow attack' },
     { name: 'Saw Lead', meta: 'Mono · glide' },
     { name: 'Sub Bass', meta: 'Mono · sine + drive' },
     { name: 'Glass Pluck', meta: 'Poly · short' },
+    { name: 'E-Piano', meta: 'Poly · tine + tremolo' },
+    { name: 'Air Pad', meta: 'Poly · wide, slow' },
   ],
   sampled: [
     { name: 'Grand Piano', meta: 'Sampled · Kawai grand' },
@@ -25,6 +29,10 @@ export const PRESETS: Record<KeysSource, PresetInfo[]> = {
     { name: 'Strings', meta: 'Sampled · ensemble' },
     { name: 'Concert Harp', meta: 'Sampled · plucked' },
     { name: 'Kalimba', meta: 'Sampled · Tanzanian' },
+    { name: 'Nylon Guitar', meta: 'Sampled · classical' },
+    { name: 'Electric Guitar', meta: 'Sampled · clean' },
+    { name: 'Finger Bass', meta: 'Sampled · electric' },
+    { name: 'Drawbar Organ', meta: 'Sampled · drawbars' },
   ],
 };
 
@@ -49,6 +57,10 @@ export interface KeysState {
   arp: boolean;
   arpMode: ArpMode;
   arpRate: ArpRate;
+  /** CHORD: each key plays a chord in the key and scale (src/keys/chords.ts). */
+  chord: boolean;
+  chordType: ChordType;
+  chordVoicing: ChordVoicing;
   /** How much of the KEYS bus goes to the reverb and the delay, 0–1 (the mixer applies them). */
   reverbSend: number;
   delaySend: number;
@@ -76,6 +88,9 @@ export const DEFAULT_KEYS: KeysState = {
   arp: false,
   arpMode: 'up',
   arpRate: '1/16',
+  chord: false,
+  chordType: 'triad',
+  chordVoicing: 'close',
   reverbSend: 0,
   delaySend: 0,
 };

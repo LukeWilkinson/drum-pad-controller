@@ -7,6 +7,9 @@
 // - HOLD: a note keeps sounding after its key comes up ("latched") until its key is tapped again or
 //   HOLD goes off.
 // - ARP: notes go to the arpeggiator (src/keys/arp.ts) instead of sounding together.
+// - CHORD: a pressed key plays a chord in the key and scale (src/keys/chords.ts). Each chord note is
+//   counted, latched, arpeggiated and recorded like a note of its own, so chords that share a note
+//   keep it sounding until the last key holding it lets go.
 
 import type { KeysEngine } from '../audio/keys';
 import * as hits from '../pads/hits';
@@ -14,6 +17,7 @@ import * as seq from '../seq/sequencer';
 import { state, subscribe } from '../state';
 import { showKey } from '../ui/keys';
 import * as arp from './arp';
+import { CHORD_TYPE_NAMES, chordName, chordNotes } from './chords';
 import { snap } from './scales';
 import { noteName, presetOf } from './types';
 
@@ -22,8 +26,8 @@ const BEND_RANGE = 2; // semitones at the ends of the PITCH strip
 let instrument: KeysEngine;
 /** How many presses hold each sounding note. */
 const held = new Map<number, number>();
-/** Each pressed key (as pressed) → the note it plays and how many presses hold it. */
-const pressed = new Map<number, { note: number; count: number; unlatched: boolean }>();
+/** Each pressed key (as pressed) or chord pad → the notes it plays (one, or a chord) and how many presses hold it. */
+const pressed = new Map<number, { notes: number[]; count: number; unlatched: boolean }>();
 /** Notes HOLD keeps sounding after their keys came up. */
 const latched = new Set<number>();
 /** Whether each sounding note goes out as MIDI (false for notes that came in as MIDI). */
@@ -42,44 +46,90 @@ export function initNotes(i: KeysEngine): void {
   });
 }
 
+/** The notes key `key` plays now: a chord with CHORD on (src/keys/chords.ts), else one note (snapped if SNAP is on). */
+function notesFor(key: number): number[] {
+  const k = state.keys;
+  if (k.chord) return chordNotes(key, k.key, k.scale, k.chordType, k.chordVoicing);
+  const note = k.snap ? snap(key, k.key, k.scale) : key;
+  return note >= 0 && note <= 127 ? [note] : [];
+}
+
 /**
- * A key `key` went down. A second press of a key already held plays its note again; the note then
- * ends when both have let go. Snap is decided on the first press, so a release always ends the
- * note that press started. With HOLD on, tapping the key of a latched note ends it instead.
+ * A key `key` went down. A second press of a key already held plays its notes again; they then end
+ * when both have let go. Snap and the chord are decided on the first press, so a release always ends
+ * the notes that press started. With HOLD on, tapping the key whose notes are all latched ends them
+ * instead.
  */
 export function noteOn(key: number, velocity: number, echo = true): void {
   if (key < 0 || key > 127) return;
-  let p = pressed.get(key);
-  if (!p) {
-    const k = state.keys;
-    const note = k.snap ? snap(key, k.key, k.scale) : key;
-    if (note < 0 || note > 127) return;
-    const unlatch = latched.has(note) && !held.has(note);
-    pressed.set(key, (p = { note, count: 0, unlatched: unlatch }));
-    if (unlatch) {
-      latched.delete(note);
-      end(note);
-    }
-  }
-  p.count++;
-  if (p.unlatched) return;
-  start(p.note, velocity, echo);
+  if (press(key, () => notesFor(key), velocity, echo)) showLast(key, pressed.get(key)!.notes, velocity);
 }
 
 export function noteOff(key: number): void {
-  const p = pressed.get(key);
-  if (!p) return;
-  if (--p.count === 0) pressed.delete(key);
-  if (p.unlatched) return;
-  const n = held.get(p.note);
-  if (!n) return;
-  if (n > 1) {
-    held.set(p.note, n - 1);
-    return;
+  release(key);
+}
+
+/** Chord pads (src/pads/chordPads.ts) press ids from here up, so they never meet a key's. */
+const CHORD_PAD_ID = 1000;
+
+/**
+ * Chord pad `pad` (0–15) went down with the chord `chord` (built by the caller). It is held, latched,
+ * arpeggiated and recorded like a key. Returns false when it only ended a latched chord (HOLD).
+ */
+export function chordPadOn(pad: number, chord: number[], velocity: number, echo = true): boolean {
+  return press(CHORD_PAD_ID + pad, () => chord.filter((n) => n >= 0 && n <= 127), velocity, echo);
+}
+
+export function chordPadOff(pad: number): void {
+  release(CHORD_PAD_ID + pad);
+}
+
+/** A press of `id` (a key, or a chord pad). Returns true when its notes started. */
+function press(id: number, notesOf: () => number[], velocity: number, echo: boolean): boolean {
+  let p = pressed.get(id);
+  if (!p) {
+    const notes = notesOf();
+    if (!notes.length) return false;
+    const unlatch = notes.every((n) => latched.has(n) && !held.has(n));
+    pressed.set(id, (p = { notes, count: 0, unlatched: unlatch }));
+    if (unlatch) {
+      for (const n of notes) {
+        latched.delete(n);
+        end(n);
+      }
+    }
   }
-  held.delete(p.note);
-  if (state.keys.hold) latched.add(p.note); // keeps sounding (or arpeggiating)
-  else end(p.note);
+  p.count++;
+  if (p.unlatched) return false;
+  for (const n of p.notes) start(n, velocity, echo);
+  return true;
+}
+
+function release(id: number): void {
+  const p = pressed.get(id);
+  if (!p) return;
+  if (--p.count === 0) pressed.delete(id);
+  if (p.unlatched) return;
+  for (const note of p.notes) {
+    const n = held.get(note);
+    if (!n) continue;
+    if (n > 1) {
+      held.set(note, n - 1);
+      continue;
+    }
+    held.delete(note);
+    if (state.keys.hold) latched.add(note); // keeps sounding (or arpeggiating)
+    else end(note);
+  }
+}
+
+/** LCD: the note, or the chord's name and notes. */
+function showLast(key: number, notes: number[], velocity: number): void {
+  const k = state.keys;
+  const what = k.chord ? chordName(key, k.key, k.scale, k.chordType) : noteName(notes[0]);
+  const detail = k.chord ? notes.map(noteName).join(' ') : `VEL ${velocity}`;
+  hits.setLast(`KEYS · ${what} · ${detail} · ${presetOf(k).name.toUpperCase()}`, `${what} · ${k.chord ? CHORD_TYPE_NAMES[k.chordType] : `VEL ${velocity}`}`);
+  hits.markPlayed();
 }
 
 /** PITCH strip: −1 … 1 bends down or up by up to BEND_RANGE semitones; 0 is no bend. */
@@ -97,9 +147,6 @@ function start(note: number, velocity: number, echo: boolean): void {
   }
   held.set(note, (held.get(note) ?? 0) + 1);
   showKey(note, true);
-  const name = noteName(note);
-  hits.setLast(`KEYS · ${name} · VEL ${velocity} · ${presetOf(state.keys).name.toUpperCase()}`, `${name} · VEL ${velocity}`);
-  hits.markPlayed();
 }
 
 function end(note: number): void {

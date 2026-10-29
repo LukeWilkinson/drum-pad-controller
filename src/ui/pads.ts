@@ -30,6 +30,20 @@ export function applyKit(els: HTMLElement[], pads: PadDef[], bank = 0): void {
     el.setAttribute('aria-label', `Pad ${padLabel(index)}, ${pad.name}`);
     el.style.setProperty('--c', GROUP_COLOUR[pad.group]);
     el.querySelector('.pad-name')!.textContent = pad.name;
+    el.querySelector('.pad-num')!.textContent = String(padNumber(i)).padStart(2, '0'); // the CH bank shows degrees there
+    el.classList.remove('chord');
+  });
+}
+
+/** The CH bank (src/pads/chordPads.ts): each pad shows its chord, its degree, and a colour per row type. */
+export function applyChordLabels(els: HTMLElement[], chords: { name: string; roman: string; seventh: boolean }[]): void {
+  els.forEach((el, i) => {
+    const c = chords[i];
+    el.setAttribute('aria-label', `Chord pad ${padNumber(i)}, ${c.roman}, ${c.name}`);
+    el.style.setProperty('--c', GROUP_COLOUR[c.seventh ? 'cym' : 'tom']);
+    el.querySelector('.pad-name')!.textContent = c.name;
+    el.querySelector('.pad-num')!.textContent = c.roman;
+    el.classList.add('chord'); // chord symbols keep their case (Am7 is not AM7)
   });
 }
 

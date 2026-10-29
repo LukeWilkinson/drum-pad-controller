@@ -4,6 +4,7 @@ import './styles/kits.css';
 import './styles/seq.css';
 import './styles/setup.css';
 import './styles/keys.css';
+import './styles/pedals.css';
 import './styles/mix.css';
 import './styles/audio.css';
 import './styles/micPanel.css';
@@ -24,6 +25,7 @@ import * as midiIn from './midi/in';
 import * as learn from './midi/learn';
 import * as hits from './pads/hits';
 import { initHits } from './pads/hits';
+import * as chordPads from './pads/chordPads';
 import { PADS_PER_BANK } from './audio/kit';
 import { KITS, factoryKit } from './audio/kits';
 import * as kitControl from './kitControl';
@@ -31,6 +33,7 @@ import { bootKits, kitLabel } from './kitControl';
 import * as mix from './mix/mix';
 import { attachPadInput } from './pads/input';
 import * as keys from './keys/keys';
+import * as pedalboard from './keys/pedalboard';
 import * as notes from './keys/notes';
 import * as arp from './keys/arp';
 import { attachKeysInput } from './keys/input';
@@ -74,10 +77,12 @@ vocal.initVocal(engine); // the saved vocal settings; the mic stays off until it
 initRecordUi(ui.app); // after the MIX and AUDIO panels: it wires their REC OUT buttons
 const keysBoard = buildKeysPanel(ui.app, { onBend: notes.bend });
 const instrument = keys.initKeys(engine); // after initClock: Tone runs on the engine's context
+void pedalboard.initPedals(instrument); // the saved pedalboards
 seq.attachKeys(instrument); // loops play their KEYS notes on it
 notes.initNotes(instrument);
 arp.initArp(engine, instrument);
 initHits(engine, ui, padEls);
+chordPads.initChordPads(padEls);
 initMicRec(engine, ui); // REC MIC can take pad hits, so after initHits
 midiOut.initOut(engine, instrument);
 midiClock.initMidiClock(engine);
@@ -87,18 +92,25 @@ void midi.initMidi(); // the saved MIDI settings; reconnects if MIDI was on last
 initViews(ui);
 initRail(ui.app.querySelector('.rail-right')!, engine);
 
-/** Pad index each screen pad was pressed as (bank × 16 + screen index). */
+/** Pad index each screen pad was pressed as (bank × 16 + screen index), or CHORD_HELD for a chord pad. */
 const heldPad: number[] = [];
+const CHORD_HELD = -1;
 let kitReady = false;
 
 subscribe((s, changed) => {
   if (changed.has('kit') || changed.has('edited')) ui.kitName.textContent = kitLabel(s.kit, s.edited);
-  if (s.kit && (changed.has('kit') || changed.has('pads') || changed.has('bank'))) applyKit(padEls, s.kit.pads, s.bank);
+  if (s.chordPads) {
+    if (changed.has('chordPads') || changed.has('keys')) chordPads.showLabels();
+  } else if (s.kit && (changed.has('kit') || changed.has('pads') || changed.has('bank') || changed.has('chordPads'))) applyKit(padEls, s.kit.pads, s.bank);
   if (changed.has('kit') || changed.has('pads') || changed.has('selectedPad')) ui.selName.textContent = hits.padTitle(s.selectedPad);
-  if (changed.has('bank')) ui.banks.forEach((b, i) => b.setAttribute('aria-pressed', String(i === s.bank)));
+  if (changed.has('bank') || changed.has('chordPads')) {
+    ui.banks.forEach((b, i) => b.setAttribute('aria-pressed', String(!s.chordPads && i === s.bank)));
+    ui.chordBank.setAttribute('aria-pressed', String(s.chordPads));
+  }
 });
 
 ui.banks.forEach((b, i) => b.addEventListener('click', () => kitControl.selectBank(i)));
+ui.chordBank.addEventListener('click', kitControl.selectChordPads);
 
 hits.setLast('LOADING KIT…', 'LOADING…');
 
@@ -115,15 +127,21 @@ attachPadInput(
   padEls,
   {
     onHit(screenIndex, velocity) {
+      if (state.chordPads) {
+        heldPad[screenIndex] = CHORD_HELD;
+        chordPads.hit(screenIndex, velocity);
+        return;
+      }
       const index = state.bank * PADS_PER_BANK + screenIndex;
       heldPad[screenIndex] = index; // a bank switch mid-hold still releases the right pad
       hits.hit(index, velocity);
     },
     onRelease(screenIndex) {
-      hits.release(heldPad[screenIndex]);
+      if (heldPad[screenIndex] === CHORD_HELD) chordPads.release(screenIndex);
+      else hits.release(heldPad[screenIndex]);
     },
     onMove(screenIndex, velocity) {
-      hits.move(heldPad[screenIndex], velocity);
+      if (heldPad[screenIndex] !== CHORD_HELD) hits.move(heldPad[screenIndex], velocity);
     },
   },
   () => state.fullLevel,
@@ -173,4 +191,4 @@ bootKits(engine, (done, total) => hits.setLast(`LOADING KIT ${done}/${total}`, `
 registerSW({ immediate: true });
 
 // Dev-only handle for checking the engine and store from the browser console.
-if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, latency, seq, repeat, midi, learn, state, KITS, factoryKit, keys, notes, arp, instrument, mix, userSamples, recorder, vocal, ...kitControl } });
+if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, latency, seq, repeat, midi, learn, state, KITS, factoryKit, keys, notes, arp, instrument, pedalboard, mix, userSamples, recorder, vocal, ...kitControl } });

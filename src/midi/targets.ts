@@ -10,8 +10,10 @@ import * as clock from '../audio/clock';
 import * as recorder from '../audio/recorder';
 import { BANK_NAMES, PADS_PER_BANK, PAD_COUNT, PARAM_RANGE, padLabel, type ParamKey } from '../audio/kit';
 import * as keys from '../keys/keys';
+import * as pedalboard from '../keys/pedalboard';
+import { PEDALS } from '../keys/pedals';
 import { PRESET_SLOTS } from '../keys/types';
-import { selectBank, setParam } from '../kitControl';
+import { selectBank, selectChordPads, setParam } from '../kitControl';
 import { FX } from '../mix/knobs';
 import * as mix from '../mix/mix';
 import { STRIPS, STRIP_LABEL, type StripId } from '../mix/types';
@@ -56,6 +58,8 @@ const FIXED: Record<string, Target> = {
   'oct-up': { label: 'KEYS OCTAVE +', press: () => keys.nudgeOctave(1) },
   hold: { label: 'KEYS HOLD', press: keys.toggleHold },
   arp: { label: 'KEYS ARP', press: keys.toggleArp },
+  chord: { label: 'KEYS CHORD', press: keys.toggleChord },
+  'chord-pads': { label: 'BANK CH (chord pads)', press: selectChordPads },
   snap: { label: 'KEYS SNAP', press: keys.toggleSnap },
   'src:synth': { label: 'KEYS SYNTH', press: () => keys.setSource('synth') },
   'src:sampled': { label: 'KEYS SAMPLED', press: () => keys.setSource('sampled') },
@@ -84,6 +88,15 @@ export function findTarget(id: string): Target | null {
     const fx = FX.find((f) => f.id === fxId);
     const knob = fx?.knobs[Number(i)];
     if (fx && knob && Number.isInteger(Number(i))) return { label: `${fx.name} ${knob.label}`, set: (v) => knob.apply(knob.scale.from(v)) };
+  }
+  if (kind === 'pedal' || kind === 'pedalk') {
+    const pedal = PEDALS.find((p) => p.id === arg);
+    if (pedal && kind === 'pedal') return { label: `PEDAL ${pedal.name}`, press: () => pedalboard.togglePedal(pedal.id) };
+    const i = Number(id.split(':')[2]);
+    if (pedal && (i === 0 || i === 1)) {
+      const knob = pedal.knobs[i];
+      return { label: `${pedal.name} ${knob.label}`, set: (v) => pedalboard.setPedalKnob(pedal.id, i, knob.scale.from(v)) };
+    }
   }
   if (kind === 'keys-send' && (arg === 'reverb' || arg === 'delay')) {
     return { label: `KEYS ${arg.toUpperCase()} SEND`, set: (v) => keys.setSend(arg, Math.round(v * 100) / 100) };

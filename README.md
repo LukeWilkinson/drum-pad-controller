@@ -41,17 +41,22 @@ Open the **Network** address it prints (port 4173) on the phone, then use Chrome
 | `npm run build` | Type-check and build to `dist/` |
 | `npm run lan` | Build, then serve `dist/` over HTTPS on the network (PWA works here) |
 | `npm run fetch-samples` | Download the CC0 drum samples (skips files already present) |
-| `npm run fetch-instruments` | Download and convert the CC0 KEYS instrument samples (needs ffmpeg; skips files already present) |
+| `npm run fetch-instruments` | Download and convert the CC0 KEYS instrument samples (needs ffmpeg; FreePats archives also need bsdtar, which Windows ships as `tar.exe`; skips files already present) |
+| `npm run check:chords` | Check every chord (key × scale × root × type × voicing) and chord name against a brute-force rebuild |
+| `npm run check:instruments` | Measure every KEYS sample's pitch (fails past ±10 cents) and level, and check the FreePats licences say CC0. Pass instrument ids to check only those |
 | `npm run check:vocal` | Render synthetic voices through the vocal tuner and measure the result (prints PASS / FAIL; `python scripts/vocal_check.py <folder>` re-measures its WAVs with numpy) |
 | `npm run make-icons` | Regenerate PWA icons from `public/icons/icon.svg` |
 
 Set `HTTP=1` to turn off HTTPS. This is only for desktop checks; phones need HTTPS.
+
+The pedal check runs in the browser, since it needs Web Audio. With `npm run dev` open, type this in the browser console: `const { run } = await import('/scripts/pedal-check.js'); await run()`. It renders test sounds through every pedal and checks bypass, distortion, bit depth, levels (±3 dB) and chain order.
 
 ## Playing
 
 - **Velocity:** press higher on a pad to hit harder (40 at the bottom, 127 at the top). **FULL LVL** forces 127.
 - **Multi-touch:** hold as many pads as there are fingers.
 - **Keyboard:** the pad rows top to bottom are `1 2 3 4`, `Q W E R`, `A S D F`, `Z X C V`.
+- **CH (chord pads):** the button after A–D turns the 16 pads into chords of the KEYS key and scale, played on the KEYS sound. Bottom row: I ii iii IV, next row: V vi vii I (an octave up), top two rows: the same as 7ths. Each pad shows its chord (Am7) and degree (vi7). They follow KEYS HOLD, ARP and the CHORD voicing, record into the loop as KEYS notes and go out on the Keys MIDI channel. Note Repeat doesn't apply. From a MIDI pad controller, notes 36–51 play the chord pads while CH is on (other banks still play drums).
 
 ## Kits
 
@@ -82,13 +87,14 @@ Set `HTTP=1` to turn off HTTPS. This is only for desktop checks; phones need HTT
 
 ## Keys
 
-- Open **KEYS** for a keyboard. **SYNTH** has Warm Pad, Saw Lead, Sub Bass and Glass Pluck. **SAMPLED** has Grand Piano, FM Piano, Strings, Concert Harp and Kalimba (CC0 recordings, see CREDITS.md).
+- Open **KEYS** for a keyboard. **SYNTH** has Warm Pad, Saw Lead, Sub Bass, Glass Pluck, E-Piano and Air Pad. **SAMPLED** has Grand Piano, FM Piano, Strings, Concert Harp, Kalimba, Nylon Guitar, Electric Guitar, Finger Bass and Drawbar Organ (CC0 recordings, see CREDITS.md). Swipe the preset buttons sideways to see them all.
 - Touch: slide across keys to play each one; press lower on a key to play harder. Octave −/+ covers C1–C7.
 - Computer keyboard on the KEYS tab: `A S D F G H J K L ;` are the white keys, `W E T Y U O P` the black keys, `Z` / `X` the octave. Space, Shift+R, Ctrl+Z and M still work.
-- **SNAP** keeps notes in a key and scale (set in SETUP → Auto-tune). **HOLD** latches notes. **ARP** toggles the arpeggiator; hold it for mode and rate. **PITCH** bends ±2 semitones.
+- **SNAP** keeps notes in a key and scale (set in SETUP → Auto-tune). **HOLD** latches notes. **ARP** toggles the arpeggiator; hold it for mode and rate. **CHORD** makes each key play a chord in the key and scale (C gives C, D gives Dm in C major); hold it for the type (triad, 7th, sus2, sus4, add9, power) and voicing (root, inversions, spread). Chords work with HOLD, ARP (it arpeggiates the chord), recording and MIDI in. Mono presets (Saw Lead, Sub Bass) play only the top note. **PITCH** bends ±2 semitones.
 - Notes record into LOOP 1–4 with REC / DUB, beside the drums, and play back with the current KEYS sound.
 - MIDI: SETUP has a **Keys channel** (default 1). Keys notes and pitch bend go out on it; notes, pitch bend and sustain (CC 64) coming in on it play KEYS. Other channels still play pads.
 - The two **REVERB / DELAY** knobs on the KEYS tab send the keys to the effects (they start at 0).
+- **PEDALS** (KEYS header) opens a pedalboard in place of the presets, so the keyboard stays playable. Eight pedals in a fixed order: COMP (SUSTAIN, LEVEL), DRIVE (DRIVE, TONE), AMP (GAIN, TONE: a small valve amp and cabinet), WAH (FREQ, SENS: an auto-wah that follows how hard you play), CHORUS, PHASER and TREMOLO (RATE, DEPTH), CRUSH (BITS, MIX). Tap a footswitch to switch a pedal in or out; the LED shows it is on. Each instrument keeps its own board: Electric Guitar starts with AMP on and Drawbar Organ with CHORUS (as an organ vibrato), the rest with every pedal off. **RESET** puts the current instrument's board back. A red dot on PEDALS means a pedal is on. Pedals are on the KEYS sound only and are recorded by REC OUT and BOUNCE; they don't change MIDI out.
 
 ## Mix / FX
 
@@ -113,7 +119,7 @@ Set `HTTP=1` to turn off HTTPS. This is only for desktop checks; phones need HTT
 
 ## MIDI Learn
 
-Turn on LEARN in SETUP, tap a control, then move a control on the MIDI device. Pads, transport buttons, the master volume, the KEYS buttons, the pad knobs, the mixer faders and mutes, the FX switches and knobs, the KEYS send knobs, REC OUT (including the tablet chip), the REC MIC button, and the vocal switch (including the VOX chip), strength, speed and VOX sends can all be learned. A note presses a button; a CC moves a fader or knob, or presses a button when it rises past 64.
+Turn on LEARN in SETUP, tap a control, then move a control on the MIDI device. Pads, transport buttons, the master volume, the KEYS buttons, the pad knobs, the mixer faders and mutes, the FX switches and knobs, the KEYS send knobs, the pedal footswitches and knobs (open PEDALS first; they act on the instrument playing), REC OUT (including the tablet chip), the REC MIC button, and the vocal switch (including the VOX chip), strength, speed and VOX sends can all be learned. A note presses a button; a CC moves a fader or knob, or presses a button when it rises past 64.
 
 ## Licence
 

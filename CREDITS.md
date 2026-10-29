@@ -185,6 +185,22 @@ Files used (in `public/samples/instruments/<id>/<note>.flac`; the full list of s
 
 CC0 does not require attribution. The credit is kept here anyway, as thanks and so the source can be traced.
 
+## KEYS sampled instruments: FreePats (CC0)
+
+- Source: the [FreePats project](https://freepats.zenvoid.org/). Each set is a release archive pinned by its sha256 in `src/audio/instruments.json`; `npm run fetch-instruments` downloads it, checks the hash and unpacks it into `.cache/instruments/` with bsdtar.
+- Licence: **CC0 1.0 (public domain)**, stated on each FreePats page and in each archive (`cc0.txt`, `LICENSE.txt` or `readme.txt`; `npm run check:instruments` checks for it). Not used: the FSS steel-string acoustic guitar (GPL-3.0 with an exception, not CC0).
+- Checked: 2026-10-29.
+- Changes: the same conversion as above (mono, 32 kHz, cut, faded). Three samples were retuned by resampling after `npm run check:instruments` measured them sharp: Nylon Guitar B4 +13 and D5 +11 cents, Electric Guitar A2 +15 cents. The organ's loop points are this app's own (the SFZ loop points don't survive the conversion's trim).
+
+| Preset | Set (archive) | Recorded notes |
+|---|---|---|
+| Nylon Guitar | Spanish Classical Guitar, 2019-06-18 (`SpanishClassicalGuitar-SFZ+FLAC-20190618.7z`) | 16: G1, B1, D#2, G2, B2, D3, F3, A3, C4, E4, G4, B4, D5, F5, A5, C6 |
+| Electric Guitar | FSBS Electric Guitar Clean #1, small, bridge pickup, 2026-08-07 (`EGuitarFSBS-clean-bridge-small-SFZ+FLAC-20260807.7z`) | 13: C2, F2, A2, C3, E3, G3, B3, E4, G4, B4, D5, G#5, C#6 |
+| Finger Bass | Bass Guitar YR, finger, by Andrea Biasior (Yamaha RBX), 2019-09-30 (`FingerBassYR-SFZ+FLAC-20190930.7z`) | 5: E1, G1, A#1, C#2, D#2 |
+| Drawbar Organ | Drawbar Organ Emulation, 2019-07-12 (`DrawbarOrganEmulation-SFZ-20190712.tar.xz`) | 14: C2, E2, G#2, C3, E3, G#3, C4, E4, G#4, C5, E5, G#5, C6, E6 |
+
+The E-Piano and Air Pad presets are synthesised (Tone.js), not sampled. The KEYS pedals (`src/audio/pedals.ts`) use no recordings: Tone.js effects and the app's own clipping curves and cabinet filters.
+
 ## Vocal pitch correction
 
 - No third-party code or recordings. The tuner (`src/vocal/`) is the app's own implementation of two published methods: YIN pitch detection (A. de Cheveigné and H. Kawahara, "YIN, a fundamental frequency estimator for speech and music", JASA 111(4), 2002) and TD-PSOLA pitch shifting (time-domain pitch-synchronous overlap-add; E. Moulines and F. Charpentier, Speech Communication 9, 1990).

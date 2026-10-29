@@ -58,7 +58,10 @@ export interface ScreenRefs {
   lastInline: HTMLElement;
   fullLevel: HTMLButtonElement;
   noteRepeat: HTMLButtonElement;
+  /** Bank buttons A–D. */
   banks: HTMLButtonElement[];
+  /** CH: the chord pad bank. */
+  chordBank: HTMLButtonElement;
   rec: HTMLButtonElement;
   dub: HTMLButtonElement;
   undo: HTMLButtonElement;
@@ -121,6 +124,7 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
       <div class="bankrow">
         <div class="banks" role="group" aria-label="Pad banks">
           ${['A', 'B', 'C', 'D'].map((b, i) => `<button class="bank" data-learn="bank:${i}" aria-label="Pad bank ${b}" aria-pressed="${b === 'A'}">${b}</button>`).join('')}
+          <button class="bank bank-ch" data-learn="chord-pads" aria-label="Chord pads: the pads play KEYS chords" aria-pressed="false">CH</button>
         </div>
         <div class="toggles">
           <button class="toggle note-repeat" data-learn="note-repeat" aria-pressed="false"><span class="lbl-short">NOTE RPT</span><span class="lbl-long">NOTE REPEAT</span></button>
@@ -175,7 +179,8 @@ export function buildScreen(root: HTMLElement): ScreenRefs {
     lastInline: q('.last-inline'),
     fullLevel: q('.full-level'),
     noteRepeat: q('.note-repeat'),
-    banks: [...root.querySelectorAll<HTMLButtonElement>('.bank')],
+    banks: [...root.querySelectorAll<HTMLButtonElement>('.bank:not(.bank-ch)')],
+    chordBank: root.querySelector<HTMLButtonElement>('.bank-ch')!,
     rec: q('.rec'),
     dub: q('.key.dub'),
     undo: q('.key.undo'),
