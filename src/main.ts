@@ -4,6 +4,7 @@ import './styles/kits.css';
 import './styles/seq.css';
 import './styles/setup.css';
 import './styles/keys.css';
+import './styles/pedals.css';
 import './styles/mix.css';
 import './styles/audio.css';
 import './styles/micPanel.css';
@@ -32,6 +33,7 @@ import { bootKits, kitLabel } from './kitControl';
 import * as mix from './mix/mix';
 import { attachPadInput } from './pads/input';
 import * as keys from './keys/keys';
+import * as pedalboard from './keys/pedalboard';
 import * as notes from './keys/notes';
 import * as arp from './keys/arp';
 import { attachKeysInput } from './keys/input';
@@ -75,6 +77,7 @@ vocal.initVocal(engine); // the saved vocal settings; the mic stays off until it
 initRecordUi(ui.app); // after the MIX and AUDIO panels: it wires their REC OUT buttons
 const keysBoard = buildKeysPanel(ui.app, { onBend: notes.bend });
 const instrument = keys.initKeys(engine); // after initClock: Tone runs on the engine's context
+void pedalboard.initPedals(instrument); // the saved pedalboards
 seq.attachKeys(instrument); // loops play their KEYS notes on it
 notes.initNotes(instrument);
 arp.initArp(engine, instrument);
@@ -188,4 +191,4 @@ bootKits(engine, (done, total) => hits.setLast(`LOADING KIT ${done}/${total}`, `
 registerSW({ immediate: true });
 
 // Dev-only handle for checking the engine and store from the browser console.
-if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, latency, seq, repeat, midi, learn, state, KITS, factoryKit, keys, notes, arp, instrument, mix, userSamples, recorder, vocal, ...kitControl } });
+if (import.meta.env.DEV) Object.assign(window, { __drum: { engine, clock, latency, seq, repeat, midi, learn, state, KITS, factoryKit, keys, notes, arp, instrument, pedalboard, mix, userSamples, recorder, vocal, ...kitControl } });

@@ -1,0 +1,72 @@
+/* KEYS pedalboard (src/ui/pedals.ts) and the PEDALS button in the KEYS header. Loaded after keys.css.
+   While the board is open (.keys-panel[data-pedals]) it takes the place of the presets, sends and strips;
+   the octave row stays (not in phone landscape) and the keyboard keeps the rest of the height.
+   - phone portrait: one row of cards that scrolls sideways
+   - phone landscape: the same row, smaller knobs; the octave row goes
+   - tablet: two rows of four, nothing to scroll */
+
+.ky-pedals {
+  height: 44px; padding: 0 12px; border-radius: 6px;
+  display: flex; align-items: center; gap: 6px;
+  background: var(--raised); color: var(--text);
+  font-weight: 700; font-size: 12px; letter-spacing: .06em; white-space: nowrap;
+}
+.ky-pedals-icon { flex: none; }
+.ky-pedals-dot { flex: none; width: 8px; height: 8px; border-radius: 4px; background: var(--switch-off); }
+.ky-pedals.lit .ky-pedals-dot { background: var(--rec); }
+.ky-pedals[aria-pressed="true"] { background: var(--amber); color: var(--body); }
+
+.keys-panel[data-pedals] :is(.ky-presets, .ky-sends, .ky-strips) { display: none; }
+
+.ky-pb { display: flex; flex-direction: column; gap: 8px; flex: none; min-width: 0; }
+.ky-pb[hidden] { display: none; }
+.pb-head { display: flex; align-items: center; gap: 8px; }
+.pb-title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pb-reset { flex: none; min-width: 44px; }
+
+/* Cards in chain order; a part of the next card shows so it reads as a row that scrolls. */
+.pb-cards {
+  display: grid; grid-auto-flow: column; grid-auto-columns: calc((100% - 16px) / 2.6); gap: 8px;
+  overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity; scrollbar-width: none;
+}
+.pb-cards::-webkit-scrollbar { display: none; }
+.pb-card {
+  min-width: 0; scroll-snap-align: start;
+  display: flex; flex-direction: column; gap: 6px; padding: 8px;
+  border-radius: 10px; border-top: 4px solid var(--pc); background: var(--raised);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .25);
+}
+.pb-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; min-height: 16px; }
+.pb-name { font-size: 13px; font-weight: 700; letter-spacing: .06em; color: var(--text-strong); }
+.pb-led { flex: none; width: 10px; height: 10px; border-radius: 5px; background: var(--switch-off); }
+.pb-card:not(.off) .pb-led { background: var(--rec); box-shadow: 0 0 6px var(--rec); }
+
+.pb-knobs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 2px; }
+.pb-knob { flex-direction: column; align-items: center; gap: 1px; min-width: 0; padding: 2px 0; }
+.pb-card .k-track { stroke: var(--well); }
+.pb-card .k-arc { stroke: var(--pc); }
+.pb-card.off .pb-knob { opacity: .55; }
+.pb-k-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; color: var(--text-muted); }
+.pb-k-val { font-family: var(--font-mono); font-size: 10px; color: var(--text); white-space: nowrap; }
+
+/* The footswitch: tap to switch the pedal in or out. */
+.pb-switch {
+  height: 44px; border-radius: 22px; background: var(--well); color: var(--text-muted);
+  font-weight: 700; font-size: 12px; letter-spacing: .08em; box-shadow: var(--key-shadow);
+}
+.pb-switch[aria-pressed="true"] { background: color-mix(in srgb, var(--pc) 35%, var(--well)); color: var(--text-strong); }
+
+@media (orientation: landscape) and (max-height: 540px) {
+  .ky-pedals { padding: 0 10px; }
+  .ky-pedals-text { display: none; }
+  .keys-panel[data-pedals] .ky-oct { display: none; }
+  .ky-pb { gap: 6px; }
+  .pb-cards { grid-auto-columns: calc((100% - 16px) / 3.3); gap: 6px; }
+  .pb-card { padding: 6px; gap: 4px; }
+  .pb-knob .knob-svg { width: 32px; height: 32px; }
+}
+
+@media (min-width: 1024px) and (min-height: 600px) {
+  /* Rows, so the chain reads left to right, top row first. */
+  .pb-cards { grid-auto-flow: row; grid-template-columns: repeat(4, minmax(0, 1fr)); overflow-x: visible; }
+}

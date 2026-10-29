@@ -1,5 +1,6 @@
-// KEYS panel (Keys.dc.html): the snap chip, SYNTH / SAMPLED, the presets, octave, CHORD / HOLD / ARP, the
-// pitch and mod strips, and the keyboard. Built once; render() updates it from the store. The keyboard
+// KEYS panel (Keys.dc.html): the snap chip, PEDALS, SYNTH / SAMPLED, the presets, octave, CHORD / HOLD / ARP,
+// the pitch and mod strips, and the keyboard. PEDALS shows the pedalboard (src/ui/pedals.ts) in place of
+// the rows between the header and the keyboard. Built once; render() updates it from the store. The keyboard
 // has 15 white keys (two octaves, C to C); phones show the first 10 (C to E), as in the design.
 // A dot marks the key's root on every octave; with snap on, keys outside the scale are dimmed.
 // The two small knobs send the KEYS bus to the REVERB and DELAY (src/mix/).
@@ -14,6 +15,8 @@ import {
   type ChordVoicing,
 } from '../keys/chords';
 import * as keys from '../keys/keys';
+import * as pedalboard from '../keys/pedalboard';
+import { anyOn } from '../keys/pedals';
 import { inScale, scaleLabel } from '../keys/scales';
 import {
   ARP_MODES,
@@ -30,6 +33,7 @@ import {
 import { state, subscribe } from '../state';
 import { openDialog } from './dialog';
 import { bindKnob, knobSvg, setKnobArc } from './knob';
+import { buildPedalboard } from './pedals';
 
 const HOLD_MS = 500; // holding ARP this long opens its options
 const THUMB_W = 28; // px, the strip thumb
@@ -69,6 +73,7 @@ export function buildKeysPanel(app: HTMLElement, opts: KeysPanelOptions): HTMLEl
         <button class="ky-seg" data-src="synth" data-learn="src:synth" aria-pressed="true">SYNTH</button>
         <button class="ky-seg" data-src="sampled" data-learn="src:sampled" aria-pressed="false">SAMPLED</button>
       </div>
+      <button class="ky-pedals" aria-pressed="false" aria-label="Pedals"><svg class="ky-pedals-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="3" width="14" height="18" rx="2"/><circle cx="12" cy="15" r="3"/><path d="M9 7h6"/></svg><span class="ky-pedals-text">PEDALS</span><span class="ky-pedals-dot"></span></button>
       <button class="ky-snap" data-learn="snap" aria-pressed="false"><span class="ky-snap-dot"></span><span class="ky-snap-text"></span><span class="ky-snap-short"></span></button>
     </header>
     <div class="ky-presets" role="group" aria-label="Presets">
@@ -104,6 +109,18 @@ export function buildKeysPanel(app: HTMLElement, opts: KeysPanelOptions): HTMLEl
     </div>
     <div class="ky-board" role="group" aria-label="Keyboard">${whites}${blacks}</div>`;
   app.appendChild(panel);
+
+  // PEDALS swaps the preset, octave, sends and strip rows for the pedalboard; the keyboard stays.
+  const pb = buildPedalboard();
+  const pedalsBtn = panel.querySelector<HTMLButtonElement>('.ky-pedals')!;
+  panel.insertBefore(pb.root, panel.querySelector('.ky-board'));
+  let pedalsOpen = false;
+  pedalsBtn.addEventListener('click', () => {
+    pedalsOpen = !pedalsOpen;
+    panel.toggleAttribute('data-pedals', pedalsOpen);
+    pb.show(pedalsOpen);
+    render();
+  });
 
   const board = panel.querySelector<HTMLElement>('.ky-board')!;
   keyEls = new Map([...board.querySelectorAll<HTMLElement>('.kb-key')].map((el) => [Number(el.dataset.off), el]));
@@ -145,6 +162,10 @@ export function buildKeysPanel(app: HTMLElement, opts: KeysPanelOptions): HTMLEl
 
   function render(): void {
     const k = state.keys;
+    const on = anyOn(pedalboard.boardOf());
+    pedalsBtn.setAttribute('aria-pressed', String(pedalsOpen));
+    pedalsBtn.classList.toggle('lit', on);
+    pedalsBtn.setAttribute('aria-label', `Pedals${on ? ', some on' : ''}. ${pedalsOpen ? 'Close' : 'Open'} the pedalboard`);
     for (const el of sendKnobs) {
       const v = k[el.dataset.fx === 'reverb' ? 'reverbSend' : 'delaySend'];
       setKnobArc(el, v);
@@ -201,7 +222,7 @@ export function buildKeysPanel(app: HTMLElement, opts: KeysPanelOptions): HTMLEl
   }
 
   // `view`: the preset strip can only scroll to the current preset once the panel is on screen.
-  subscribe((s, changed) => (changed.has('keys') || changed.has('keysLoad') || (changed.has('view') && s.view === 'keys')) && render());
+  subscribe((s, changed) => (changed.has('keys') || changed.has('keysLoad') || changed.has('pedals') || (changed.has('view') && s.view === 'keys')) && render());
   return board;
 }
 

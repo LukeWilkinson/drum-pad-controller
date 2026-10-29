@@ -7,6 +7,7 @@ import { loadLatency, type LatencyState } from './audio/latencyTypes';
 import type { UserSampleInfo } from './audio/userSamples';
 import type { RecorderState } from './audio/recorder';
 import { loadTheme, type ThemeState } from './ui/themeTypes';
+import type { Boards } from './keys/pedals';
 import { DEFAULT_KEYS, type KeysState } from './keys/types';
 import { DEFAULT_CHANNEL, DEFAULT_KEYS_CHANNEL, type LearnState, type MidiState } from './midi/types';
 import { defaultMix, type MixState } from './mix/types';
@@ -60,6 +61,8 @@ export interface AppState {
   keys: KeysState;
   /** Samples of the sampled instrument just picked: loading progress, or null when ready (src/keys/keys.ts). */
   keysLoad: { done: number; total: number; failed: boolean } | null;
+  /** Pedalboards changed from a preset's defaults, by preset key (changed only by src/keys/pedalboard.ts). */
+  pedals: Boards;
   /** Mixer strips and FX (changed only by src/mix/mix.ts). */
   mix: MixState;
   /** Latency calibration, offset and buffer mode (changed only by src/audio/latency.ts). */
@@ -116,6 +119,7 @@ export const state: AppState = {
   learn: { on: false, armed: null, last: null },
   keys: { ...DEFAULT_KEYS, preset: { ...DEFAULT_KEYS.preset } },
   keysLoad: null,
+  pedals: {},
   mix: defaultMix(),
   latency: loadLatency(),
   theme: loadTheme(),

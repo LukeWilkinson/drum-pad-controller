@@ -5,11 +5,12 @@
 // src/audio/instruments.json, loaded into the engine's buffer cache when first picked).
 // Scheduled notes (ARP, loops) go through playAt(), which hands them over just before their time so
 // they can still be cancelled. bend() moves every sounding note. Every preset plays into one keys
-// bus, which feeds the master.
+// bus, which goes through the pedalboard (src/audio/pedals.ts) to the KEYS strip.
 
 import { Chorus, Distortion, FMSynth, Filter, MonoSynth, PolySynth, Synth, Tremolo, type ToneAudioNode } from 'tone';
 import type { AudioEngine } from './engine';
 import data from './instruments.json';
+import { PedalChain } from './pedals';
 import type { KeysSource } from '../keys/types';
 
 /** A sampled instrument (src/audio/instruments.json). */
@@ -313,6 +314,8 @@ export interface KeysHook {
 
 export class KeysEngine {
   private bus: GainNode;
+  /** The pedalboard between the keys bus and the KEYS strip (src/keys/pedalboard.ts sets it). */
+  readonly pedals: PedalChain;
   private hook: KeysHook | null = null;
   /** Presets, built the first time each is picked and then kept (sampled buffers stay loaded). */
   private synths: (Built | undefined)[] = [];
@@ -325,7 +328,7 @@ export class KeysEngine {
 
   constructor(private engine: AudioEngine) {
     this.bus = engine.ctx.createGain();
-    this.bus.connect(engine.input);
+    this.pedals = new PedalChain(this.bus, engine.input);
   }
 
   /**
