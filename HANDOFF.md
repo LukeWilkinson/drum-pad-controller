@@ -670,6 +670,35 @@ Luke asked for more instruments (guitar for sure), chords from single notes, ped
 - Checked: `scripts/pedal-check.js` in the browser pane (`const { run } = await import('/scripts/pedal-check.js'); await run()`): 41/41 pass: bypass sample-identical to no chain, drive THD 0.5 / 10 / 41 % and amp 5.8 / 18 / 40 % at 0 / 0.4 / 1, crush 4 bits = 17 sample values, every pedal and knob extreme within ±3 dB of bypass on a KEYS-level chord, chain order. By script: toggle, clamp, preset defaults (guitar AMP, organ CHORUS), RESET, pref round trip, damaged pref → defaults, `?fakemidi` learn of a footswitch and a knob (CC toggles, CC 0/127 = 1 / 12 Hz), live notes through the chain into the KEYS strip; layout at 390×844, 844×390, 1280×800 (+ light theme); `npm run build`; `check:chords`; no console errors.
 - Not checked: how each pedal sounds (Luke's ear), phone CPU with several pedals on, touch on the cards, the crusher worklet in the built / Pages app (dev only). A pedal switched while the page is hidden waits up to 1 s (throttled timer) before it is wired in.
 
+### Step 5, docs and checklist: done (2026-10-29)
+- README: PEDALS bullet in Keys, pedal targets in MIDI Learn, how to run the pedal check. DESIGN: built notes for the preset strip, CHORD, PEDALS board and the CH bank. SPEC: M9a built, M9b next. CREDITS: the pedals use no recordings. Luke's checklist is below. Nothing here was run on a device. **M9a is built.**
+
+## Luke's checklist for M9a
+M9a is on `feat/m9a-sounds`, not on the live site yet. PC first: `npm.cmd run dev`, open the localhost address. For the phone, Claude merges into `main` and pushes (asks first), then open the live site. Tap a pad first to start audio.
+1. New instruments (ears; KEYS → SAMPLED / SYNTH, swipe the preset strip):
+   - [ ] Nylon Guitar, Electric Guitar, Finger Bass, Drawbar Organ: in tune across the keyboard, no clicks between notes, level close to Grand Piano.
+   - [ ] Drawbar Organ holds while a key is down with no bump at the loop point; release fades cleanly.
+   - [ ] E-Piano (bell attack + tremolo) and Air Pad (slow, wide) sound right and sit at a level like Warm Pad.
+   - [ ] Phone: the preset strip swipes sideways smoothly and the picked preset scrolls into view.
+2. KEYS chord mode:
+   - [ ] CHORD on: each key plays a chord in the SNAP key and scale (A minor: A gives Am, C gives C). Hold CHORD: TYPE (7th, sus2, sus4, add9, power) and VOICING change what you hear.
+   - [ ] CHORD with HOLD latches the chord; with ARP it arpeggiates the chord; DUB records it and plays back.
+   - [ ] Mono presets (Saw Lead, Sub Bass) play only the top note.
+3. CH (chord pads) on PADS:
+   - [ ] CH turns the pads into chords (bottom row i ii° III iv in A minor, top rows 7ths); names show on the pads, LCD shows the chord.
+   - [ ] Chords play on the current KEYS sound, with velocity from the pad; A–D goes back to the drums.
+   - [ ] Optional (MIDI pad controller): notes 36–51 play the chord pads while CH is on.
+4. Pedals (KEYS → PEDALS):
+   - [ ] Each pedal on its own with a few presets: COMP evens out loud and soft notes; DRIVE gets grittier with DRIVE, darker with TONE; AMP sounds like a clean guitar amp at low GAIN and breaks up when turned up; WAH opens as you play harder; CHORUS, PHASER and TREMOLO move at RATE; CRUSH gets rougher at low BITS.
+   - [ ] Switching a pedal while notes play doesn't click; switching one on doesn't jump the volume much (they were levelled to ±3 dB on a test chord).
+   - [ ] Electric Guitar starts with AMP on; Drawbar Organ starts with CHORUS on and sounds like an organ vibrato. Other presets start with nothing on.
+   - [ ] Changing preset changes the board; each preset keeps its own settings after a reload. RESET puts the defaults back. Red dot on PEDALS when anything is on.
+   - [ ] Phone: knobs turn by dragging up and down without scrolling the row; the row swipes sideways from the card edges; the keyboard plays while the board is open. Landscape: nothing cut off.
+   - [ ] Phone: with 4–5 pedals on and a chord held, no crackles (CPU).
+   - [ ] REC OUT with a pedal on: the WAV has the pedal sound.
+   - [ ] Optional (MIDI controller): Learn a footswitch and a knob (open PEDALS, LEARN, tap, move the control).
+5. Known gaps: Claude could not hear any of this; touch was tested with synthetic events only.
+
 ## Live site: GitHub Pages (2026-10-18)
 - **https://lukewilkinson.github.io/drum-pad-controller/** from the public repo https://github.com/LukeWilkinson/drum-pad-controller (remote `origin`). Luke chose a public repo (code and commit email visible) after Netlify suspended the new account.
 - `.github/workflows/pages.yml` builds and deploys on every push to `main` (`vite build --base=/<repo>/`); the first run passed. Pages source is set to "GitHub Actions" in the repo settings.
@@ -698,6 +727,6 @@ Luke asked for more instruments (guitar for sure), chords from single notes, ped
 - In PowerShell, `npm` is blocked by the script policy; use `npm.cmd`.
 
 ## Next step
-**M9a (2026-10-29):** steps 1–4 done and committed on `feat/m9a-sounds` (step 4 = the pedalboard, see "Step 4" above). Next: step 5, docs (README, DESIGN, SPEC, CREDITS) and Luke's M9a phone checklist (instrument levels and tuning, chord voicing, pedal tone, CH pads); plan in `C:\Users\LukeW\.claude\plans\joyful-sleeping-grove.md`.
+**M9a (2026-10-29): built.** Steps 1–5 done and committed on `feat/m9a-sounds`. Next: Luke's M9a checklist (above, "Luke's checklist for M9a"): PC test at localhost first, then merge into `main` and push (ask Luke first) for the phone. Then M9b.
 
 M5 merged into `main` (2026-10-18); its checklist section 5 (MIDI hardware) is not run yet. M6 plan approved (2026-10-21, see "M6" above), building on `feat/m6-effects`. Steps 1 (Kalimba), 2 (audio graph), 3 (MIX / FX tab) 4 (Latency card) and 5 (Theme card) done; Luke's ear checks happen with the M6 phone test. Step 6 (MIDI Learn targets) and 7 (docs, checklist) done: M6 is built. **PC test passed (2026-10-22):** Luke checked it at localhost on the PC, all good; phone-only items (vibrate, touch feel, landscape, Low-latency buffer) not run yet. M6 merged into `main` and live on the Pages site (2026-10-22, 460a854; Pages needs a public repo and source = GitHub Actions). M7 plan approved (2026-10-22, see "M7" above), building on `feat/m7-stretch`. Steps 1 (sample store and import), 2 (sharing kits and songs), 3 (recorder and WAV export), 4 (vocal DSP worklet), 5 (vocal card and VOX strip) and 6 (docs and checklist) done: **M7 is built**. Luke's PC test (2026-10-23): import works; he asked for SAVE FILE, an AUDIO tab with header chips, and REC MIC. Those "M7 additions" steps 1–4 are done (2026-10-23, see above). **PC test passed (2026-10-24):** Luke checked everything at localhost on the PC, all fine. **Merged into `main` and pushed (2026-10-24, 8e60a62)**: the Pages site carries M7. Next: Luke's M7 phone test on the live site (checklist above, sections 1–8, plus the M6 phone-only items), then M8 (layouts start in Claude Design).

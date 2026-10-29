@@ -77,6 +77,7 @@ Ignore the "A · Chassis", "B · Glow" and "C · Mono" artboards: they were the 
 - **Velocity:** set by where the pad is pressed, higher means harder: `v = 40 + 87 * (1 - y / height)`, clamped to 1–127. **Full Level** forces 127.
 - **Multi-touch:** use Pointer Events per pad with `touch-action: none`. Track each pointer separately so many pads can be held at once. Release on pointerup, pointerleave and pointercancel.
 - **Pad banks:** A, B, C and D. **Note Repeat** and **Full Level** are toggles that show amber when on.
+  - built (M9a, not in the design): a 5th bank button **CH** (chord pads). The pads then show a chord name (Am7, keeping case) and Roman degree; triads in the tom colour, 7ths in the cymbal colour. On phones ≤ 420 px the bank row gap is 4 px and NOTE RPT / FULL LVL wrap to 2 lines; the tablet bank grid has 5 columns
 - **Desktop keyboard:** the four pad rows (top to bottom) map to keys `1 2 3 4`, `Q W E R`, `A S D F`, `Z X C V`. Other shortcuts:
   - Space: play/stop
   - R: record
@@ -127,6 +128,8 @@ Keep the pad screen uncluttered. Everything else lives behind the tabs.
   - keyboard from C to E (10 white keys); the root note is marked
   - when scale snap is on, out-of-scale keys are dimmed and a snap chip shows the key and scale in the header
   - built: tablet shows 15 white keys (C to C); PC keys `A S D F G H J K L ;` / `W E T Y U O P`, `Z` / `X` octave; MOD strip is still a placeholder
+  - built (M9a, not in the design): the preset strip is 2 rows that scroll sideways (phone landscape: 1 row, about 3½ in view); a CHORD toggle before HOLD / ARP (hold for TYPE / VOICING; on phones the ARP / CHORD detail text is hidden so every button stays 44 px)
+  - built (M9a, not in the design): a PEDALS button in the header (stomp-box icon, `--rec` dot when a pedal is on, amber while open; icon only in phone landscape). Open, it replaces the presets, sends and strips with "PEDALS · <INSTRUMENT>", RESET and 8 stomp cards in chain order: `--raised` card with a 4 px top stripe in the pedal's colour (comp `--cym`, drive `--tom`, amp `--amber`, wah `--snare`, chorus `--perc`, phaser `--kick`, tremolo `--hat`, crush `--fx`), name and LED (`--rec` with a glow when on), two 40 px knobs whose arc is the pedal colour, and a 44 px pill footswitch (ON / OFF, tinted with the pedal colour when on). Phone portrait: one row that scrolls sideways, octave row kept; phone landscape: smaller row (32 px knobs), octave row hidden; tablet: 2 rows of 4
 - **Mix/FX:**
   - five channels plus master, each with a fader, meter, dB readout and mute button
   - Reverb, Delay and Filter cards, each with an on/off switch and three 270° arc knobs

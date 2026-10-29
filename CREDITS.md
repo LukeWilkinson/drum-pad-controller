@@ -199,7 +199,7 @@ CC0 does not require attribution. The credit is kept here anyway, as thanks and 
 | Finger Bass | Bass Guitar YR, finger, by Andrea Biasior (Yamaha RBX), 2019-09-30 (`FingerBassYR-SFZ+FLAC-20190930.7z`) | 5: E1, G1, A#1, C#2, D#2 |
 | Drawbar Organ | Drawbar Organ Emulation, 2019-07-12 (`DrawbarOrganEmulation-SFZ-20190712.tar.xz`) | 14: C2, E2, G#2, C3, E3, G#3, C4, E4, G#4, C5, E5, G#5, C6, E6 |
 
-The E-Piano and Air Pad presets are synthesised (Tone.js), not sampled.
+The E-Piano and Air Pad presets are synthesised (Tone.js), not sampled. The KEYS pedals (`src/audio/pedals.ts`) use no recordings: Tone.js effects and the app's own clipping curves and cabinet filters.
 
 ## Vocal pitch correction
 

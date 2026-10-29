@@ -49,6 +49,8 @@ Open the **Network** address it prints (port 4173) on the phone, then use Chrome
 
 Set `HTTP=1` to turn off HTTPS. This is only for desktop checks; phones need HTTPS.
 
+The pedal check runs in the browser, since it needs Web Audio. With `npm run dev` open, type this in the browser console: `const { run } = await import('/scripts/pedal-check.js'); await run()`. It renders test sounds through every pedal and checks bypass, distortion, bit depth, levels (±3 dB) and chain order.
+
 ## Playing
 
 - **Velocity:** press higher on a pad to hit harder (40 at the bottom, 127 at the top). **FULL LVL** forces 127.
@@ -92,6 +94,7 @@ Set `HTTP=1` to turn off HTTPS. This is only for desktop checks; phones need HTT
 - Notes record into LOOP 1–4 with REC / DUB, beside the drums, and play back with the current KEYS sound.
 - MIDI: SETUP has a **Keys channel** (default 1). Keys notes and pitch bend go out on it; notes, pitch bend and sustain (CC 64) coming in on it play KEYS. Other channels still play pads.
 - The two **REVERB / DELAY** knobs on the KEYS tab send the keys to the effects (they start at 0).
+- **PEDALS** (KEYS header) opens a pedalboard in place of the presets, so the keyboard stays playable. Eight pedals in a fixed order: COMP (SUSTAIN, LEVEL), DRIVE (DRIVE, TONE), AMP (GAIN, TONE: a small valve amp and cabinet), WAH (FREQ, SENS: an auto-wah that follows how hard you play), CHORUS, PHASER and TREMOLO (RATE, DEPTH), CRUSH (BITS, MIX). Tap a footswitch to switch a pedal in or out; the LED shows it is on. Each instrument keeps its own board: Electric Guitar starts with AMP on and Drawbar Organ with CHORUS (as an organ vibrato), the rest with every pedal off. **RESET** puts the current instrument's board back. A red dot on PEDALS means a pedal is on. Pedals are on the KEYS sound only and are recorded by REC OUT and BOUNCE; they don't change MIDI out.
 
 ## Mix / FX
 
@@ -116,7 +119,7 @@ Set `HTTP=1` to turn off HTTPS. This is only for desktop checks; phones need HTT
 
 ## MIDI Learn
 
-Turn on LEARN in SETUP, tap a control, then move a control on the MIDI device. Pads, transport buttons, the master volume, the KEYS buttons, the pad knobs, the mixer faders and mutes, the FX switches and knobs, the KEYS send knobs, REC OUT (including the tablet chip), the REC MIC button, and the vocal switch (including the VOX chip), strength, speed and VOX sends can all be learned. A note presses a button; a CC moves a fader or knob, or presses a button when it rises past 64.
+Turn on LEARN in SETUP, tap a control, then move a control on the MIDI device. Pads, transport buttons, the master volume, the KEYS buttons, the pad knobs, the mixer faders and mutes, the FX switches and knobs, the KEYS send knobs, the pedal footswitches and knobs (open PEDALS first; they act on the instrument playing), REC OUT (including the tablet chip), the REC MIC button, and the vocal switch (including the VOX chip), strength, speed and VOX sends can all be learned. A note presses a button; a CC moves a fader or knob, or presses a button when it rises past 64.
 
 ## Licence
 

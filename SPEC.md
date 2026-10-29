@@ -30,8 +30,8 @@ A free, cross-platform drum pad and MIDI controller that runs on PC, phones and 
    - **Preset layouts:** a few good built-in layouts; add, remove and save your own.
    - **Shareable layouts:** save a layout as a seed (short code/string) that others can load.
    - **Design first:** the layout editor and preset layouts start in Claude Design. When M8 reaches that part, Claude prompts Luke to move to a design chat (or moves there) before building.
-9. **M9a Sounds** (Luke, 2026-10-29; built before M8): nylon and clean electric guitar, bass, organ (CC0 FreePats samples), a synth Rhodes and an Air Pad; KEYS chord mode; a CHORDS bank on PADS; a fixed-order pedalboard saved per instrument (comp, drive, amp, wah, chorus, phaser, tremolo, crush).
-10. **M9b Fred again-style tools** (Luke, 2026-10-29): vocal chops (slice a sample or mic take across pads, pitched), sidechain pump (kick ducks chords), filtered chords, lo-fi / tape FX (tape stop, wobble, crush).
+9. **M9a Sounds** (Luke, 2026-10-29; built before M8): nylon and clean electric guitar, bass, organ (CC0 FreePats samples), a synth Rhodes and an Air Pad; KEYS chord mode; a CHORDS bank on PADS; a fixed-order pedalboard saved per instrument (comp, drive, amp, wah, chorus, phaser, tremolo, crush). *Built 2026-10-29 on `feat/m9a-sounds`; waiting on Luke's phone test.*
+10. **M9b Fred again-style tools** (Luke, 2026-10-29): vocal chops (slice a sample or mic take across pads, pitched), sidechain pump (kick ducks chords), filtered chords, lo-fi / tape FX (tape stop, wobble, crush). Next after M9a.
 
 ## Decisions (were open questions)
 - **Auto-tune:** both, as two separate on/off options. Scale snap is in milestone 5; vocal pitch correction from the mic is a stretch goal (milestone 7). The settings screen already has a card for each.
