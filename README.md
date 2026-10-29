@@ -41,7 +41,8 @@ Open the **Network** address it prints (port 4173) on the phone, then use Chrome
 | `npm run build` | Type-check and build to `dist/` |
 | `npm run lan` | Build, then serve `dist/` over HTTPS on the network (PWA works here) |
 | `npm run fetch-samples` | Download the CC0 drum samples (skips files already present) |
-| `npm run fetch-instruments` | Download and convert the CC0 KEYS instrument samples (needs ffmpeg; skips files already present) |
+| `npm run fetch-instruments` | Download and convert the CC0 KEYS instrument samples (needs ffmpeg; FreePats archives also need bsdtar, which Windows ships as `tar.exe`; skips files already present) |
+| `npm run check:instruments` | Measure every KEYS sample's pitch (fails past ±10 cents) and level, and check the FreePats licences say CC0. Pass instrument ids to check only those |
 | `npm run check:vocal` | Render synthetic voices through the vocal tuner and measure the result (prints PASS / FAIL; `python scripts/vocal_check.py <folder>` re-measures its WAVs with numpy) |
 | `npm run make-icons` | Regenerate PWA icons from `public/icons/icon.svg` |
 
@@ -82,7 +83,7 @@ Set `HTTP=1` to turn off HTTPS. This is only for desktop checks; phones need HTT
 
 ## Keys
 
-- Open **KEYS** for a keyboard. **SYNTH** has Warm Pad, Saw Lead, Sub Bass and Glass Pluck. **SAMPLED** has Grand Piano, FM Piano, Strings, Concert Harp and Kalimba (CC0 recordings, see CREDITS.md).
+- Open **KEYS** for a keyboard. **SYNTH** has Warm Pad, Saw Lead, Sub Bass, Glass Pluck, E-Piano and Air Pad. **SAMPLED** has Grand Piano, FM Piano, Strings, Concert Harp, Kalimba, Nylon Guitar, Electric Guitar, Finger Bass and Drawbar Organ (CC0 recordings, see CREDITS.md). Swipe the preset buttons sideways to see them all.
 - Touch: slide across keys to play each one; press lower on a key to play harder. Octave −/+ covers C1–C7.
 - Computer keyboard on the KEYS tab: `A S D F G H J K L ;` are the white keys, `W E T Y U O P` the black keys, `Z` / `X` the octave. Space, Shift+R, Ctrl+Z and M still work.
 - **SNAP** keeps notes in a key and scale (set in SETUP → Auto-tune). **HOLD** latches notes. **ARP** toggles the arpeggiator; hold it for mode and rate. **PITCH** bends ±2 semitones.

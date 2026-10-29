@@ -7,7 +7,7 @@
 // they can still be cancelled. bend() moves every sounding note. Every preset plays into one keys
 // bus, which feeds the master.
 
-import { Distortion, FMSynth, Filter, MonoSynth, PolySynth, Synth, type ToneAudioNode } from 'tone';
+import { Chorus, Distortion, FMSynth, Filter, MonoSynth, PolySynth, Synth, Tremolo, type ToneAudioNode } from 'tone';
 import type { AudioEngine } from './engine';
 import data from './instruments.json';
 import type { KeysSource } from '../keys/types';
@@ -58,7 +58,7 @@ const HANDOVER = 0.03;
 /** Many notes at once. A note played again while it still sounds is ended first. */
 class PolyVoice implements Voice {
   private sounding = new Set<number>();
-  constructor(private synth: PolySynth<Synth> | PolySynth<FMSynth>) {}
+  constructor(private synth: PolySynth<Synth> | PolySynth<FMSynth> | PolySynth<MonoSynth>) {}
   noteOn(note: number, velocity: number, time: number): void {
     if (this.sounding.has(note)) this.synth.triggerRelease(hz(note), time);
     this.synth.triggerAttack(hz(note), time, velocity);
@@ -263,7 +263,39 @@ function glassPluck(): Built {
   return { voice: new PolyVoice(synth), out: synth };
 }
 
-const SYNTHS = [warmPad, sawLead, subBass, glassPluck];
+/** Rhodes-style electric piano: a 1:1 FM "bark" that fades into a sine body, plus tremolo. */
+function ePiano(): Built {
+  const tremolo = new Tremolo({ frequency: 4.5, depth: 0.25, spread: 0 }).start();
+  const synth = new PolySynth(FMSynth, {
+    harmonicity: 1,
+    modulationIndex: 3.5,
+    oscillator: { type: 'sine' },
+    envelope: { attack: 0.003, decay: 2.2, sustain: 0.25, release: 0.6 },
+    modulation: { type: 'sine' },
+    modulationEnvelope: { attack: 0.002, decay: 0.45, sustain: 0.08, release: 0.4 },
+  });
+  synth.maxPolyphony = 16;
+  synth.volume.value = -5; // peaks near the other synths (−18 dB for a C major triad)
+  synth.connect(tremolo);
+  return { voice: new PolyVoice(synth), out: tremolo };
+}
+
+/** Wide, slow pad: detuned saws whose lowpass opens over two seconds, through a stereo chorus. */
+function airPad(): Built {
+  const chorus = new Chorus({ frequency: 0.3, delayTime: 4, depth: 0.6, spread: 180, wet: 0.5 }).start();
+  const synth = new PolySynth(MonoSynth, {
+    oscillator: { type: 'fatsawtooth', count: 4, spread: 36 },
+    envelope: { attack: 1.2, decay: 0.8, sustain: 0.8, release: 2.8 },
+    filter: { type: 'lowpass', Q: 0.7, rolloff: -24 },
+    filterEnvelope: { attack: 2, decay: 1.5, sustain: 0.6, release: 2.5, baseFrequency: 250, octaves: 3 },
+  });
+  synth.maxPolyphony = 10;
+  synth.volume.value = -18;
+  synth.connect(chorus);
+  return { voice: new PolyVoice(synth), out: chorus };
+}
+
+const SYNTHS = [warmPad, sawLead, subBass, glassPluck, ePiano, airPad];
 
 /**
  * Told about every KEYS note so it can go out as MIDI (src/midi/out.ts). `at()` returns a cancel

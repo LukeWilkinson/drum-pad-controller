@@ -11,6 +11,26 @@
       "name": "Versilian Studios Chamber Orchestra 2 Community Edition (VSCO-2 CE)",
       "repo": "sgossner/VSCO-2-CE",
       "commit": "440300901dfe9275fd84e0b7763af1f8443ae62e"
+    },
+    "nylon": {
+      "name": "FreePats Spanish Classical Guitar (2019-06-18)",
+      "archive": "https://freepats.zenvoid.org/Guitar/SpanishClassicalGuitar/SpanishClassicalGuitar-SFZ+FLAC-20190618.7z",
+      "sha256": "903916921a21662d2237ade7f0e98e55de93cb7b86da219e4e10f4ad385b8f5e"
+    },
+    "eguitar": {
+      "name": "FreePats FSBS Electric Guitar Clean #1, small bridge (2026-08-07)",
+      "archive": "https://github.com/freepats/electric-guitar-FSBS-clean/releases/download/2026-08-07/EGuitarFSBS-clean-bridge-small-SFZ+FLAC-20260807.7z",
+      "sha256": "07c8cdf94dc9b4875ff6c43e51440d84f939a45530060c0761093a56d4a1f032"
+    },
+    "bass": {
+      "name": "FreePats Finger Bass YR (2019-09-30)",
+      "archive": "https://github.com/freepats/electric-bass-YR/releases/download/2019-09-30/FingerBassYR-SFZ+FLAC-20190930.7z",
+      "sha256": "36f87ec9eb086ef25050312522aacf71213c582f46989e0c5a12681304596587"
+    },
+    "organ": {
+      "name": "FreePats Drawbar Organ Emulation (2019-07-12)",
+      "archive": "https://freepats.zenvoid.org/Organ/DrawbarOrganEmulation/DrawbarOrganEmulation-SFZ-20190712.tar.xz",
+      "sha256": "e2da18b0a4d13be7020037e18e4a719387433357e7603d0773990e794dcf5d0f"
     }
   },
   "format": {
@@ -643,6 +663,289 @@
         79,
         81,
         84
+      ]
+    },
+    {
+      "id": "nylon",
+      "name": "Nylon Guitar",
+      "seconds": 4,
+      "release": 0.3,
+      "gain": -13,
+      "samples": [
+        {
+          "note": 31,
+          "source": "nylon",
+          "file": "SpanishClassicalGuitar-SFZ+FLAC-20190618/samples/G1.flac"
+        },
+        {
+          "note": 35,
+          "source": "nylon",
+          "file": "SpanishClassicalGuitar-SFZ+FLAC-20190618/samples/B1.flac"
+        },
+        {
+          "note": 39,
+          "source": "nylon",
+          "file": "SpanishClassicalGuitar-SFZ+FLAC-20190618/samples/D#2.flac"
+        },
+        {
+          "note": 43,
+          "source": "nylon",
+          "file": "SpanishClassicalGuitar-SFZ+FLAC-20190618/samples/G2.flac"
+        },
+        {
+          "note": 47,
+          "source": "nylon",
+          "file": "SpanishClassicalGuitar-SFZ+FLAC-20190618/samples/B2.flac"
+        },
+        {
+          "note": 50,
+          "source": "nylon",
+          "file": "SpanishClassicalGuitar-SFZ+FLAC-20190618/samples/D3.flac"
+        },
+        {
+          "note": 53,
+          "source": "nylon",
+          "file": "SpanishClassicalGuitar-SFZ+FLAC-20190618/samples/F3.flac"
+        },
+        {
+          "note": 57,
+          "source": "nylon",
+          "file": "SpanishClassicalGuitar-SFZ+FLAC-20190618/samples/A3.flac"
+        },
+        {
+          "note": 60,
+          "source": "nylon",
+          "file": "SpanishClassicalGuitar-SFZ+FLAC-20190618/samples/C4.flac"
+        },
+        {
+          "note": 64,
+          "source": "nylon",
+          "file": "SpanishClassicalGuitar-SFZ+FLAC-20190618/samples/E4.flac"
+        },
+        {
+          "note": 67,
+          "source": "nylon",
+          "file": "SpanishClassicalGuitar-SFZ+FLAC-20190618/samples/G4.flac"
+        },
+        {
+          "note": 71,
+          "cents": 13,
+          "source": "nylon",
+          "file": "SpanishClassicalGuitar-SFZ+FLAC-20190618/samples/B4.flac"
+        },
+        {
+          "note": 74,
+          "cents": 11,
+          "source": "nylon",
+          "file": "SpanishClassicalGuitar-SFZ+FLAC-20190618/samples/D5.flac"
+        },
+        {
+          "note": 77,
+          "source": "nylon",
+          "file": "SpanishClassicalGuitar-SFZ+FLAC-20190618/samples/F5.flac"
+        },
+        {
+          "note": 81,
+          "source": "nylon",
+          "file": "SpanishClassicalGuitar-SFZ+FLAC-20190618/samples/A5.flac"
+        },
+        {
+          "note": 84,
+          "source": "nylon",
+          "file": "SpanishClassicalGuitar-SFZ+FLAC-20190618/samples/C6.flac"
+        }
+      ]
+    },
+    {
+      "id": "eguitar",
+      "name": "Electric Guitar",
+      "seconds": 5,
+      "release": 0.3,
+      "gain": -16,
+      "samples": [
+        {
+          "note": 36,
+          "source": "eguitar",
+          "file": "EGuitarFSBS-clean bridge small SFZ+FLAC-20260807/samples/bridge/small/C2_s1_01.flac"
+        },
+        {
+          "note": 41,
+          "source": "eguitar",
+          "file": "EGuitarFSBS-clean bridge small SFZ+FLAC-20260807/samples/bridge/small/F2_s1_01.flac"
+        },
+        {
+          "note": 45,
+          "cents": 15,
+          "source": "eguitar",
+          "file": "EGuitarFSBS-clean bridge small SFZ+FLAC-20260807/samples/bridge/small/A2_s2_01.flac"
+        },
+        {
+          "note": 48,
+          "source": "eguitar",
+          "file": "EGuitarFSBS-clean bridge small SFZ+FLAC-20260807/samples/bridge/small/C3_s2_02.flac"
+        },
+        {
+          "note": 52,
+          "source": "eguitar",
+          "file": "EGuitarFSBS-clean bridge small SFZ+FLAC-20260807/samples/bridge/small/E3_s3_01.flac"
+        },
+        {
+          "note": 55,
+          "source": "eguitar",
+          "file": "EGuitarFSBS-clean bridge small SFZ+FLAC-20260807/samples/bridge/small/G3_s4_01.flac"
+        },
+        {
+          "note": 59,
+          "source": "eguitar",
+          "file": "EGuitarFSBS-clean bridge small SFZ+FLAC-20260807/samples/bridge/small/B3_s5_01.flac"
+        },
+        {
+          "note": 64,
+          "source": "eguitar",
+          "file": "EGuitarFSBS-clean bridge small SFZ+FLAC-20260807/samples/bridge/small/E4_s6_01.flac"
+        },
+        {
+          "note": 67,
+          "source": "eguitar",
+          "file": "EGuitarFSBS-clean bridge small SFZ+FLAC-20260807/samples/bridge/small/G4_s6_01.flac"
+        },
+        {
+          "note": 71,
+          "source": "eguitar",
+          "file": "EGuitarFSBS-clean bridge small SFZ+FLAC-20260807/samples/bridge/small/B4_s6_01.flac"
+        },
+        {
+          "note": 74,
+          "source": "eguitar",
+          "file": "EGuitarFSBS-clean bridge small SFZ+FLAC-20260807/samples/bridge/small/D5_s6_01.flac"
+        },
+        {
+          "note": 80,
+          "source": "eguitar",
+          "file": "EGuitarFSBS-clean bridge small SFZ+FLAC-20260807/samples/bridge/small/G#5_s6_03.flac"
+        },
+        {
+          "note": 85,
+          "source": "eguitar",
+          "file": "EGuitarFSBS-clean bridge small SFZ+FLAC-20260807/samples/bridge/small/C#6_s6_01.flac"
+        }
+      ]
+    },
+    {
+      "id": "bass",
+      "name": "Finger Bass",
+      "seconds": 3,
+      "release": 0.15,
+      "gain": -15,
+      "samples": [
+        {
+          "note": 28,
+          "source": "bass",
+          "file": "FingerBassYR SFZ+FLAC-20190930/samples/finger/E.flac"
+        },
+        {
+          "note": 31,
+          "source": "bass",
+          "file": "FingerBassYR SFZ+FLAC-20190930/samples/finger/G.flac"
+        },
+        {
+          "note": 34,
+          "source": "bass",
+          "file": "FingerBassYR SFZ+FLAC-20190930/samples/finger/A#.flac"
+        },
+        {
+          "note": 37,
+          "source": "bass",
+          "file": "FingerBassYR SFZ+FLAC-20190930/samples/finger/C#.flac"
+        },
+        {
+          "note": 39,
+          "source": "bass",
+          "file": "FingerBassYR SFZ+FLAC-20190930/samples/finger/D#.flac"
+        }
+      ]
+    },
+    {
+      "id": "organ",
+      "name": "Drawbar Organ",
+      "seconds": 4,
+      "release": 0.1,
+      "gain": -18,
+      "loop": [
+        0.8,
+        3.5
+      ],
+      "samples": [
+        {
+          "note": 36,
+          "source": "organ",
+          "file": "DrawbarOrganEmulation-SFZ-20190712/samples/C2.wav"
+        },
+        {
+          "note": 40,
+          "source": "organ",
+          "file": "DrawbarOrganEmulation-SFZ-20190712/samples/E2.wav"
+        },
+        {
+          "note": 44,
+          "source": "organ",
+          "file": "DrawbarOrganEmulation-SFZ-20190712/samples/G#2.wav"
+        },
+        {
+          "note": 48,
+          "source": "organ",
+          "file": "DrawbarOrganEmulation-SFZ-20190712/samples/C3.wav"
+        },
+        {
+          "note": 52,
+          "source": "organ",
+          "file": "DrawbarOrganEmulation-SFZ-20190712/samples/E3.wav"
+        },
+        {
+          "note": 56,
+          "source": "organ",
+          "file": "DrawbarOrganEmulation-SFZ-20190712/samples/G#3.wav"
+        },
+        {
+          "note": 60,
+          "source": "organ",
+          "file": "DrawbarOrganEmulation-SFZ-20190712/samples/C4.wav"
+        },
+        {
+          "note": 64,
+          "source": "organ",
+          "file": "DrawbarOrganEmulation-SFZ-20190712/samples/E4.wav"
+        },
+        {
+          "note": 68,
+          "source": "organ",
+          "file": "DrawbarOrganEmulation-SFZ-20190712/samples/G#4.wav"
+        },
+        {
+          "note": 72,
+          "source": "organ",
+          "file": "DrawbarOrganEmulation-SFZ-20190712/samples/C5.wav"
+        },
+        {
+          "note": 76,
+          "source": "organ",
+          "file": "DrawbarOrganEmulation-SFZ-20190712/samples/E5.wav"
+        },
+        {
+          "note": 80,
+          "source": "organ",
+          "file": "DrawbarOrganEmulation-SFZ-20190712/samples/G#5.wav"
+        },
+        {
+          "note": 84,
+          "source": "organ",
+          "file": "DrawbarOrganEmulation-SFZ-20190712/samples/C6.wav"
+        },
+        {
+          "note": 88,
+          "source": "organ",
+          "file": "DrawbarOrganEmulation-SFZ-20190712/samples/E6.wav"
+        }
       ]
     }
   ]

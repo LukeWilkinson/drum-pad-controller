@@ -4,9 +4,12 @@
 // to its exact note, and an instrument's `pads` notes are rendered from the nearest sample as
 // pad_<note>.flac (for the Kalimba kit in kits.json).
 // The file list comes from src/audio/instruments.json (the same file the app reads), pinned to a
-// commit of each repo so the files never change underneath us. Skips files already present.
+// commit of each repo so the files never change underneath us. An `archive` source (FreePats .7z /
+// .tar.xz releases) is pinned by its sha256 instead and unpacked into .cache/instruments/ with bsdtar;
+// its samples' `file` is a path inside the archive. Skips files already present.
 // Needs ffmpeg on the PATH. Usage: npm run fetch-instruments
 import { spawn } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -31,11 +34,57 @@ function ffmpeg(args, input) {
   });
 }
 
+/** Runs a command and resolves when it exits cleanly. */
+function run(cmd, args) {
+  return new Promise((resolve, reject) => {
+    const p = spawn(cmd, args, { stdio: ['ignore', 'ignore', 'pipe'] });
+    let err = '';
+    p.stderr.on('data', (d) => (err += d));
+    p.on('error', (e) => reject(new Error(`${cmd} not found (${e.message})`)));
+    p.on('close', (code) => (code === 0 ? resolve() : reject(new Error(`${cmd} exit ${code}: ${err.trim()}`))));
+  });
+}
+
+// bsdtar (libarchive) reads .7z and .tar.xz. Windows ships it as System32\tar.exe; Git Bash's GNU tar
+// can't open .7z, so name the Windows one explicitly.
+const TAR = process.platform === 'win32' ? join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'tar.exe') : 'bsdtar';
+const CACHE = join(ROOT, '.cache', 'instruments');
+
+/** Downloads an archive source once, checks its sha256 and unpacks it into .cache/instruments/<key>/. */
+const archives = new Map();
+function unpack(key) {
+  if (!archives.has(key)) {
+    const { archive, sha256 } = sources[key];
+    const dir = join(CACHE, key);
+    const done = join(dir, '.ok');
+    archives.set(key, (async () => {
+      if (existsSync(done)) return dir;
+      const res = await fetch(archive);
+      if (!res.ok) throw new Error(`HTTP ${res.status} for ${archive}`);
+      const data = Buffer.from(await res.arrayBuffer());
+      const hash = createHash('sha256').update(data).digest('hex');
+      if (hash !== sha256) throw new Error(`sha256 mismatch for ${archive}: got ${hash}`);
+      mkdirSync(dir, { recursive: true });
+      const file = join(CACHE, `${key}${archive.slice(archive.lastIndexOf('.'))}`);
+      writeFileSync(file, data);
+      await run(TAR, ['-xf', file, '-C', dir]);
+      writeFileSync(done, sha256);
+      return dir;
+    })());
+  }
+  return archives.get(key);
+}
+
 /** Downloads each source file once, even when a sample and pad notes share it. */
 const downloads = new Map();
 function download(sample) {
   if (!downloads.has(sample.file)) {
-    const { repo, commit } = sources[sample.source];
+    const source = sources[sample.source];
+    if (source.archive) {
+      downloads.set(sample.file, unpack(sample.source).then((dir) => readFileSync(join(dir, sample.file))));
+      return downloads.get(sample.file);
+    }
+    const { repo, commit } = source;
     const url = `https://raw.githubusercontent.com/${repo}/${commit}/${sample.file.split('/').map(encodeURIComponent).join('/')}`;
     downloads.set(sample.file, fetch(url).then(async (res) => {
       if (!res.ok) throw new Error(`HTTP ${res.status} for ${sample.file}`);

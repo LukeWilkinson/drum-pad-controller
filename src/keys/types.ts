@@ -11,13 +11,16 @@ export interface PresetInfo {
   meta: string;
 }
 
-/** Presets per source, in screen order (Keys.dc.html): 4 synth, 5 sampled (Kalimba was added). */
+/** Presets per source, in screen order (Keys.dc.html had 4 synth and 4 sampled; M6 added Kalimba,
+ *  M9a E-Piano, Air Pad and the 4 FreePats instruments). */
 export const PRESETS: Record<KeysSource, PresetInfo[]> = {
   synth: [
     { name: 'Warm Pad', meta: 'Poly · slow attack' },
     { name: 'Saw Lead', meta: 'Mono · glide' },
     { name: 'Sub Bass', meta: 'Mono · sine + drive' },
     { name: 'Glass Pluck', meta: 'Poly · short' },
+    { name: 'E-Piano', meta: 'Poly · tine + tremolo' },
+    { name: 'Air Pad', meta: 'Poly · wide, slow' },
   ],
   sampled: [
     { name: 'Grand Piano', meta: 'Sampled · Kawai grand' },
@@ -25,6 +28,10 @@ export const PRESETS: Record<KeysSource, PresetInfo[]> = {
     { name: 'Strings', meta: 'Sampled · ensemble' },
     { name: 'Concert Harp', meta: 'Sampled · plucked' },
     { name: 'Kalimba', meta: 'Sampled · Tanzanian' },
+    { name: 'Nylon Guitar', meta: 'Sampled · classical' },
+    { name: 'Electric Guitar', meta: 'Sampled · clean' },
+    { name: 'Finger Bass', meta: 'Sampled · electric' },
+    { name: 'Drawbar Organ', meta: 'Sampled · drawbars' },
   ],
 };
 

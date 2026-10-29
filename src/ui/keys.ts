@@ -143,13 +143,16 @@ export function buildKeysPanel(app: HTMLElement, opts: KeysPanelOptions): HTMLEl
     const load = state.keysLoad;
     presets.forEach((btn, i) => {
       const p = PRESETS[k.source][i];
-      btn.hidden = !p; // SYNTH has one preset fewer than SAMPLED
+      btn.hidden = !p; // SYNTH has fewer presets than SAMPLED
       if (!p) return;
       const current = i === k.preset[k.source];
       const loading = current && load ? (load.failed ? "Couldn't load samples" : `Loading ${load.done}/${load.total}`) : '';
       btn.querySelector('.ky-pname')!.textContent = p.name;
       btn.querySelector('.ky-pmeta')!.textContent = loading || p.meta;
       btn.setAttribute('aria-pressed', String(current));
+      // The strip scrolls sideways: keep the current preset in view (after a source switch, MIDI Learn
+      // or opening the tab). A microtask, so views.ts has shown the panel by then.
+      if (current) queueMicrotask(() => scrollIntoStrip(btn));
     });
     octVal.textContent = `C${k.octave}`;
     holdBtn.setAttribute('aria-pressed', String(k.hold));
@@ -175,7 +178,15 @@ export function buildKeysPanel(app: HTMLElement, opts: KeysPanelOptions): HTMLEl
   }
 
   render();
-  subscribe((_s, changed) => (changed.has('keys') || changed.has('keysLoad')) && render());
+  function scrollIntoStrip(btn: HTMLElement): void {
+    if (!btn.offsetParent) return; // panel hidden
+    const strip = btn.parentElement!;
+    const left = btn.offsetLeft - strip.offsetLeft;
+    if (left < strip.scrollLeft || left + btn.offsetWidth > strip.scrollLeft + strip.clientWidth) strip.scrollLeft = left;
+  }
+
+  // `view`: the preset strip can only scroll to the current preset once the panel is on screen.
+  subscribe((s, changed) => (changed.has('keys') || changed.has('keysLoad') || (changed.has('view') && s.view === 'keys')) && render());
   return board;
 }
 

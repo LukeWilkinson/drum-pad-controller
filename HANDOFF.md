@@ -620,6 +620,28 @@ Luke asked for clearer recording: after the pad tap a panel opens with RECORD (a
 - Not checked: a real mic, the Android permission prompt, finger-drag feel, and the playhead moving smoothly (the pane runs about 1 animation frame per 500 ms; the playhead moved 0 → 2% when a frame ran). Test data went to the 5181 origin only (`Mic 1` on pad A14 there), not Luke's 5180 or the live site.
 - **Merged into `main` and pushed (2026-10-24, 52b930c)** at Luke's request, for the phone test. The Pages run succeeded (checked through the GitHub API; `gh` isn't installed) and the live JS bundle contains the panel. Luke's phone test: M7 checklist section 6.
 
+## M9a Sounds (plan approved 2026-10-29)
+Luke asked for more instruments (guitar for sure), chords from single notes, pedals, and Fred again-style tools. Split: M9a (this) and M9b (vocal chops, sidechain pump, filtered chords, lo-fi / tape). Branch `feat/m9a-sounds`, one commit per step. Full plan: `C:\Users\LukeW\.claude\plans\joyful-sleeping-grove.md`.
+- **Luke's picks:** nylon + clean electric guitar, bass, organ, synth Rhodes (no CC0 sampled EP exists), new synth pad; chord mode on KEYS and a CHORDS (CH) bank button on PADS; fixed-order pedalboard saved per instrument.
+- **Sources (all CC0, FreePats):** Spanish Classical Guitar 2019-06-18, FSBS Electric Guitar Clean #1 small bridge 2026-08-07, Finger Bass YR 2019-09-30, Drawbar Organ Emulation 2019-07-12. Excluded: FSS steel-string (GPL), large FSBS sets. Archives are .7z / .tar.xz; Windows `tar.exe` (bsdtar 3.8.9) unpacks them.
+- **Steps:**
+  1. New instruments: `fetch-instruments` archive sources; nylon, eguitar, bass, organ in instruments.json; E-Piano and Air Pad synth presets; preset strip scrolls; CREDITS.
+  2. KEYS chord mode: `src/keys/chords.ts` (types triad/7th/sus2/sus4/add9/power, voicings), `notes.ts` presses hold a chord, CHORD toggle + options dialog, learn targets.
+  3. CHORDS bank on PADS: `state.chordPads`, CH button, `hits.ts` routes pads to chord notes (I–vii, I', 7ths), chord-name labels, LCD.
+  4. Pedalboard: `src/keys/pedals.ts` + `src/audio/pedals.ts` (`PedalChain` between KEYS bus and `engine.input`), `pedals` pref per preset, PEDALS sheet, learn targets.
+  5. Docs and Luke's M9a checklist.
+- **Checks:** `npm run build` each step; new `check:instruments` (YIN pitch ±10 cents per sample, CC0 licence files); chord brute-force check; browser-pane scripts; layout at 3 sizes. Sound and touch need Luke.
+
+### Step 1, new instruments: done (2026-10-29)
+- `scripts/fetch-instruments.mjs`: sources with `archive` + `sha256` are downloaded once, hash-checked and unpacked into `.cache/instruments/<key>/` (git-ignored) with Windows `System32\tar.exe` (bsdtar; Git Bash's GNU tar can't open .7z). Sample `file` is a path inside the archive.
+- `instruments.json`: `nylon` (16 samples), `eguitar` (13), `bass` (5), `organ` (14, loop 0.8–3.5 s). 48 files, 4.8 MB; the precache is now 294 entries, 19.9 MB.
+- `PRESETS`: synth E-Piano (FM 1:1 + Tremolo) and Air Pad (PolySynth of MonoSynth fat saws, slow filter envelope, Chorus); sampled Nylon Guitar, Electric Guitar, Finger Bass, Drawbar Organ.
+- Preset strip: 2 rows that scroll sideways (portrait, tablet), 1 row with about 3½ in view (phone landscape); the current preset scrolls into view, also when the tab opens.
+- New `npm run check:instruments` (`scripts/instrument-check.mjs`): app's YIN on every sample, octave readings reported not failed (the organ's 16' sub-octave, low guitar E), level column, CC0 text in each archive. All 4 new instruments pass (worst 9.2 cents) after retuning nylon B4/D5 and eguitar A2 with `cents`. Gains set to about −28 dBFS RMS like the older ones.
+- Found, not fixed: Concert Harp reads 10–28 cents flat on 9 samples (notes 28, 35, 59, 62, 69, 72, 76, 93, 101). Grand has 2 notes YIN can't read; kalimba is inharmonic and fails the check by design.
+- Checked in the browser pane: each new preset loads and sounds (peak at the master tap); E-Piano raised from −14 to −5 dB to match the other synths (−18 dB for a triad); no console errors; layout at 390×844, 844×390, 1280×800 with no sideways page scroll.
+- Not checked: how they sound (Luke's ear), touch-swiping the strip on the phone.
+
 ## Live site: GitHub Pages (2026-10-18)
 - **https://lukewilkinson.github.io/drum-pad-controller/** from the public repo https://github.com/LukeWilkinson/drum-pad-controller (remote `origin`). Luke chose a public repo (code and commit email visible) after Netlify suspended the new account.
 - `.github/workflows/pages.yml` builds and deploys on every push to `main` (`vite build --base=/<repo>/`); the first run passed. Pages source is set to "GitHub Actions" in the repo settings.
