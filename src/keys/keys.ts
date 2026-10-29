@@ -1,4 +1,4 @@
-// KEYS settings: SYNTH / SAMPLED, the preset, the octave, scale snap, HOLD and ARP. This is the only code that changes
+// KEYS settings: SYNTH / SAMPLED, the preset, the octave, scale snap, HOLD, ARP and CHORD. This is the only code that changes
 // state.keys and state.keysLoad (as kitControl.ts is for kits). It keeps the instrument on the
 // chosen preset and saves the settings as the 'keys' pref.
 
@@ -6,6 +6,7 @@ import type { AudioEngine } from '../audio/engine';
 import { KeysEngine } from '../audio/keys';
 import { state, update, type AppState } from '../state';
 import { getPref, setPref } from '../store/db';
+import { CHORD_TYPES, CHORD_VOICINGS, type ChordType, type ChordVoicing } from './chords';
 import { SCALE_IDS, type ScaleId } from './scales';
 import {
   ARP_MODES,
@@ -118,6 +119,19 @@ export function setArpRate(arpRate: ArpRate): void {
   if (arpRate in ARP_RATES && arpRate !== state.keys.arpRate) set({ arpRate });
 }
 
+/** CHORD on or off. Keys already down keep the notes they started with (src/keys/notes.ts). */
+export function toggleChord(): void {
+  set({ chord: !state.keys.chord });
+}
+
+export function setChordType(chordType: ChordType): void {
+  if (CHORD_TYPES.includes(chordType) && chordType !== state.keys.chordType) set({ chordType });
+}
+
+export function setChordVoicing(chordVoicing: ChordVoicing): void {
+  if (CHORD_VOICINGS.includes(chordVoicing) && chordVoicing !== state.keys.chordVoicing) set({ chordVoicing });
+}
+
 /** The KEYS bus's reverb or delay send, 0–1 (src/mix/mix.ts applies it to the mixer). */
 export function setSend(fx: 'reverb' | 'delay', amount: number): void {
   const v = Math.min(1, Math.max(0, amount));
@@ -143,6 +157,9 @@ async function loadKeys(): Promise<void> {
   if (SCALE_IDS.includes(saved.scale as ScaleId)) patch.scale = saved.scale;
   if (ARP_MODES.includes(saved.arpMode as ArpMode)) patch.arpMode = saved.arpMode;
   if (typeof saved.arpRate === 'string' && saved.arpRate in ARP_RATES) patch.arpRate = saved.arpRate;
+  if (typeof saved.chord === 'boolean') patch.chord = saved.chord;
+  if (CHORD_TYPES.includes(saved.chordType as ChordType)) patch.chordType = saved.chordType;
+  if (CHORD_VOICINGS.includes(saved.chordVoicing as ChordVoicing)) patch.chordVoicing = saved.chordVoicing;
   for (const key of ['reverbSend', 'delaySend'] as const) {
     const v = saved[key];
     if (typeof v === 'number' && v >= 0 && v <= 1) patch[key] = v;

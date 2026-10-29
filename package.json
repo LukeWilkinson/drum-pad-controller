@@ -14,6 +14,7 @@
     "fetch-instruments": "node scripts/fetch-instruments.mjs",
     "check:vocal": "node scripts/vocal-check.mjs",
     "check:instruments": "node scripts/instrument-check.mjs",
+    "check:chords": "node scripts/chord-check.mjs",
     "make-icons": "pwa-assets-generator --preset minimal-2023 public/icons/icon.svg"
   },
   "devDependencies": {

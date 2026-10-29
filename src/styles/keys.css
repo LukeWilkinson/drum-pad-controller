@@ -73,12 +73,20 @@
 .ky-toggle { height: 44px; padding: 0 10px; border-radius: 6px; background: var(--raised); color: var(--text); font-weight: 700; font-size: 12px; letter-spacing: .06em; }
 .ky-toggle[aria-pressed="true"] { background: var(--amber); color: var(--body); }
 .ky-arp-info { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0; white-space: nowrap; }
+.ky-oct .ky-btn, .ky-oct .ky-toggle { flex: none; min-width: 44px; } /* never under 44px */
+/* Phones (portrait and landscape): OCTAVE, CHORD, HOLD and ARP only just fit, so the ARP / CHORD details go (the
+   options dialogs and the LCD still show them). */
+@media (max-width: 420px), (orientation: landscape) and (max-height: 540px) {
+  .ky-oct { gap: 4px; }
+  .ky-oct .ky-arp-info { display: none; }
+}
 
 /* ARP options dialog */
 .ky-opt-label { margin: 0 0 6px !important; font-size: 11px !important; font-weight: 700; letter-spacing: .08em; color: var(--text-muted); }
 .ky-opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-bottom: 14px; }
 .ky-opt { min-height: 44px; }
 .ky-opt[aria-pressed="true"] { background: var(--amber); color: var(--body); }
+.ky-opt-note { margin: 0 0 14px !important; font-size: 12px !important; color: var(--text-muted); }
 
 /* ---------- FX sends (small knobs) ---------- */
 

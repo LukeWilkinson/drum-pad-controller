@@ -1,6 +1,7 @@
-// KEYS types, preset names and note helpers. This file imports only a type from scales.ts (which
-// imports nothing), so state.ts, the audio code and the UI can all use it.
+// KEYS types, preset names and note helpers. This file imports only types from scales.ts and
+// chords.ts (which import nothing else), so state.ts, the audio code and the UI can all use it.
 
+import type { ChordType, ChordVoicing } from './chords';
 import type { ScaleId } from './scales';
 
 export type KeysSource = 'synth' | 'sampled';
@@ -56,6 +57,10 @@ export interface KeysState {
   arp: boolean;
   arpMode: ArpMode;
   arpRate: ArpRate;
+  /** CHORD: each key plays a chord in the key and scale (src/keys/chords.ts). */
+  chord: boolean;
+  chordType: ChordType;
+  chordVoicing: ChordVoicing;
   /** How much of the KEYS bus goes to the reverb and the delay, 0–1 (the mixer applies them). */
   reverbSend: number;
   delaySend: number;
@@ -83,6 +88,9 @@ export const DEFAULT_KEYS: KeysState = {
   arp: false,
   arpMode: 'up',
   arpRate: '1/16',
+  chord: false,
+  chordType: 'triad',
+  chordVoicing: 'close',
   reverbSend: 0,
   delaySend: 0,
 };

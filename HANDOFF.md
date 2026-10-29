@@ -642,6 +642,14 @@ Luke asked for more instruments (guitar for sure), chords from single notes, ped
 - Checked in the browser pane: each new preset loads and sounds (peak at the master tap); E-Piano raised from −14 to −5 dB to match the other synths (−18 dB for a triad); no console errors; layout at 390×844, 844×390, 1280×800 with no sideways page scroll.
 - Not checked: how they sound (Luke's ear), touch-swiping the strip on the phone.
 
+### Step 2, KEYS chord mode: done (2026-10-29)
+- `src/keys/chords.ts` (pure): `chordNotes(root, key, scale, type, voicing)`, `chordName()`, `degreeOf()`, `chordScale()`. Triad / 7th / add9 stack thirds of the scale; pentatonic and blues stack on their parent (major / minor) so they give real chords; sus2 / sus4 / power are fixed intervals (a diatonic sus4 on IV would be a tritone). Roots outside the scale snap in first, even with SNAP off.
+- `notes.ts`: a pressed key holds `notes[]`; every chord note is counted, latched, arpeggiated and recorded on its own, so overlapping chords keep a shared note until the last key lets go (it is re-struck by the second chord). LCD: `KEYS · Am7 · A3 C4 E4 G4 · <PRESET>`.
+- `KeysState.chord / chordType / chordVoicing`, saved and checked in `loadKeys()` (CHORD on/off is restored, unlike HOLD / ARP). CHORD button in the octave row (tap toggles, hold opens TYPE / VOICING); learn target `chord`. On phones (≤ 420 px or phone landscape) the row's gap is 4 px and the ARP / CHORD detail text is hidden so every button stays ≥ 44 px (the octave −/+ had shrunk to 29 px).
+- Claude's choice: no learn target for the chord type (no single control to learn it from).
+- Checked: `npm run check:chords` (294,923 cases vs a walk-up-the-keyboard rebuild, plus names: C major, A minor, A harmonic minor triads and 7ths, D dorian, G mixolydian, add9, power, sus4, A minor pentatonic). Browser pane by script: Dm from D4, C# → C, overlapping C + Am, HOLD latch / unlatch, G7 1st inversion = B D F G, ARP over C = 60 64 67 60 64 67, DUB records Am as 3 notes and one undo removes them, pref round trip, damaged pref → defaults, dialog, layout at 3 sizes, no console errors.
+- Not checked: MIDI keyboard in (same `notes.noteOn` path as the screen keys), touch on the phone, how it sounds.
+
 ## Live site: GitHub Pages (2026-10-18)
 - **https://lukewilkinson.github.io/drum-pad-controller/** from the public repo https://github.com/LukeWilkinson/drum-pad-controller (remote `origin`). Luke chose a public repo (code and commit email visible) after Netlify suspended the new account.
 - `.github/workflows/pages.yml` builds and deploys on every push to `main` (`vite build --base=/<repo>/`); the first run passed. Pages source is set to "GitHub Actions" in the repo settings.

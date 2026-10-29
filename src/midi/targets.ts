@@ -56,6 +56,7 @@ const FIXED: Record<string, Target> = {
   'oct-up': { label: 'KEYS OCTAVE +', press: () => keys.nudgeOctave(1) },
   hold: { label: 'KEYS HOLD', press: keys.toggleHold },
   arp: { label: 'KEYS ARP', press: keys.toggleArp },
+  chord: { label: 'KEYS CHORD', press: keys.toggleChord },
   snap: { label: 'KEYS SNAP', press: keys.toggleSnap },
   'src:synth': { label: 'KEYS SYNTH', press: () => keys.setSource('synth') },
   'src:sampled': { label: 'KEYS SAMPLED', press: () => keys.setSource('sampled') },

@@ -1,10 +1,18 @@
-// KEYS panel (Keys.dc.html): the snap chip, SYNTH / SAMPLED, the presets (4 or 5), octave, HOLD / ARP, the
+// KEYS panel (Keys.dc.html): the snap chip, SYNTH / SAMPLED, the presets, octave, CHORD / HOLD / ARP, the
 // pitch and mod strips, and the keyboard. Built once; render() updates it from the store. The keyboard
 // has 15 white keys (two octaves, C to C); phones show the first 10 (C to E), as in the design.
 // A dot marks the key's root on every octave; with snap on, keys outside the scale are dimmed.
 // The two small knobs send the KEYS bus to the REVERB and DELAY (src/mix/).
 // Controls marked data-todo are wired up in later M5 steps (or later milestones).
 
+import {
+  CHORD_TYPES,
+  CHORD_TYPE_NAMES,
+  CHORD_VOICINGS,
+  CHORD_VOICING_NAMES,
+  type ChordType,
+  type ChordVoicing,
+} from '../keys/chords';
 import * as keys from '../keys/keys';
 import { inScale, scaleLabel } from '../keys/scales';
 import {
@@ -72,6 +80,7 @@ export function buildKeysPanel(app: HTMLElement, opts: KeysPanelOptions): HTMLEl
       <span class="ky-oct-val"></span>
       <button class="ky-btn ky-oct-up" data-learn="oct-up" aria-label="Octave up">+</button>
       <span class="ky-spacer"></span>
+      <button class="ky-toggle ky-chord" data-learn="chord" aria-pressed="false" aria-haspopup="dialog" title="Tap: on / off. Hold: options">CHORD<span class="ky-arp-info ky-chord-info"></span></button>
       <button class="ky-toggle ky-hold" data-learn="hold" aria-pressed="false">HOLD</button>
       <button class="ky-toggle ky-arp" data-learn="arp" aria-pressed="false" aria-haspopup="dialog" title="Tap: on / off. Hold: options">ARP<span class="ky-arp-info"></span></button>
     </div>
@@ -112,6 +121,9 @@ export function buildKeysPanel(app: HTMLElement, opts: KeysPanelOptions): HTMLEl
   const arpInfo = panel.querySelector<HTMLElement>('.ky-arp-info')!;
   holdBtn.addEventListener('click', keys.toggleHold);
   onTapOrHold(arpBtn, keys.toggleArp, openArpOptions);
+  const chordBtn = panel.querySelector<HTMLButtonElement>('.ky-chord')!;
+  const chordInfo = panel.querySelector<HTMLElement>('.ky-chord-info')!;
+  onTapOrHold(chordBtn, keys.toggleChord, openChordOptions);
   attachPitchStrip(panel.querySelector<HTMLElement>('.ky-pitch')!, opts.onBend);
 
   for (const seg of segs) seg.addEventListener('click', () => keys.setSource(seg.dataset.src as KeysSource));
@@ -159,6 +171,9 @@ export function buildKeysPanel(app: HTMLElement, opts: KeysPanelOptions): HTMLEl
     arpBtn.setAttribute('aria-pressed', String(k.arp));
     arpInfo.textContent = k.arp ? ` ${ARP_MODE_ARROWS[k.arpMode]} ${k.arpRate}` : '';
     arpBtn.setAttribute('aria-label', `Arpeggiator ${k.arp ? 'on' : 'off'}, ${ARP_MODE_NAMES[k.arpMode].toLowerCase()}, ${k.arpRate}. Hold for options`);
+    chordBtn.setAttribute('aria-pressed', String(k.chord));
+    chordInfo.textContent = k.chord ? ` ${CHORD_TYPE_NAMES[k.chordType]}` : '';
+    chordBtn.setAttribute('aria-label', `Chords ${k.chord ? 'on' : 'off'}, ${CHORD_TYPE_NAMES[k.chordType].toLowerCase()}, ${CHORD_VOICING_NAMES[k.chordVoicing].toLowerCase()}. Hold for options`);
     snapBtn.setAttribute('aria-pressed', String(k.snap));
     snapText.textContent = k.snap ? `SNAP · ${scaleLabel(k.key, k.scale)}` : 'SNAP OFF';
     snapShort.textContent = k.snap ? scaleLabel(k.key, k.scale, true) : 'SNAP OFF';
@@ -230,6 +245,28 @@ async function openArpOptions(): Promise<void> {
     (b) => {
       if (b.dataset.mode) keys.setArpMode(b.dataset.mode as ArpMode);
       if (b.dataset.rate) keys.setArpRate(b.dataset.rate as ArpRate);
+      const group = b.parentElement!;
+      for (const o of group.querySelectorAll('.ky-opt')) o.setAttribute('aria-pressed', String(o === b));
+    },
+  );
+}
+
+/** CHORD options: chord type and voicing, applied as they are tapped. */
+async function openChordOptions(): Promise<void> {
+  const k = state.keys;
+  const btn = (kind: string, value: string, label: string, on: boolean) =>
+    `<button type="button" class="kp-btn ky-opt" data-${kind}="${value}" aria-pressed="${on}">${label}</button>`;
+  await openDialog(
+    `<h2>CHORD</h2>
+    <p class="ky-opt-label">TYPE</p>
+    <div class="ky-opts">${CHORD_TYPES.map((t) => btn('type', t, CHORD_TYPE_NAMES[t], t === k.chordType)).join('')}</div>
+    <p class="ky-opt-label">VOICING</p>
+    <div class="ky-opts">${CHORD_VOICINGS.map((v) => btn('voicing', v, CHORD_VOICING_NAMES[v], v === k.chordVoicing)).join('')}</div>
+    <p class="ky-opt-note">Chords follow the key and scale of the SNAP chip (${scaleLabel(k.key, k.scale)}).</p>
+    <div class="dlg-btns"><button value="done" class="kp-btn primary">DONE</button></div>`,
+    (b) => {
+      if (b.dataset.type) keys.setChordType(b.dataset.type as ChordType);
+      if (b.dataset.voicing) keys.setChordVoicing(b.dataset.voicing as ChordVoicing);
       const group = b.parentElement!;
       for (const o of group.querySelectorAll('.ky-opt')) o.setAttribute('aria-pressed', String(o === b));
     },
