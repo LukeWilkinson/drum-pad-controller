@@ -22,6 +22,8 @@ export interface AppState {
   edited: boolean;
   /** Pad bank on screen, 0–3 (A–D). */
   bank: number;
+  /** The CH bank is on screen instead: the pads play KEYS chords (src/pads/chordPads.ts). Not saved. */
+  chordPads: boolean;
   /** Pad (bank × 16 + screen index, 0–63) being edited / last hit. */
   selectedPad: number;
   view: View;
@@ -82,6 +84,7 @@ export const state: AppState = {
   kit: null,
   edited: false,
   bank: 0,
+  chordPads: false,
   selectedPad: 12, // Kick
   view: 'pads',
   userKits: [],

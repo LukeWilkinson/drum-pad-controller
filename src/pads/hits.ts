@@ -60,7 +60,7 @@ export function hit(index: number, velocity: number, fromMidi = false): void {
   if (!fromMidi) midiOut.hold(index);
   seq.recordHit(index, velocity);
   repeat.press(index, velocity, !fromMidi);
-  if (Math.floor(index / PADS_PER_BANK) === state.bank) showHit(padEls[index % PADS_PER_BANK], velocity);
+  if (onScreen(index)) showHit(padEls[index % PADS_PER_BANK], velocity);
   anyHit = true;
   const name = state.kit?.pads[index].name.toUpperCase() ?? '';
   if (engine.padMissing(index)) setLast(`${padTitle(index)} · SAMPLE MISSING`, `${name} · MISSING`);
@@ -72,7 +72,7 @@ export function release(index: number, fromMidi = false): void {
   if (!fromMidi && claimed.delete(index)) return; // never played, so nothing to end
   repeat.release(index);
   if (!fromMidi) midiOut.release(index);
-  showRelease(padEls[index % PADS_PER_BANK]);
+  showRelease(padEls[index % PADS_PER_BANK]); // also after a bank switch mid-hold
 }
 
 /** FULL LEVEL: touch hits play at velocity 127. MIDI velocity is always used as sent. */
@@ -84,5 +84,10 @@ export function toggleFullLevel(): void {
 export function move(index: number, velocity: number): void {
   if (!state.noteRepeat) return;
   repeat.move(index, velocity);
-  if (Math.floor(index / PADS_PER_BANK) === state.bank) showHit(padEls[index % PADS_PER_BANK], velocity); // the fill follows the finger
+  if (onScreen(index)) showHit(padEls[index % PADS_PER_BANK], velocity); // the fill follows the finger
+}
+
+/** Pad `index` is one of the 16 on screen (its bank shows, and the CH bank doesn't). */
+function onScreen(index: number): boolean {
+  return !state.chordPads && Math.floor(index / PADS_PER_BANK) === state.bank;
 }

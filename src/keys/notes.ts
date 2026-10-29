@@ -26,7 +26,7 @@ const BEND_RANGE = 2; // semitones at the ends of the PITCH strip
 let instrument: KeysEngine;
 /** How many presses hold each sounding note. */
 const held = new Map<number, number>();
-/** Each pressed key (as pressed) → the notes it plays (one, or a chord) and how many presses hold it. */
+/** Each pressed key (as pressed) or chord pad → the notes it plays (one, or a chord) and how many presses hold it. */
 const pressed = new Map<number, { notes: number[]; count: number; unlatched: boolean }>();
 /** Notes HOLD keeps sounding after their keys came up. */
 const latched = new Set<number>();
@@ -62,12 +62,36 @@ function notesFor(key: number): number[] {
  */
 export function noteOn(key: number, velocity: number, echo = true): void {
   if (key < 0 || key > 127) return;
-  let p = pressed.get(key);
+  if (press(key, () => notesFor(key), velocity, echo)) showLast(key, pressed.get(key)!.notes, velocity);
+}
+
+export function noteOff(key: number): void {
+  release(key);
+}
+
+/** Chord pads (src/pads/chordPads.ts) press ids from here up, so they never meet a key's. */
+const CHORD_PAD_ID = 1000;
+
+/**
+ * Chord pad `pad` (0–15) went down with the chord `chord` (built by the caller). It is held, latched,
+ * arpeggiated and recorded like a key. Returns false when it only ended a latched chord (HOLD).
+ */
+export function chordPadOn(pad: number, chord: number[], velocity: number, echo = true): boolean {
+  return press(CHORD_PAD_ID + pad, () => chord.filter((n) => n >= 0 && n <= 127), velocity, echo);
+}
+
+export function chordPadOff(pad: number): void {
+  release(CHORD_PAD_ID + pad);
+}
+
+/** A press of `id` (a key, or a chord pad). Returns true when its notes started. */
+function press(id: number, notesOf: () => number[], velocity: number, echo: boolean): boolean {
+  let p = pressed.get(id);
   if (!p) {
-    const notes = notesFor(key);
-    if (!notes.length) return;
+    const notes = notesOf();
+    if (!notes.length) return false;
     const unlatch = notes.every((n) => latched.has(n) && !held.has(n));
-    pressed.set(key, (p = { notes, count: 0, unlatched: unlatch }));
+    pressed.set(id, (p = { notes, count: 0, unlatched: unlatch }));
     if (unlatch) {
       for (const n of notes) {
         latched.delete(n);
@@ -76,15 +100,15 @@ export function noteOn(key: number, velocity: number, echo = true): void {
     }
   }
   p.count++;
-  if (p.unlatched) return;
+  if (p.unlatched) return false;
   for (const n of p.notes) start(n, velocity, echo);
-  showLast(key, p.notes, velocity);
+  return true;
 }
 
-export function noteOff(key: number): void {
-  const p = pressed.get(key);
+function release(id: number): void {
+  const p = pressed.get(id);
   if (!p) return;
-  if (--p.count === 0) pressed.delete(key);
+  if (--p.count === 0) pressed.delete(id);
   if (p.unlatched) return;
   for (const note of p.notes) {
     const n = held.get(note);

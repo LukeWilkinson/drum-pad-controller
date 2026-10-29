@@ -85,6 +85,32 @@ export function chordNotes(root: number, key: number, scale: ScaleId, type: Chor
   return [...new Set(notes)].filter((n) => n >= 0 && n <= 127).sort((a, b) => a - b);
 }
 
+/**
+ * The CH pad bank (src/pads/chordPads.ts): pad number `pad` (1–16, MPC numbering: 1 = bottom-left).
+ * The bottom row plays the triads on scale degrees I–IV, the second row V–vii and I an octave up,
+ * and the top two rows the same chords as 7ths. Degrees are counted in the 7-note scale chords are
+ * built on (chordScale), so pentatonic and blues get all seven. The tonic sits in the octave below
+ * the keyboard's left-most C (KEYS octave 4 → C3–B3), so the chords sit around middle C.
+ */
+export function chordPad(pad: number, key: number, scale: ScaleId, octave: number, voicing: ChordVoicing): { notes: number[]; name: string; degree: number; type: ChordType } {
+  const row = Math.floor((pad - 1) / 4);
+  const degree = (row % 2) * 4 + ((pad - 1) % 4);
+  const type: ChordType = row < 2 ? 'triad' : 'seventh';
+  const parent = chordScale(scale);
+  const steps = SCALES[parent].steps;
+  const root = octave * 12 + key + steps[degree % 7] + 12 * Math.floor(degree / 7);
+  return { notes: chordNotes(root, key, parent, type, voicing), name: chordName(root, key, parent, type), degree, type };
+}
+
+const ROMAN = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII'];
+
+/** "vi", "V7", "vii°", "I" (an octave up is still I): the degree in Roman numerals, lower case for minor. */
+export function romanOf(degree: number, name: string, type: ChordType): string {
+  const r = ROMAN[degree % 7];
+  const minor = /m(?!aj)|dim/.test(name.slice(1).replace(/^#/, ''));
+  return `${minor ? r.toLowerCase() : r}${name.includes('dim') || name.includes('m7b5') ? '°' : ''}${type === 'seventh' ? '7' : ''}`;
+}
+
 /** Chord symbol for the chord built on `root`, e.g. "Am7", "Bdim", "Fsus2", "C5", "Gadd9". */
 export function chordName(root: number, key: number, scale: ScaleId, type: ChordType): string {
   const close = closeChord(root, key, scale, type);

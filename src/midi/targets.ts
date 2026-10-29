@@ -11,7 +11,7 @@ import * as recorder from '../audio/recorder';
 import { BANK_NAMES, PADS_PER_BANK, PAD_COUNT, PARAM_RANGE, padLabel, type ParamKey } from '../audio/kit';
 import * as keys from '../keys/keys';
 import { PRESET_SLOTS } from '../keys/types';
-import { selectBank, setParam } from '../kitControl';
+import { selectBank, selectChordPads, setParam } from '../kitControl';
 import { FX } from '../mix/knobs';
 import * as mix from '../mix/mix';
 import { STRIPS, STRIP_LABEL, type StripId } from '../mix/types';
@@ -57,6 +57,7 @@ const FIXED: Record<string, Target> = {
   hold: { label: 'KEYS HOLD', press: keys.toggleHold },
   arp: { label: 'KEYS ARP', press: keys.toggleArp },
   chord: { label: 'KEYS CHORD', press: keys.toggleChord },
+  'chord-pads': { label: 'BANK CH (chord pads)', press: selectChordPads },
   snap: { label: 'KEYS SNAP', press: keys.toggleSnap },
   'src:synth': { label: 'KEYS SYNTH', press: () => keys.setSource('synth') },
   'src:sampled': { label: 'KEYS SAMPLED', press: () => keys.setSource('sampled') },

@@ -1,13 +1,15 @@
 // MIDI input → KEYS, pads and learned controls. A learned mapping (MIDI Learn, src/midi/learn.ts,
 // any channel) wins. Otherwise, on the Keys channel, notes play KEYS (src/keys/notes.ts), pitch
 // bend bends it and CC 64 (sustain) is HOLD. On every other channel notes 36–99 play pads A1–D16
-// (src/midi/notes.ts) and other CCs are ignored. A pad hit from MIDI plays like a touch (sound, recording, Note Repeat, LCD) but is
+// (src/midi/notes.ts; with the CH bank on screen, notes 36–51 play its chord pads) and other CCs are ignored. A pad hit from MIDI plays like a touch (sound, recording, Note Repeat, LCD) but is
 // not sent back out as MIDI, so a port used both ways can't feed back. Note-off (or note-on with
 // velocity 0) releases it. While learn mode has a control armed, the next note-on or CC is learned
 // instead of played. The MIDI chip blinks on any incoming message.
 
 import * as keys from '../keys/keys';
 import * as notes from '../keys/notes';
+import { PADS_PER_BANK } from '../audio/kit';
+import * as chordPads from '../pads/chordPads';
 import * as hits from '../pads/hits';
 import { state, subscribe } from '../state';
 import type { ScreenRefs } from '../ui/screen';
@@ -69,6 +71,8 @@ function handle(data: Uint8Array): void {
     if (!mapped && onKeys) return pressKey(num, value);
     const pad = mapped ? mapped.pad : padOfNote(num);
     if (pad === undefined || pad === null) return;
+    // With the CH bank on screen, the bank A notes (36–51) play its chord pads instead.
+    if (!mapped && state.chordPads && pad < PADS_PER_BANK) return press(num, chordKey(pad), value);
     press(num, pad, value);
   } else if (type === NOTE_OFF || type === NOTE_ON) {
     if (onKeys && heldKeys.has(num)) releaseKey(num);
@@ -98,17 +102,27 @@ function mappedTarget(kind: 'note' | 'cc', num: number): Target | undefined {
   return (m && findTarget(m.target)) ?? undefined;
 }
 
+/** `held` value for chord pad `screen` (negative, so it can't be a drum pad index). */
+const chordKey = (screen: number) => -1 - screen;
+
+/** `pad` is a drum pad index, or a chordKey(). */
 function press(key: number, pad: number, vel: number): void {
-  if (held.has(key)) hits.release(held.get(key)!, true); // a retrigger without a note-off
+  if (held.has(key)) releasePad(held.get(key)!); // a retrigger without a note-off
   held.set(key, pad);
-  hits.hit(pad, vel, true);
+  if (pad < 0) chordPads.hit(-1 - pad, vel, true);
+  else hits.hit(pad, vel, true);
 }
 
 function unpress(key: number): void {
   const pad = held.get(key);
   if (pad === undefined) return;
   held.delete(key);
-  hits.release(pad, true);
+  releasePad(pad);
+}
+
+function releasePad(pad: number): void {
+  if (pad < 0) chordPads.release(-1 - pad);
+  else hits.release(pad, true);
 }
 
 function pressKey(note: number, vel: number): void {
@@ -125,7 +139,7 @@ function releaseKey(note: number): void {
 function releaseAll(): void {
   for (const note of heldKeys) notes.noteOff(note);
   heldKeys.clear();
-  for (const pad of held.values()) hits.release(pad, true);
+  for (const pad of held.values()) releasePad(pad);
   held.clear();
 }
 

@@ -54,6 +54,7 @@ Set `HTTP=1` to turn off HTTPS. This is only for desktop checks; phones need HTT
 - **Velocity:** press higher on a pad to hit harder (40 at the bottom, 127 at the top). **FULL LVL** forces 127.
 - **Multi-touch:** hold as many pads as there are fingers.
 - **Keyboard:** the pad rows top to bottom are `1 2 3 4`, `Q W E R`, `A S D F`, `Z X C V`.
+- **CH (chord pads):** the button after A–D turns the 16 pads into chords of the KEYS key and scale, played on the KEYS sound. Bottom row: I ii iii IV, next row: V vi vii I (an octave up), top two rows: the same as 7ths. Each pad shows its chord (Am7) and degree (vi7). They follow KEYS HOLD, ARP and the CHORD voicing, record into the loop as KEYS notes and go out on the Keys MIDI channel. Note Repeat doesn't apply. From a MIDI pad controller, notes 36–51 play the chord pads while CH is on (other banks still play drums).
 
 ## Kits
 
