@@ -120,6 +120,7 @@ Read SPEC.md (milestones) and DESIGN.md (tokens, layouts) first. The design canv
   - **Step 2, SEQ panel: done (2026-11-04).** CH 1–8 / CH 9–16 row pages and LEN button (end of the STEPS row) in `src/ui/seq.ts`. Smoke-checked by script; full checks in step 3.
   - **Step 3, checks: done (2026-11-04).** Fixed shared-note removal in `chordInCell()`. Checked by script (`?fakemidi`: place, undo, off-grid, key change, DUB record, MIDI out, reload) and layout by measurement at 3 sizes; no screenshots (pane hidden).
   - **Step 4, docs and checklist: done (2026-11-04).** README, DESIGN, Luke's checklist (HANDOFF.md, "Luke's checklist for SEQ chords"). **Built**.
-  - **PC test passed (2026-11-04):** Luke ran the checklist at localhost and reported all good. Phone items not run yet; not merged yet.
+  - **PC test passed (2026-11-04):** Luke ran the checklist at localhost and reported all good. Phone items not run yet.
+  - **Merged into `main` and pushed (2026-11-04, 107b627)** for the phone test; the Pages deploy result was not checked (no `gh` in Claude's shell).
 - **Next:** Luke's M9a phone test on the live site (HANDOFF.md, "Luke's checklist for M9a": touch on the pedal cards, CPU, landscape). Then M9b (SPEC.md). Also open: Luke's M7 phone test on the live site (HANDOFF.md checklist, sections 1–8, plus the M6 phone-only items). Then M8 (Luke's notes 2026-10-22: custom/grid layouts, shareable layout seeds; record own sounds is done as REC MIC) is in SPEC.md; its layout part starts in Claude Design. Still open: M5 checklist section 5 and M6 phone-only items.
 - PowerShell blocks `npm`; Luke runs `npm.cmd` there.
