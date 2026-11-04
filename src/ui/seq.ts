@@ -2,11 +2,15 @@
 // swing, step pages, bar picker, row pages and the 8 × 8 step grid.
 // Built once; render functions only touch what a change affects. While playing, onFrame() moves the
 // playhead column and keeps the shown page on the playhead, until a page or bar is picked by hand.
+// Row pages run A 1–8 … D 9–16, then CH 1–8 (triads) and CH 9–16 (7ths): one row per chord pad, in
+// the KEYS key, scale, octave and voicing of now. A chord cell places the chord as plain KEYS notes
+// (seq.toggleChordStep), LEN long; it lights only while every note of that row's chord starts there.
 
 import type { AudioEngine } from '../audio/engine';
 import * as clock from '../audio/clock';
 import { BANK_NAMES, GROUP_COLOUR, PADS_PER_BANK } from '../audio/kit';
-import { BAR_TICKS, LENGTHS, QUANTS, STEP_TICKS, SWING_MAX, SWING_MIN, hasHits, lengthTicks, type Bars, type Quant } from '../seq/pattern';
+import { chordPad, romanOf } from '../keys/chords';
+import { BAR_TICKS, LENGTHS, QUANTS, STEP_TICKS, SWING_MAX, SWING_MIN, chordInCell, hasHits, lengthTicks, type Bars, type Quant } from '../seq/pattern';
 import * as seq from '../seq/sequencer';
 import { state, subscribe, type Change } from '../state';
 import { selectBank } from '../kitControl';
@@ -28,8 +32,17 @@ const CHEVRON = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" str
 const PLAY_ICON = '<svg class="i-play" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4l13 8-13 8z" fill="currentColor"/></svg>';
 const STOP_ICON = '<svg class="i-stop" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1" fill="currentColor"/></svg>';
 
+/** Chord lengths the LEN button steps through, in ticks; 1 BEAT is the default. */
+const CHORD_LENS = [
+  { label: '1 STEP', ticks: STEP_TICKS },
+  { label: '1 BEAT', ticks: STEP_TICKS * 4 },
+  { label: '2 BEATS', ticks: STEP_TICKS * 8 },
+  { label: '1 BAR', ticks: BAR_TICKS },
+];
+const PREVIEW_MAX = 2; // seconds: longest chord preview on a stopped tap
+
 const CONTROLS: Change[] = ['patterns', 'pattern', 'queued', 'recMode', 'countIn', 'click', 'quant', 'swing', 'playing', 'bank'];
-const GRID: Change[] = ['patterns', 'pattern', 'kit', 'pads', 'bank'];
+const GRID: Change[] = ['patterns', 'pattern', 'kit', 'pads', 'bank', 'keys'];
 
 export function buildSeqPanel(app: HTMLElement, engine: AudioEngine): void {
   const panel = document.createElement('section');
@@ -69,6 +82,7 @@ export function buildSeqPanel(app: HTMLElement, engine: AudioEngine): void {
       <button data-page="0" aria-pressed="true">STEPS 1–8</button>
       <button data-page="1" aria-pressed="false">STEPS 9–16</button>
       <button class="sq-bar"></button>
+      <button class="sq-len-btn"></button>
     </div>
     <div class="sq-grid" role="grid" aria-label="Step grid">
       ${ROW_PAGES[0].map(() => `
@@ -90,7 +104,11 @@ export function buildSeqPanel(app: HTMLElement, engine: AudioEngine): void {
   const barBtn = $<HTMLButtonElement>('.sq-bar');
   const posEl = $<HTMLElement>('.sq-pos');
 
+  const lenBtn = $<HTMLButtonElement>('.sq-len-btn');
+
   let rowPage = 0;
+  let chordRows = false; // the CH row pages are showing
+  let chordLen = 1; // index into CHORD_LENS
   let page = 0; // 0 = steps 1–8, 1 = steps 9–16
   let bar = 0; // bar of the loop shown, 0-based
   let follow = true; // shown page and bar track the playhead
@@ -99,16 +117,41 @@ export function buildSeqPanel(app: HTMLElement, engine: AudioEngine): void {
   const bars = () => state.patterns[state.pattern].bars;
   const padAt = (row: number) => state.bank * PADS_PER_BANK + ROW_PAGES[rowPage][row]; // rows show the bank on screen
   const tickAt = (k: number) => bar * BAR_TICKS + (page * STEPS_PER_PAGE + k) * STEP_TICKS;
+  /** The chord of row `row` on a CH page: chord pad 1–8 (triads) or 9–16 (7ths). */
+  const chordAt = (row: number) => {
+    const k = state.keys;
+    return chordPad(rowPage * STEPS_PER_PAGE + row + 1, k.key, k.scale, k.octave, k.chordVoicing);
+  };
+  /** Plays a chord row's chord, as long as LEN (capped), when stopped. */
+  const previewChord = (row: number) => {
+    if (state.playing) return;
+    const seconds = Math.min(PREVIEW_MAX, CHORD_LENS[chordLen].ticks * clock.secondsPerTick());
+    seq.previewNotes(chordAt(row).notes, seq.STEP_VELOCITY, seconds);
+  };
 
   // ---------- controls ----------
 
   $('.sq-loop').addEventListener('click', pickLoop);
-  // Steps through every row page of every bank: A 1–8, A 9–16, B 1–8 … D 9–16, then back to A.
+  // Steps through every row page of every bank: A 1–8, A 9–16, B 1–8 … D 9–16, CH 1–8, CH 9–16, then back to A.
   $('.sq-rows').addEventListener('click', () => {
-    rowPage = 1 - rowPage;
-    if (rowPage === 0) selectBank((state.bank + 1) % BANK_NAMES.length); // re-renders via the store
+    const lastBank = BANK_NAMES.length - 1;
+    if (rowPage === 0) {
+      rowPage = 1;
+    } else if (!chordRows && state.bank === lastBank) {
+      chordRows = true;
+      rowPage = 0;
+    } else {
+      rowPage = 0;
+      const next = chordRows ? 0 : state.bank + 1;
+      chordRows = false;
+      selectBank(next); // re-renders via the store when the bank changes
+    }
     renderControls();
     renderGrid();
+  });
+  lenBtn.addEventListener('click', () => {
+    chordLen = (chordLen + 1) % CHORD_LENS.length;
+    renderControls();
   });
   for (const b of lenBtns) b.addEventListener('click', () => seq.setLength(Number(b.dataset.bars) as Bars));
   $('.sq-rec').addEventListener('click', seq.toggleRec);
@@ -176,11 +219,19 @@ export function buildSeqPanel(app: HTMLElement, engine: AudioEngine): void {
   // ---------- grid ----------
 
   rows.forEach((row, r) => {
-    row.querySelector('.sq-name')!.addEventListener('click', () => engine.play(padAt(r), seq.STEP_VELOCITY));
+    row.querySelector('.sq-name')!.addEventListener('click', () => {
+      if (chordRows) previewChord(r);
+      else engine.play(padAt(r), seq.STEP_VELOCITY);
+    });
     row.querySelectorAll<HTMLButtonElement>('.sq-cell').forEach((cell) => {
       cell.addEventListener('click', () => {
-        const pad = padAt(r);
         const adding = cell.getAttribute('aria-pressed') !== 'true';
+        if (chordRows) {
+          seq.toggleChordStep(chordAt(r).notes, tickAt(Number(cell.dataset.k)), CHORD_LENS[chordLen].ticks);
+          if (adding) previewChord(r);
+          return;
+        }
+        const pad = padAt(r);
         seq.toggleStep(pad, tickAt(Number(cell.dataset.k)));
         if (adding && !state.playing) engine.play(pad, seq.STEP_VELOCITY); // hear what was added
       });
@@ -193,8 +244,18 @@ export function buildSeqPanel(app: HTMLElement, engine: AudioEngine): void {
     const queued = state.queued === null ? '' : ` → ${state.queued + 1}`;
     $('.sq-loop-name').textContent = `LOOP ${state.pattern + 1}${queued}`;
     $('.sq-loop').setAttribute('aria-label', `Loop ${state.pattern + 1}${queued ? `, loop ${state.queued! + 1} starts at the next bar` : ''}. Choose loop`);
-    $('.sq-rows').textContent = `PADS ${BANK_NAMES[state.bank]} ${rowPage === 0 ? '1–8' : '9–16'}`;
-    $('.sq-rows').setAttribute('aria-label', `Showing pads ${rowPage === 0 ? '1 to 8' : '9 to 16'} of bank ${BANK_NAMES[state.bank]}. Next pads`);
+    const half = rowPage === 0 ? '1–8' : '9–16';
+    $('.sq-rows').textContent = chordRows ? `CH ${half}` : `PADS ${BANK_NAMES[state.bank]} ${half}`;
+    $('.sq-rows').setAttribute(
+      'aria-label',
+      chordRows
+        ? `Showing chord pads ${rowPage === 0 ? '1 to 8, triads' : '9 to 16, sevenths'}. Next pads`
+        : `Showing pads ${rowPage === 0 ? '1 to 8' : '9 to 16'} of bank ${BANK_NAMES[state.bank]}. Next pads`,
+    );
+    lenBtn.hidden = !chordRows;
+    lenBtn.textContent = `LEN ${CHORD_LENS[chordLen].label}`;
+    lenBtn.setAttribute('aria-label', `Placed chords last ${CHORD_LENS[chordLen].label.toLowerCase()}. Change length`);
+    panel.querySelector('.sq-pages')!.classList.toggle('with-len', chordRows);
     for (const b of lenBtns) b.setAttribute('aria-pressed', String(Number(b.dataset.bars) === n));
     $('.sq-play').setAttribute('aria-pressed', String(state.playing));
     $('.sq-play').setAttribute('aria-label', state.playing ? 'Stop' : 'Play');
@@ -216,6 +277,7 @@ export function buildSeqPanel(app: HTMLElement, engine: AudioEngine): void {
   }
 
   function renderGrid(): void {
+    if (chordRows) return renderChordGrid();
     const p = state.patterns[state.pattern];
     const len = lengthTicks(p);
     // Loudest hit per pad per 16th cell.
@@ -231,6 +293,7 @@ export function buildSeqPanel(app: HTMLElement, engine: AudioEngine): void {
       const name = def?.name ?? '';
       const colour = def ? GROUP_COLOUR[def.group] : 'transparent';
       row.style.setProperty('--c', colour);
+      row.classList.remove('chord');
       row.querySelector('.sq-name-text')!.textContent = name.toUpperCase();
       row.querySelector('.sq-name')!.setAttribute('aria-label', `Play ${name}`);
       row.querySelectorAll<HTMLButtonElement>('.sq-cell').forEach((cell, k) => {
@@ -240,6 +303,29 @@ export function buildSeqPanel(app: HTMLElement, engine: AudioEngine): void {
         cell.classList.toggle('beat', step % 4 === 0);
         if (v !== undefined) cell.style.setProperty('--a', (0.45 + 0.55 * (v / 127)).toFixed(2));
         cell.setAttribute('aria-label', `${name} step ${step + 1}${p.bars > 1 ? `, bar ${bar + 1}` : ''}`);
+      });
+    });
+    playCol = -1;
+    showPosition(seq.playhead());
+  }
+
+  /** The CH row pages: a cell is lit when every note of its row's chord starts in that 16th. */
+  function renderChordGrid(): void {
+    const p = state.patterns[state.pattern];
+    rows.forEach((row, r) => {
+      const c = chordAt(r);
+      const roman = romanOf(c.degree, c.name, c.type);
+      row.style.setProperty('--c', GROUP_COLOUR[c.type === 'seventh' ? 'cym' : 'tom']); // as on the CH pads
+      row.classList.add('chord');
+      row.querySelector('.sq-name-text')!.textContent = `${roman}\n${c.name}`;
+      row.querySelector('.sq-name')!.setAttribute('aria-label', `Play chord ${roman}, ${c.name}`);
+      row.querySelectorAll<HTMLButtonElement>('.sq-cell').forEach((cell, k) => {
+        const step = page * STEPS_PER_PAGE + k;
+        const found = chordInCell(p, c.notes, tickAt(k));
+        cell.setAttribute('aria-pressed', String(found !== null));
+        cell.classList.toggle('beat', step % 4 === 0);
+        if (found) cell.style.setProperty('--a', (0.45 + 0.55 * (Math.max(...found.map((n) => n.vel)) / 127)).toFixed(2));
+        cell.setAttribute('aria-label', `Chord ${roman} ${c.name} step ${step + 1}${p.bars > 1 ? `, bar ${bar + 1}` : ''}`);
       });
     });
     playCol = -1;

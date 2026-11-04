@@ -699,6 +699,41 @@ M9a is on `feat/m9a-sounds`, not on the live site yet. PC first: `npm.cmd run de
    - [ ] Optional (MIDI controller): Learn a footswitch and a knob (open PEDALS, LEARN, tap, move the control).
 5. Known gaps: Claude could not hear any of this; touch was tested with synthetic events only.
 
+## Chord rows in SEQ (plan approved 2026-11-04)
+Branch `feat/seq-chords`. Plan: `C:\Users\LukeW\.claude\plans\i-want-to-add-stateless-hopcroft.md`.
+- Luke's picks: chord rows on the SEQ grid (one row per CH pad, rows button cycles A 1–8 … D 9–16 → CH 1–8 → CH 9–16), placed chords stored as plain KEYS notes (they don't follow later key changes).
+- Claude's pick: a LEN button on CH pages (1 STEP / 1 BEAT / 2 BEATS / 1 BAR, default 1 BEAT, not saved). Drag-to-length left out.
+- Steps: 1 sequencer, 2 SEQ panel, 3 checks, 4 docs and checklist.
+
+### Step 1, sequencer: done (2026-11-04)
+`chordInCell()` in `src/seq/pattern.ts` (pure); `toggleChordStep(chord, tick, len, vel)` (one undo step; removes the chord's notes in that 16th, else adds them) and `previewNotes(chord, vel, seconds)` (KEYS engine, not recorded) in `src/seq/sequencer.ts`. Checked by `tsc` only; exercised in step 3.
+
+### Step 2, SEQ panel: done (2026-11-04)
+`src/ui/seq.ts`: `chordRows` flag; rows button goes D 9–16 → CH 1–8 → CH 9–16 → A 1–8 (back to A uses `selectBank(0)`, which also leaves CH on PADS, same as other bank steps). Chord rows use `chordPad(1–16, key, scale, octave, voicing)` from `src/keys/chords.ts` directly; names show degree over chord (`white-space: pre-line`, case kept); colours `tom` / `cym` like the CH pads. Grid re-renders on `'keys'`. LEN button sits at the end of the STEPS row (not the header as planned: the header is full at 390 px). Name tap and adding a chord preview it when stopped, up to 2 s.
+Smoke-checked by script in the browser pane: row-page cycle, A minor chord names, a tap adds A3 C4 E4 at tick 48 len 96 and a second tap removes them, STEPS row fits at 390 px (87/87/74/92 px, no overflow). Screenshots timed out (pane not on screen); full checks are step 3.
+
+### Step 3, checks: done (2026-11-04)
+- **Bug found and fixed:** I and iii on the same step share E and G; removing I took both copies and broke iii. `chordInCell()` now picks one event per pitch, so removing a chord leaves the other chord whole.
+- Checked by script in the browser pane (`?fakemidi`, C major): LEN gives 24 / 96 / 192 / 384 ticks; placing I at step 1 and vi at step 5 lights exactly those cells; undo restores; shared-note removal (above); an off-grid chord at tick 53 lights step 3 (alpha 0.80 for vel 80) and a tap removes it; changing key to D leaves the notes untouched and moves the highlight off; a live CH-pad G chord recorded with DUB (1/16) lands at tick 24 and lights row V step 2; playback sends note-ons 0x90 55/59/62 on Keys channel 1; reload keeps the notes.
+- Layout by measurement at 390×844, 844×390, 1280×800 on CH 9–16 with BAR and LEN 2 BEATS showing: no overflow, no clipped buttons or chord names (longest `vii°7 / Bm7b5`). Screenshots not taken: the browser pane was hidden.
+- `tsc` and `npm run build` clean.
+- Not checked: sound and touch on the phone, the look on screen.
+
+### Step 4, docs and checklist: done (2026-11-04)
+README ("Chords on the SEQ grid" under Playing), DESIGN (Sequencer notes), CLAUDE.md layout line, and the checklist below.
+
+## Luke's checklist for SEQ chords
+**PC test passed (2026-11-04):** Luke reported all good at localhost. Item 8 (phone) is not run yet.
+On the PC at localhost (`npm.cmd run dev`), then the phone after merging:
+1. [ ] SEQ → tap the rows button until **CH 1–8**: rows show chords of the KEYS key (degree over name, e.g. `i` / `Am`). **CH 9–16** shows 7ths; the next tap goes back to PADS A 1–8.
+2. [ ] Tap a row name: the chord plays. Tap a step: it lights and the chord plays (when stopped). Tap again: it goes off. Undo (Ctrl+Z) brings it back.
+3. [ ] **LEN**: try 1 STEP and 1 BAR; press Play and hear the chord length change.
+4. [ ] Place I and iii on the same step, then remove I: iii still lights and still sounds as a full chord.
+5. [ ] Change the KEYS key: row names change; chords already placed keep sounding the same and their cells go dark.
+6. [ ] Record CH pads live with DUB: the chords show on the CH rows.
+7. [ ] Drum rows and drum steps still work as before; the look of the STEPS row with BAR and LEN both showing.
+8. [ ] Phone: touch on the chord cells, portrait and landscape, nothing cut off.
+
 ## Live site: GitHub Pages (2026-10-18)
 - **https://lukewilkinson.github.io/drum-pad-controller/** from the public repo https://github.com/LukeWilkinson/drum-pad-controller (remote `origin`). Luke chose a public repo (code and commit email visible) after Netlify suspended the new account.
 - `.github/workflows/pages.yml` builds and deploys on every push to `main` (`vite build --base=/<repo>/`); the first run passed. Pages source is set to "GitHub Actions" in the repo settings.

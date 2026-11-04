@@ -98,7 +98,11 @@
 .sq-pages.with-bar { grid-template-columns: repeat(2, minmax(0, 1fr)) auto; }
 .sq-pages button { height: 44px; font-family: var(--font-mono); font-size: 12px; font-weight: 400; letter-spacing: 0; }
 .sq-pages .sq-bar { padding: 0 12px; color: var(--amber); }
-.sq-pages .sq-bar[hidden] { display: none; }
+.sq-pages .sq-bar[hidden], .sq-pages .sq-len-btn[hidden] { display: none; }
+/* CH row pages add LEN (chord length) at the end of the row */
+.sq-pages.with-len { grid-template-columns: repeat(2, minmax(0, 1fr)) auto; }
+.sq-pages.with-bar.with-len { grid-template-columns: repeat(2, minmax(0, 1fr)) auto auto; }
+.sq-pages .sq-len-btn { padding: 0 10px; color: var(--amber); }
 
 /* ---------- Step grid ---------- */
 
@@ -111,6 +115,7 @@
 }
 .sq-strip { width: 4px; height: 20px; flex: none; border-radius: 2px; background: var(--c); }
 .sq-name-text { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-word; }
+.sq-row.chord .sq-name-text { white-space: pre-line; } /* degree over chord name; case kept (Am7, vii°7) */
 .sq-cell {
   flex: 1; min-width: 0; height: 40px; padding: 0; border-radius: 4px;
   background: var(--raised); border: 2px solid transparent;

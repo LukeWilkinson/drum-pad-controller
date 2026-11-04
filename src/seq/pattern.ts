@@ -61,6 +61,22 @@ export function hasHits(p: Pattern): boolean {
   return p.events.some((e) => e.tick < end) || p.notes.some((n) => n.tick < end);
 }
 
+/**
+ * One note event per note of `chord` starting in the 16th at `tick`, or null unless every chord note
+ * has one there. Used by the SEQ chord rows: a chord counts as placed only when all its notes are.
+ * Only one event per pitch is picked, so removing a chord leaves another chord's copy of a shared
+ * note (I and iii both hold E and G) in place.
+ */
+export function chordInCell(p: Pattern, chord: number[], tick: number): NoteEvent[] | null {
+  const found: NoteEvent[] = [];
+  for (const note of new Set(chord)) {
+    const n = p.notes.find((e) => e.note === note && e.tick >= tick && e.tick < tick + STEP_TICKS);
+    if (!n) return null;
+    found.push(n);
+  }
+  return found;
+}
+
 /** Wraps any tick into 0 … length − 1. */
 export function wrap(tick: number, length: number): number {
   return ((tick % length) + length) % length;
