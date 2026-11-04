@@ -719,6 +719,20 @@ Smoke-checked by script in the browser pane: row-page cycle, A minor chord names
 - `tsc` and `npm run build` clean.
 - Not checked: sound and touch on the phone, the look on screen.
 
+### Step 4, docs and checklist: done (2026-11-04)
+README ("Chords on the SEQ grid" under Playing), DESIGN (Sequencer notes), CLAUDE.md layout line, and the checklist below.
+
+## Luke's checklist for SEQ chords
+On the PC at localhost (`npm.cmd run dev`), then the phone after merging:
+1. [ ] SEQ → tap the rows button until **CH 1–8**: rows show chords of the KEYS key (degree over name, e.g. `i` / `Am`). **CH 9–16** shows 7ths; the next tap goes back to PADS A 1–8.
+2. [ ] Tap a row name: the chord plays. Tap a step: it lights and the chord plays (when stopped). Tap again: it goes off. Undo (Ctrl+Z) brings it back.
+3. [ ] **LEN**: try 1 STEP and 1 BAR; press Play and hear the chord length change.
+4. [ ] Place I and iii on the same step, then remove I: iii still lights and still sounds as a full chord.
+5. [ ] Change the KEYS key: row names change; chords already placed keep sounding the same and their cells go dark.
+6. [ ] Record CH pads live with DUB: the chords show on the CH rows.
+7. [ ] Drum rows and drum steps still work as before; the look of the STEPS row with BAR and LEN both showing.
+8. [ ] Phone: touch on the chord cells, portrait and landscape, nothing cut off.
+
 ## Live site: GitHub Pages (2026-10-18)
 - **https://lukewilkinson.github.io/drum-pad-controller/** from the public repo https://github.com/LukeWilkinson/drum-pad-controller (remote `origin`). Luke chose a public repo (code and commit email visible) after Netlify suspended the new account.
 - `.github/workflows/pages.yml` builds and deploys on every push to `main` (`vite build --base=/<repo>/`); the first run passed. Pages source is set to "GitHub Actions" in the repo settings.

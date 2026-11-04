@@ -57,6 +57,7 @@ The pedal check runs in the browser, since it needs Web Audio. With `npm run dev
 - **Multi-touch:** hold as many pads as there are fingers.
 - **Keyboard:** the pad rows top to bottom are `1 2 3 4`, `Q W E R`, `A S D F`, `Z X C V`.
 - **CH (chord pads):** the button after A–D turns the 16 pads into chords of the KEYS key and scale, played on the KEYS sound. Bottom row: I ii iii IV, next row: V vi vii I (an octave up), top two rows: the same as 7ths. Each pad shows its chord (Am7) and degree (vi7). They follow KEYS HOLD, ARP and the CHORD voicing, record into the loop as KEYS notes and go out on the Keys MIDI channel. Note Repeat doesn't apply. From a MIDI pad controller, notes 36–51 play the chord pads while CH is on (other banks still play drums).
+- **Chords on the SEQ grid:** the rows button (PADS A 1–8 …) goes on past D 9–16 to **CH 1–8** (triads I–vii, I') and **CH 9–16** (7ths). Each row is a chord of the KEYS key and scale; tap a step to place that chord, tap it again to remove it (one undo step each). **LEN** at the end of the STEPS row sets how long placed chords last: 1 STEP, 1 BEAT (default), 2 BEATS or 1 BAR. Placed chords are plain KEYS notes, the same as recorded ones: they play on the KEYS sound, go out on the Keys MIDI channel, and stay as they are if the key changes later (the row then no longer lights for them). A chord played live on the CH pads with REC or DUB lights its row too.
 
 ## Kits
 

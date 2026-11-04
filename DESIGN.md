@@ -121,6 +121,7 @@ Keep the pad screen uncluttered. Everything else lives behind the tabs.
   - REC, Overdub, Count-in and Click toggles
   - quantise (1/4, 1/8, 1/16, 1/32, Off) and swing
   - 8 rows by 8 steps, with pages for steps 1–8 and 9–16; beat-start cells are lighter and the playhead column is outlined
+  - built (not in the design): the rows button steps on past D 9–16 to CH 1–8 / CH 9–16, one chord pad per row. The row name shows the degree over the chord (two lines, case kept), strip colour tom for triads and cymbal for 7ths like the CH pads. On CH pages a LEN button (amber text, like BAR) is added at the end of the STEPS row; the header had no room at 390 px
 - **Keys:**
   - SYNTH / SAMPLED switch with four presets each
   - octave −/+, Hold and Arp
