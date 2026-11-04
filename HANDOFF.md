@@ -708,6 +708,10 @@ Branch `feat/seq-chords`. Plan: `C:\Users\LukeW\.claude\plans\i-want-to-add-stat
 ### Step 1, sequencer: done (2026-11-04)
 `chordInCell()` in `src/seq/pattern.ts` (pure); `toggleChordStep(chord, tick, len, vel)` (one undo step; removes the chord's notes in that 16th, else adds them) and `previewNotes(chord, vel, seconds)` (KEYS engine, not recorded) in `src/seq/sequencer.ts`. Checked by `tsc` only; exercised in step 3.
 
+### Step 2, SEQ panel: done (2026-11-04)
+`src/ui/seq.ts`: `chordRows` flag; rows button goes D 9–16 → CH 1–8 → CH 9–16 → A 1–8 (back to A uses `selectBank(0)`, which also leaves CH on PADS, same as other bank steps). Chord rows use `chordPad(1–16, key, scale, octave, voicing)` from `src/keys/chords.ts` directly; names show degree over chord (`white-space: pre-line`, case kept); colours `tom` / `cym` like the CH pads. Grid re-renders on `'keys'`. LEN button sits at the end of the STEPS row (not the header as planned: the header is full at 390 px). Name tap and adding a chord preview it when stopped, up to 2 s.
+Smoke-checked by script in the browser pane: row-page cycle, A minor chord names, a tap adds A3 C4 E4 at tick 48 len 96 and a second tap removes them, STEPS row fits at 390 px (87/87/74/92 px, no overflow). Screenshots timed out (pane not on screen); full checks are step 3.
+
 ## Live site: GitHub Pages (2026-10-18)
 - **https://lukewilkinson.github.io/drum-pad-controller/** from the public repo https://github.com/LukeWilkinson/drum-pad-controller (remote `origin`). Luke chose a public repo (code and commit email visible) after Netlify suspended the new account.
 - `.github/workflows/pages.yml` builds and deploys on every push to `main` (`vite build --base=/<repo>/`); the first run passed. Pages source is set to "GitHub Actions" in the repo settings.
