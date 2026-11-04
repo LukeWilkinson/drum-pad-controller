@@ -20,6 +20,7 @@ import {
   STEP_TICKS,
   SWING_MAX,
   SWING_MIN,
+  chordInCell,
   clonePattern,
   emptyPattern,
   insertEvent,
@@ -357,6 +358,31 @@ export function toggleStep(pad: number, tick: number, vel = STEP_VELOCITY): void
   if (p.events.some(inCell)) p.events = p.events.filter((e) => !inCell(e));
   else insertEvent(p.events, { tick, pad, vel });
   update({}, 'patterns');
+}
+
+/**
+ * SEQ chord row tap: if every note of `chord` starts inside the 16th at `tick`, removes those notes;
+ * otherwise adds the chord there as plain KEYS notes, `len` ticks long (cut one tick short of the
+ * loop, like recorded notes). One undo step either way.
+ */
+export function toggleChordStep(chord: number[], tick: number, len: number, vel = STEP_VELOCITY): void {
+  const p = current();
+  const found = chordInCell(p, chord, tick);
+  pushHistory();
+  if (found) {
+    p.notes = p.notes.filter((n) => !found.includes(n));
+  } else {
+    const ticks = Math.max(1, Math.min(lengthTicks(p) - 1, len));
+    for (const note of chord) insertEvent(p.notes, { tick, note, vel, len: ticks });
+  }
+  update({}, 'patterns');
+}
+
+/** Plays `chord` now on the KEYS preset, `seconds` long, to hear what was placed. Not recorded. */
+export function previewNotes(chord: number[], vel: number, seconds: number): void {
+  if (!instrument) return;
+  const now = engine.ctx.currentTime;
+  for (const note of chord) instrument.playAt(note, vel, now, seconds);
 }
 
 export function setLength(bars: Bars, index = state.pattern): void {

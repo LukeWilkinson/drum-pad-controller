@@ -61,6 +61,15 @@ export function hasHits(p: Pattern): boolean {
   return p.events.some((e) => e.tick < end) || p.notes.some((n) => n.tick < end);
 }
 
+/**
+ * The notes of `chord` that start in the 16th at `tick`, or null unless every chord note has one
+ * there. Used by the SEQ chord rows: a chord counts as placed only when all its notes are.
+ */
+export function chordInCell(p: Pattern, chord: number[], tick: number): NoteEvent[] | null {
+  const found = p.notes.filter((n) => n.tick >= tick && n.tick < tick + STEP_TICKS && chord.includes(n.note));
+  return chord.every((note) => found.some((n) => n.note === note)) ? found : null;
+}
+
 /** Wraps any tick into 0 … length − 1. */
 export function wrap(tick: number, length: number): number {
   return ((tick % length) + length) % length;

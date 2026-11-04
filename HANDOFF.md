@@ -699,6 +699,15 @@ M9a is on `feat/m9a-sounds`, not on the live site yet. PC first: `npm.cmd run de
    - [ ] Optional (MIDI controller): Learn a footswitch and a knob (open PEDALS, LEARN, tap, move the control).
 5. Known gaps: Claude could not hear any of this; touch was tested with synthetic events only.
 
+## Chord rows in SEQ (plan approved 2026-11-04)
+Branch `feat/seq-chords`. Plan: `C:\Users\LukeW\.claude\plans\i-want-to-add-stateless-hopcroft.md`.
+- Luke's picks: chord rows on the SEQ grid (one row per CH pad, rows button cycles A 1–8 … D 9–16 → CH 1–8 → CH 9–16), placed chords stored as plain KEYS notes (they don't follow later key changes).
+- Claude's pick: a LEN button on CH pages (1 STEP / 1 BEAT / 2 BEATS / 1 BAR, default 1 BEAT, not saved). Drag-to-length left out.
+- Steps: 1 sequencer, 2 SEQ panel, 3 checks, 4 docs and checklist.
+
+### Step 1, sequencer: done (2026-11-04)
+`chordInCell()` in `src/seq/pattern.ts` (pure); `toggleChordStep(chord, tick, len, vel)` (one undo step; removes the chord's notes in that 16th, else adds them) and `previewNotes(chord, vel, seconds)` (KEYS engine, not recorded) in `src/seq/sequencer.ts`. Checked by `tsc` only; exercised in step 3.
+
 ## Live site: GitHub Pages (2026-10-18)
 - **https://lukewilkinson.github.io/drum-pad-controller/** from the public repo https://github.com/LukeWilkinson/drum-pad-controller (remote `origin`). Luke chose a public repo (code and commit email visible) after Netlify suspended the new account.
 - `.github/workflows/pages.yml` builds and deploys on every push to `main` (`vite build --base=/<repo>/`); the first run passed. Pages source is set to "GitHub Actions" in the repo settings.
