@@ -723,6 +723,7 @@ Smoke-checked by script in the browser pane: row-page cycle, A minor chord names
 README ("Chords on the SEQ grid" under Playing), DESIGN (Sequencer notes), CLAUDE.md layout line, and the checklist below.
 
 ## Luke's checklist for SEQ chords
+**PC test passed (2026-11-04):** Luke reported all good at localhost. Item 8 (phone) is not run yet.
 On the PC at localhost (`npm.cmd run dev`), then the phone after merging:
 1. [ ] SEQ → tap the rows button until **CH 1–8**: rows show chords of the KEYS key (degree over name, e.g. `i` / `Am`). **CH 9–16** shows 7ths; the next tap goes back to PADS A 1–8.
 2. [ ] Tap a row name: the chord plays. Tap a step: it lights and the chord plays (when stopped). Tap again: it goes off. Undo (Ctrl+Z) brings it back.
